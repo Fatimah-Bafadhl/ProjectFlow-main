@@ -26,7 +26,7 @@ class Comment extends Model
      protected $primaryKey = 'comment_id';
 
 
-   protected $fillable = ['comment_text', 'attachment', 'task_id', 'project_id', 'user_id', 'visible_to_client'];
+   protected $fillable = ['comment_text', 'attachment', 'task_id', 'project_id', 'user_id', 'author_name', 'visible_to_client'];
 
     
     public function task()

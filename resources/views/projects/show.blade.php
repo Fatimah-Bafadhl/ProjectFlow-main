@@ -230,7 +230,7 @@ $isAssignedManager = $isManager && $project->managers()->where('users.user_id', 
         @forelse($project->comments()->with('user')->latest()->get() as $comment)
             <div class="border rounded-3 p-3" style="border-color: #EFEEF3 !important;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-bold" style="font-size: 13px;">{{ optional($comment->user)->username ?? 'مستخدم' }}</span>
+                                       <span class="fw-bold" style="font-size: 13px;">{{ optional($comment->user)->username ?? $comment->author_name ?? 'مستخدم محذوف' }}</span>
                     <span class="text-muted" style="font-size: 11px;">{{ $comment->created_at->translatedFormat('d F Y - h:i A') }}</span>
                 </div>
                 @if($comment->comment_text)
@@ -311,8 +311,8 @@ $isAssignedManager = $isManager && $project->managers()->where('users.user_id', 
                 <div class="border rounded-3 p-3 d-flex justify-content-between align-items-start" style="border-color: #EFEEF3 !important;">
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-1">
-                            <span class="fw-bold" style="font-size: 13px;">{{ optional(optional($ticket->client)->user)->username ?? 'عميل' }}</span>
-                            <span class="badge {{ $ticket->status === \App\Enums\TicketStatus::Handled ? 'bg-success' : 'bg-warning text-dark' }}" style="font-size: 10px;">
+                            <span class="fw-bold" style="font-size: 13px;">{{ optional(optional($ticket->client)->user)->username ?? $ticket->client_name ?? 'عميل محذوف' }}</span>
+                        <span class="badge {{ $ticket->status === \App\Enums\TicketStatus::Handled ? 'bg-success' : 'bg-warning text-dark' }}" style="font-size: 10px;">
                                 {{ $ticket->status->label() }}
                             </span>
                         </div>

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use App\Notifications\SystemActivityNotification;
@@ -69,14 +71,22 @@ class ClientController extends Controller
         return redirect()->back()->with('success', 'تم تعديل بيانات العميل بنجاح');
     }
 
-    public function destroy(Client $client)
+        public function destroy(Client $client)
     {
 
      if (!auth()->user()->isAdmin()) {
             abort(403, 'عذراً، لا تمتلك صلاحية حذف عميل.');
         }
         $clientName = $client->name;
-        $client->delete();
+        $linkedUserId = $client->user_id;
+
+        DB::transaction(function () use ($client, $linkedUserId) {
+            $client->delete();
+
+            if ($linkedUserId) {
+                User::where('user_id', $linkedUserId)->delete();
+            }
+        });
 
         if (auth()->check()) {
             auth()->user()->notify(new SystemActivityNotification(

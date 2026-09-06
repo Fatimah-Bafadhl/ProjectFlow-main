@@ -40,7 +40,7 @@ $isAdmin = $user && $user->isAdmin();
 <div class="projects-scroll-container">
     <div class="row g-4" id="projectsGrid">
         @forelse($projects as $project)
-    @php
+           @php
         $totalTasks = $project->tasks ? $project->tasks->count() : 0;
         $progress = $project->progress ?? 0;
     @endphp
@@ -51,11 +51,13 @@ $isAdmin = $user && $user->isAdmin();
                  data-project-desc="{{ $project->project_description }}"
                  data-start-date="{{ $project->start_project }}"
                  data-end-date="{{ $project->end_project }}"
-                 data-status="{{ $project->status }}"
-                 data-status="{{ $project->status }}"
+                                 data-status="{{ $project->status }}"
 data-manager-ids="{{ $project->managers->pluck('user_id')->implode(',') }}"
-data-employee-ids="{{ $project->employees->pluck('employee_id')->implode(',') }}">
-                 
+data-employee-ids="{{ $project->employees->pluck('employee_id')->implode(',') }}"
+data-task-count="{{ $totalTasks }}"
+data-comment-count="{{ $project->comments_count ?? 0 }}"
+data-open-ticket-count="{{ $project->open_tickets_count ?? 0 }}">
+
                 <div class="project-card position-relative p-3">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div class="d-flex flex-column align-items-start text-end gap-1">
@@ -182,7 +184,7 @@ data-employee-ids="{{ $project->employees->pluck('employee_id')->implode(',') }}
                             </select>
                         </div>
 
-                        @if($isAdmin)
+                                                                              @if($isAdmin)
 <div class="mb-3 text-end">
     <label class="custom-label mb-1">المدراء المسؤولون</label>
     <div class="border rounded-3 p-2" style="max-height: 150px; overflow-y: auto;">
@@ -271,7 +273,7 @@ data-employee-ids="{{ $project->employees->pluck('employee_id')->implode(',') }}
 
 @push('scripts')
 <script>
-    function prepareAddProjectModal(actionUrl) {
+            function prepareAddProjectModal(actionUrl) {
         document.getElementById('projectForm').action = actionUrl;
         document.getElementById('projectFormMethod').value = 'POST';
         document.getElementById('projectModalTitle').innerText = 'إضافة مشروع جديد';
@@ -296,12 +298,13 @@ data-employee-ids="{{ $project->employees->pluck('employee_id')->implode(',') }}
         myModal.show();
     }
 
-    function openEditProjectModal(button, actionUrl) {
+        function openEditProjectModal(button, actionUrl) {
         const card = button.closest('.project-card-wrapper');
         const form = document.getElementById('projectForm');
         form.action = actionUrl;
         document.getElementById('projectFormMethod').value = 'PUT';
         document.getElementById('projectModalTitle').innerText = 'تعديل المشروع';
+
 
         const startDate = card.getAttribute('data-start-date');
         const endDate = card.getAttribute('data-end-date');
@@ -334,7 +337,16 @@ document.querySelectorAll('.project-employee-checkbox').forEach(cb => {
         myModal.show();
     }
 
-    function openDeleteProjectModal(button, actionUrl) {
+        function openDeleteProjectModal(button, actionUrl) {
+        const card = button.closest('.project-card-wrapper');
+        const projectName = card.getAttribute('data-project-name');
+        const taskCount = card.getAttribute('data-task-count') || 0;
+        const commentCount = card.getAttribute('data-comment-count') || 0;
+        const openTicketCount = card.getAttribute('data-open-ticket-count') || 0;
+
+        document.getElementById('deleteProjectModalText').innerText =
+            `هل تريد حذف مشروع "${projectName}"؟ سيتم إخفاء ${taskCount} مهمة و ${commentCount} تعليق من العرض (لن يتم حذفها نهائياً)، ويوجد ${openTicketCount} تذكرة مفتوحة.`;
+
         const form = document.getElementById('deleteProjectForm');
         form.action = actionUrl;
         var myModal = new bootstrap.Modal(document.getElementById('deleteProjectModal'));

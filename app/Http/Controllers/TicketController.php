@@ -34,6 +34,7 @@ class TicketController extends Controller
         Ticket::create([
             'project_id' => $project->project_id,
             'client_id'  => $client->client_id,
+            'client_name' => $client->name,
             'message'    => $request->message,
             'status'     => TicketStatus::Open->value,
         ]);

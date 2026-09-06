@@ -12,8 +12,7 @@ class Ticket extends Model
 
     protected $primaryKey = 'ticket_id';
 
-    protected $fillable = ['project_id', 'client_id', 'message', 'status'];
-
+    protected $fillable = ['project_id', 'client_id', 'client_name', 'message', 'status'];
     protected $casts = [
         'status' => TicketStatus::class,
     ];

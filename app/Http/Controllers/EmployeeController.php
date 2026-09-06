@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use App\Models\Employee;
 use App\Models\Task;
 use App\Models\Project;
@@ -83,14 +85,22 @@ class EmployeeController extends Controller
         return redirect()->back()->with('success', 'تم تعديل بيانات الموظف بنجاح');
     }
 
-    public function destroy(Employee $employee)
+        public function destroy(Employee $employee)
     {
            if (!Auth::user()->isAdmin()) {
             abort(403, 'عذراً، لا تمتلك صلاحية حذف موظف.');
            }
 
         $employeeName = $employee->name;
-        $employee->delete();
+        $linkedUserId = $employee->user_id;
+
+        DB::transaction(function () use ($employee, $linkedUserId) {
+            $employee->delete();
+
+            if ($linkedUserId) {
+                User::where('user_id', $linkedUserId)->delete();
+            }
+        });
 
         if (auth()->check()) {
             auth()->user()->notify(new SystemActivityNotification(

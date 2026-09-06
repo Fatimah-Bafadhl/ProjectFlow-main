@@ -20,7 +20,8 @@ class Project extends Model
         'end_project', 
         'status', 
         'progress', 
-        'user_id'
+        'user_id',
+        'creator_name'
     ];
 
     // دالة مزامنة وتحديث حالة ونسبة المشروع تلقائياً بناءً على مهامه

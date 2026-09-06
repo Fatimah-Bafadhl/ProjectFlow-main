@@ -98,6 +98,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
     });
 
+        Route::middleware('role:admin')->group(function () {
+        Route::post('/projects/{project}/reassign-creator', [ProjectController::class, 'reassignCreator'])->name('projects.reassignCreator');
+    });
+
     // مسارات تفاصيل المهام والتعليقات (إضافة، تعديل، حذف)
    // Route::get('/project-tasks/{task}', fn ($task) => view('tasks.project-show', compact('task')))->name('tasks.project-show');
     Route::post('/tasks/{taskId}/comments', [CommentController::class, 'store'])->name('comments.store');

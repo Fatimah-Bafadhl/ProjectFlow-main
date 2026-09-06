@@ -70,21 +70,24 @@
         : $task->comments;
 @endphp
 @forelse($visibleComments as $index => $comment)
-            @php
+                 @php
                 $commentUser = $comment->user;
-                $userName = $commentUser ? ($commentUser->name ?? $commentUser->username ?? 'مستخدم') : 'مستخدم';
+                $userName = $commentUser
+                    ? ($commentUser->name ?? $commentUser->username ?? 'مستخدم')
+                    : ($comment->author_name ?? 'مستخدم محذوف');
                 $initials = mb_substr($userName, 0, 2);
 
                 $commentEmail = $commentUser->email ?? '';
-                
-                if ($commentUser && ($commentUser->isClient() || \App\Models\Client::where('email', $commentEmail)->exists())) {
+
+                if (!$commentUser) {
+    $roleLabel = 'مستخدم محذوف';
+} elseif ($commentUser->isClient() || \App\Models\Client::where('email', $commentEmail)->exists()) {
     $roleLabel = 'عميل';
-} elseif ($commentUser && $commentUser->isEmployee()) {
+} elseif ($commentUser->isEmployee()) {
     $roleLabel = 'موظف';
 } else {
     $roleLabel = 'مدير';
 }
-
                 $isOwner = ($currentUserId && $comment->user_id === $currentUserId);
 
                $previousComment = $index > 0 ? $visibleComments[$index - 1] : null;
@@ -96,7 +99,7 @@
                     if ($currentUserId && $prevUserId) {
                         $isSameUser = ($currentUserId === $prevUserId);
                     } else {
-                        $prevUserName = $prevUser ? ($prevUser->name ?? $prevUser->username ?? 'مستخدم') : 'مستخدم';
+                                                $prevUserName = $prevUser ? ($prevUser->name ?? $prevUser->username ?? 'مستخدم') : ($previousComment->author_name ?? 'مستخدم محذوف');
                         $isSameUser = ($userName === $prevUserName);
                     }
                 }

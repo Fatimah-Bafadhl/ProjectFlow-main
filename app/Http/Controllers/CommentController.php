@@ -42,7 +42,7 @@ class CommentController extends Controller
             'image'        => 'nullable|image|mimes:jpg,jpeg,png,gif|max:10240',
         ]);
 
-                $userId = auth()->check() ? auth()->id() : null;
+                $authorName = $userId ? $user->username : null;
                 $visibleToClient = false; 
         // Task comments are internal-only now; project-level comments are the sole client-facing channel.
 
@@ -129,6 +129,7 @@ class CommentController extends Controller
             'attachment'         => $path,
             'project_id'         => $project->project_id,
             'user_id'            => $user->user_id,
+            'author_name' => $user->username,
             'visible_to_client'  => true,
         ]);
 
