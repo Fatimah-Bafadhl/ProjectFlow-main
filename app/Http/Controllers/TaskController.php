@@ -71,8 +71,12 @@ class TaskController extends Controller
     abort(403, 'عذراً، لا تمتلك صلاحية إضافة مهام لهذا المشروع.');
 }
 
-        $task = Task::create($request->all());
-
+       // $task = Task::create($request->all());
+                $task = new Task($request->only([
+            'task_title', 'task_description', 'status', 'start_task', 'end_task', 'assigned_to', 'company_name',
+        ]));
+        $task->project_id = $request->project_id;
+        $task->save();
         // المهام هي التي تحدد حالة المشروع ونسبته تلقائياً
         if ($task->project && method_exists($task->project, 'syncStatus')) {
             $task->project->syncStatus();
@@ -148,7 +152,7 @@ $client = auth()->user()->client;
         }
 
         $task = Task::findOrFail($id);
-        $oldProjectId = $task->project_id;
+       // $oldProjectId = $task->project_id;
 
         if (auth()->user()->isManager() && !auth()->user()->managedProjects()->where('projects.project_id', $task->project_id)->exists()) {
     abort(403, 'عذراً، لا تمتلك صلاحية تعديل هذه المهمة.');
@@ -172,8 +176,7 @@ $client = auth()->user()->client;
             return redirect()->back()->with('success', 'تم تحديث حالة المهمة وتحديث المشروع بنجاح');
         }
 
-        $request->validate([
-            'project_id'       => 'required|exists:projects,project_id',
+                $request->validate([
             'task_title'       => 'required|string|max:255',
             'task_description' => 'required|string',
             'status'           => 'required|string',
@@ -182,21 +185,13 @@ $client = auth()->user()->client;
             'assigned_to'      => 'required',
         ]);
 
-        if (auth()->user()->isManager() && !auth()->user()->managedProjects()->where('projects.project_id', $request->project_id)->exists()) {
-    abort(403, 'عذراً، لا تمتلك صلاحية نقل المهمة إلى هذا المشروع.');
-}
+        $task->update($request->only([
+            'task_title', 'task_description', 'status', 'start_task', 'end_task', 'assigned_to', 'company_name',
+        ]));
 
-        $task->update($request->all());
-
-        // تحديث حالة المشروع الحالي والمشروع القديم في حال تم نقل المهمة بين مشروعين
+        // تحديث حالة المشروع بعد تعديل المهمة
         if ($task->project && method_exists($task->project, 'syncStatus')) {
             $task->project->syncStatus();
-        }
-        if ($oldProjectId != $task->project_id) {
-            $oldProject = Project::find($oldProjectId);
-            if ($oldProject && method_exists($oldProject, 'syncStatus')) {
-                $oldProject->syncStatus();
-            }
         }
 
         return redirect()->route('tasks.index')->with('success', 'تم تعديل المهمة وتحديث حالة المشروع بنجاح');

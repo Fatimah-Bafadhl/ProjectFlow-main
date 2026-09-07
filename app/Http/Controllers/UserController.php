@@ -10,6 +10,7 @@ use App\Notifications\SystemActivityNotification;
 use App\Models\Employee;
 use App\Models\Client;
 use App\Models\Project;
+use App\Models\Task;
 
 class UserController extends Controller
 {
@@ -81,8 +82,10 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'تم إضافة المستخدم بنجاح');
     }
 
-    public function update(Request $request, User $user)
+        public function update(Request $request, User $user)
     {
+        $oldRole = $user->role->value;
+
         $validated = $request->validate([
             'username'     => 'required|string|max:255',
             'email'        => 'required|email|max:255|unique:users,email,' . $user->user_id . ',user_id',
@@ -90,6 +93,7 @@ class UserController extends Controller
             'role'         => 'required|in:admin,manager,employee,client',
             'phone'        => 'nullable|string|max:20',
             'company_name' => 'nullable|string|max:255',
+            'department'   => 'required_if:role,employee|string|max:255',
             'project_ids'   => 'nullable|array',
             'project_ids.*' => 'exists:projects,project_id',
         ]);
@@ -101,6 +105,12 @@ class UserController extends Controller
         }
 
         $user->update($validated);
+
+        $newRole = $user->role->value;
+
+        if ($oldRole !== $newRole) {
+            $this->handleRoleChange($user, $oldRole, $newRole, $request);
+        }
 
         
         if ($user->role === \App\Enums\Role::Client && $request->has('project_ids')) {
@@ -123,6 +133,43 @@ class UserController extends Controller
         ));
 
         return redirect()->back()->with('success', 'تم تعديل بيانات المستخدم بنجاح');
+    }
+
+        private function handleRoleChange(User $user, string $oldRole, string $newRole, Request $request): void
+    {
+        if ($oldRole === 'manager' && $newRole === 'employee') {
+            $user->managedProjects()->detach();
+
+            $employee = Employee::withTrashed()->where('user_id', $user->user_id)->first();
+
+            if ($employee) {
+                $employee->restore();
+                $employee->update([
+                    'name'       => $user->username,
+                    'department' => $request->department,
+                    'email'      => $user->email,
+                    'phone'      => $user->phone,
+                ]);
+            } else {
+                Employee::create([
+                    'user_id'    => $user->user_id,
+                    'name'       => $user->username,
+                    'department' => $request->department,
+                    'email'      => $user->email,
+                    'phone'      => $user->phone,
+                ]);
+            }
+        }
+
+        if ($oldRole === 'employee' && $newRole === 'manager') {
+            $employee = Employee::where('user_id', $user->user_id)->first();
+
+            if ($employee) {
+                Task::where('assigned_to', $employee->employee_id)->update(['assigned_to' => null]);
+                $employee->projects()->detach();
+                $employee->delete();
+            }
+        }
     }
 
     public function destroy(User $user)

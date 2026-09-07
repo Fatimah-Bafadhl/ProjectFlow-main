@@ -13,6 +13,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\TrashController;
 
 
 
@@ -100,6 +101,12 @@ Route::middleware(['auth'])->group(function () {
 
         Route::middleware('role:admin')->group(function () {
         Route::post('/projects/{project}/reassign-creator', [ProjectController::class, 'reassignCreator'])->name('projects.reassignCreator');
+    });
+
+        Route::middleware('role:admin')->group(function () {
+        Route::get('/trash', [TrashController::class, 'index'])->name('trash.index');
+        Route::post('/trash/{type}/{id}/restore', [TrashController::class, 'restore'])->name('trash.restore');
+        Route::delete('/trash/{type}/{id}/force-delete', [TrashController::class, 'forceDelete'])->name('trash.forceDelete');
     });
 
     // مسارات تفاصيل المهام والتعليقات (إضافة، تعديل، حذف)

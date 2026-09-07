@@ -16,8 +16,6 @@ class CommentController extends Controller
     {
      $user = auth()->user();
 
-        $user = auth()->user();
-
         if ($user && $user->isClient()) {
             abort(403, 'عذراً، لا تمتلك صلاحية إضافة تعليقات.');
         }
@@ -42,8 +40,9 @@ class CommentController extends Controller
             'image'        => 'nullable|image|mimes:jpg,jpeg,png,gif|max:10240',
         ]);
 
+                                $userId = $user->user_id;
                 $authorName = $userId ? $user->username : null;
-                $visibleToClient = false; 
+                $visibleToClient = false;
         // Task comments are internal-only now; project-level comments are the sole client-facing channel.
 
         if (empty($request->comment_text) && !$request->hasFile('attachment') && !$request->hasFile('image')) {
@@ -58,6 +57,7 @@ class CommentController extends Controller
                 'attachment'   => $pathFile,
                 'task_id'      => $task_id,
                 'user_id'      => $userId,
+                'author_name'  => $authorName,
                 'visible_to_client' => $visibleToClient,
             ]);
             $request->merge(['comment_text' => '']);
@@ -71,6 +71,7 @@ class CommentController extends Controller
                 'attachment'   => $pathImage,
                 'task_id'      => $task_id,
                 'user_id'      => $userId,
+                'author_name'  => $authorName,
                 'visible_to_client' => $visibleToClient,
             ]);
         }
@@ -82,6 +83,7 @@ class CommentController extends Controller
                 'attachment'   => null,
                 'task_id'      => $task_id,
                 'user_id'      => $userId,
+                'author_name'  => $authorName,
                 'visible_to_client' => $visibleToClient,
             ]);
         }

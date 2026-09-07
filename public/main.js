@@ -155,6 +155,9 @@ function prepareAddModal() {
     }
     if (methodInput) methodInput.value = "POST";
 
+    const projectIdInput = document.getElementById('projectIdInput');
+    if (projectIdInput) projectIdInput.removeAttribute('disabled');
+
     const startDateInput = document.getElementById('startDateInput');
     const endDateInput = document.getElementById('endDateInput');
     if (startDateInput) { startDateInput.removeAttribute('min'); startDateInput.removeAttribute('max'); }
@@ -185,8 +188,9 @@ function openEditModal(button) {
 
     if (document.getElementById('taskNameInput')) document.getElementById('taskNameInput').value = taskTitle;
     
-    if (document.getElementById('projectIdInput')) {
+        if (document.getElementById('projectIdInput')) {
         document.getElementById('projectIdInput').value = projectId;
+        document.getElementById('projectIdInput').setAttribute('disabled', 'disabled');
         updateProjectDatesLimits();
     }
 

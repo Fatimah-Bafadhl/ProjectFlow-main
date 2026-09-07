@@ -82,7 +82,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">الصلاحية</label>
-                                        <select name="role" class="form-select" required>
+                                        <select name="role" class="form-select edit-role-select" data-user-id="{{ $user->user_id }}" required>
                                             @foreach ($roles as $role)
                                                 <option value="{{ $role->value }}" {{ $user->role === $role ? 'selected' : '' }}>
                                                     {{ $role->value }}
@@ -94,9 +94,13 @@
                                         <label class="form-label">الهاتف</label>
                                         <input type="text" name="phone" class="form-control" value="{{ $user->phone }}">
                                     </div>
-                                                                        <div class="mb-3">
+                                                                                                                                                <div class="mb-3">
                                         <label class="form-label">اسم الشركة</label>
                                         <input type="text" name="company_name" class="form-control" value="{{ $user->company_name }}">
+                                    </div>
+                                    <div class="mb-3 employee-dept-field {{ $user->role->value !== 'employee' ? 'd-none' : '' }}" id="editEmployeeDeptField{{ $user->user_id }}">
+                                        <label class="form-label">القسم</label>
+                                        <input type="text" name="department" class="form-control" id="editDepartmentInput{{ $user->user_id }}" value="{{ optional(\App\Models\Employee::withTrashed()->where('user_id', $user->user_id)->first())->department }}" {{ $user->role->value === 'employee' ? 'required' : '' }}>
                                     </div>
                                     @if ($user->role === \App\Enums\Role::Client)
                                     <div class="mb-3">
@@ -220,10 +224,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    if (roleSelect) {
+       if (roleSelect) {
         roleSelect.addEventListener('change', toggleAddUserFields);
         toggleAddUserFields();
     }
+
+    document.querySelectorAll('.edit-role-select').forEach(function (select) {
+        select.addEventListener('change', function () {
+            const uid = this.getAttribute('data-user-id');
+            const deptField = document.getElementById('editEmployeeDeptField' + uid);
+            const deptInput = document.getElementById('editDepartmentInput' + uid);
+            const isEmployee = this.value === 'employee';
+
+            deptField.classList.toggle('d-none', !isEmployee);
+            deptInput.required = isEmployee;
+        });
+    });
 });
 </script>
 @endsection

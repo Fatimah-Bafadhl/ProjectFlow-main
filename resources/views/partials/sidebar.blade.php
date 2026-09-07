@@ -35,10 +35,14 @@
     <span>الموظفين</span>
 </a>
 @endif
-            @if (auth()->check() && auth()->user()->isAdmin())
+                        @if (auth()->check() && auth()->user()->isAdmin())
                 <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }} d-flex align-items-center justify-content-start gap-3">
                     <i class="fa-solid fa-user-shield icon-style"></i>
                     <span>إدارة المستخدمين</span>
+                </a>
+                <a href="{{ route('trash.index') }}" class="nav-link {{ request()->routeIs('trash.*') ? 'active' : '' }} d-flex align-items-center justify-content-start gap-3">
+                    <i class="fa-solid fa-trash-can icon-style"></i>
+                    <span>المحذوفات</span>
                 </a>
             @endif
 
