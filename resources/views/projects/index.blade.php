@@ -184,6 +184,14 @@ data-open-ticket-count="{{ $project->open_tickets_count ?? 0 }}">
                             </select>
                         </div>
 
+                        <div class="mb-4 text-end">
+                            <label class="custom-label mb-1">نوع المشروع <span class="text-danger">*</span></label>
+                            <select class="form-select custom-input text-center" id="projectTypeSelect" name="project_type" required>
+                                <option value="app">تطوير تطبيق</option>
+                                <option value="website">تطوير موقع إلكتروني</option>
+                            </select>
+                        </div>
+
                                                                               @if($isAdmin)
 <div class="mb-3 text-end">
     <label class="custom-label mb-1">المدراء المسؤولون</label>

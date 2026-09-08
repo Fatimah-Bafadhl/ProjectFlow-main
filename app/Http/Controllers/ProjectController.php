@@ -69,6 +69,7 @@ class ProjectController extends Controller
     'start_project'       => 'required|date|after_or_equal:today',
     'end_project'         => 'required|date|after_or_equal:start_project',
     'status'              => 'required|string',
+    'project_type'        => 'required|in:app,website',
     'manager_ids'         => 'nullable|array',
     'manager_ids.*'       => 'exists:users,user_id',
     'employee_ids'        => 'nullable|array',
@@ -82,6 +83,7 @@ class ProjectController extends Controller
             'start_project'       => $request->start_project,
             'end_project'         => $request->end_project,
             'status'              => $request->status,
+             'project_type'        => $request->project_type,
             'user_id'             => auth()->id(),
             'creator_name'        => auth()->user()->username,
         ]);
@@ -93,6 +95,19 @@ class ProjectController extends Controller
 }
 
 $project->employees()->sync($request->input('employee_ids', []));
+
+
+        foreach (\App\Enums\ProjectStageName::cases() as $stageName) {
+            $project->stages()->create([
+                'stage_key'   => $stageName->value,
+                'stage_order' => $stageName->order(),
+                'status'      => $stageName === \App\Enums\ProjectStageName::Planning
+                    ? \App\Enums\ProjectStageStatus::InProgress
+                    : \App\Enums\ProjectStageStatus::NotStarted,
+            ]);
+        }
+
+
 
 
         // مزامنة وتحديد الحالة بناءً على المهام

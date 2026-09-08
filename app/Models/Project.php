@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Enums\ProjectType;
 
 class Project extends Model
 {
@@ -21,10 +22,20 @@ class Project extends Model
         'status', 
         'progress', 
         'user_id',
-        'creator_name'
+        'creator_name',
+        'project_type'
+
     ];
 
     // دالة مزامنة وتحديث حالة ونسبة المشروع تلقائياً بناءً على مهامه
+
+        protected function casts(): array
+    {
+        return [
+            'project_type' => ProjectType::class,
+        ];
+    }
+
     public function syncStatus()
 {
     $tasks = $this->tasks;
@@ -148,6 +159,11 @@ class Project extends Model
     public function tasks()
     {
         return $this->hasMany(Task::class, 'project_id', 'project_id');
+    }
+
+    public function stages()
+    {
+        return $this->hasMany(ProjectStage::class, 'project_id', 'project_id')->orderBy('stage_order');
     }
 
     public function client() {
