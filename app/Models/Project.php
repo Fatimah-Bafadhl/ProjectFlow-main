@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\ProjectType;
 
+
 class Project extends Model
 {
     use HasFactory,SoftDeletes;
@@ -36,86 +37,54 @@ class Project extends Model
         ];
     }
 
-    public function syncStatus()
-{
-    $tasks = $this->tasks;
-    $totalTasks = $tasks->count();
-
-    if ($totalTasks === 0) {
-        $this->progress = 0;
-        $this->status = 'قيد الانتظار';
-        $this->save();
-        return;
-    }
-
-    // 1. حساب النسبة المئوية بشكل تدريجي بناءً على وزن كل حالة مهمة
-    $totalWeight = 0;
-    foreach ($tasks as $task) {
-        $status = trim($task->status);
-        switch ($status) {
-            case 'مكتمل':
-            case 'مكتملة':
-                $totalWeight += 100;
-                break;
-            case 'قيد المراجعة':
-                $totalWeight += 75;
-                break;
-            case 'قيد التنفيذ':
-                $totalWeight += 50;
-                break;
-            case 'متوقف مؤقتاً':
-            case 'متوقف مؤقتا':
-                $totalWeight += 25;
-                break;
-            default:
-                $totalWeight += 0;
-                break;
-        }
-    }
-
-    $this->progress = round($totalWeight / $totalTasks);
-
-    // 2. ضبط حالة المشروع تلقائياً بناءً على أولويات المهام الحالية
-    $allCompleted = $tasks->every(fn($t) => in_array(trim($t->status), ['مكتمل', 'مكتملة']));
-    $hasInReview = $tasks->contains(fn($t) => trim($t->status) === 'قيد المراجعة');
-    $hasInProgress = $tasks->contains(fn($t) => trim($t->status) === 'قيد التنفيذ');
-    $hasOnHold = $tasks->contains(fn($t) => trim($t->status) === 'متوقف مؤقتاً' || trim($t->status) === 'متوقف مؤقتا');
-
-    if ($allCompleted) {
-        $this->status = 'مكتملة';
-    } elseif ($hasInReview) {
-        $this->status = 'قيد المراجعة';
-    } elseif ($hasInProgress) {
-        $this->status = 'قيد التنفيذ';
-    } elseif ($hasOnHold) {
-        $this->status = 'متوقف مؤقتاً';
-    } else {
-        $this->status = 'قيد الانتظار';
-    }
-
-    $this->save();
-}
-    // خاصية محسوبة لضمان قراءة النسبة بشكل صحيح
-    public function getProgressAttribute($value)
+       public function syncStatus()
     {
-        if (!is_null($value) && $value > 0) {
-            return $value;
+        $stages = $this->stages()->with('tasks')->get();
+
+        if ($stages->isEmpty()) {
+            $this->progress = 0;
+            $this->status = 'قيد الانتظار';
+            $this->save();
+            return;
         }
 
-        $tasks = $this->tasks;
-        if ($tasks->count() > 0) {
-            return round($tasks->avg(function ($task) {
-                switch ($task->status) {
-                    case 'مكتملة': return 100;
-                    case 'قيد التنفيذ': return 50;
-                    case 'قيد الانتظار': return 0;
-                    default: return 0;
-                }
-            }));
+        $slice = 100 / 7;
+        $totalProgress = 0;
+        $inProgressStages = [];
+        $allDone = true;
+        $firstNonDone = null;
+
+        foreach ($stages as $stage) {
+            $stageStatus = $stage->status;
+
+            if ($stageStatus === \App\Enums\ProjectStageStatus::Done) {
+                $totalProgress += $slice;
+                        } elseif ($stageStatus === \App\Enums\ProjectStageStatus::InProgress) {
+                $allDone = false;
+                $inProgressStages[] = $stage;
+                $totalProgress += ($stage->taskProgressPercent() / 100) * $slice;
+            } else {
+                $allDone = false;
+            }
+
+            if ($stageStatus !== \App\Enums\ProjectStageStatus::Done && $firstNonDone === null) {
+                $firstNonDone = $stage;
+            }
         }
 
-        return $value ?? 0;
+        $this->progress = round($totalProgress);
+
+        if ($allDone) {
+            $this->status = 'مكتملة';
+        } elseif (count($inProgressStages) > 0) {
+            $this->status = $inProgressStages[0]->stage_key->label();
+        } else {
+            $this->status = $firstNonDone->stage_key->label();
+        }
+
+        $this->save();
     }
+    // خاصية محسوبة لضمان قراءة النسبة بشكل صحيح
 
         public function archive()
     {
@@ -134,10 +103,20 @@ class Project extends Model
         return !is_null($this->archived_at);
     }
 
-        protected static function booted()
+               protected static function booted()
     {
         static::addGlobalScope('notArchived', function ($query) {
             $query->whereNull('archived_at');
+        });
+
+        static::deleting(function (Project $project) {
+            if (! $project->isForceDeleting()) {
+                $project->stages()->each(fn ($stage) => $stage->delete());
+            }
+        });
+
+        static::restoring(function (Project $project) {
+            $project->stages()->onlyTrashed()->each(fn ($stage) => $stage->restore());
         });
     }
 

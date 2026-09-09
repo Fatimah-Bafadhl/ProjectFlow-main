@@ -49,11 +49,12 @@ class ProjectController extends Controller
             ])
             ->get();
     }
-       $managers = User::where('role', 'manager')->get();
+         $managers = User::where('role', 'manager')->get();
     $employees = Employee::all();
     $allUsers = User::whereIn('role', ['admin', 'manager'])->get();
+    $projectTypes = \App\Enums\ProjectType::cases();
 
-    return view('projects.index', compact('projects', 'managers', 'employees', 'allUsers'));
+    return view('projects.index', compact('projects', 'managers', 'employees', 'allUsers', 'projectTypes'));
 }
 
     public function store(Request $request)
@@ -68,7 +69,7 @@ class ProjectController extends Controller
     'project_description' => 'required|string',
     'start_project'       => 'required|date|after_or_equal:today',
     'end_project'         => 'required|date|after_or_equal:start_project',
-    'status'              => 'required|string',
+   // 'status'              => 'required|string',
     'project_type'        => 'required|in:app,website',
     'manager_ids'         => 'nullable|array',
     'manager_ids.*'       => 'exists:users,user_id',
@@ -82,7 +83,7 @@ class ProjectController extends Controller
             'project_description' => $request->project_description,
             'start_project'       => $request->start_project,
             'end_project'         => $request->end_project,
-            'status'              => $request->status,
+            //'status'              => $request->status,
              'project_type'        => $request->project_type,
             'user_id'             => auth()->id(),
             'creator_name'        => auth()->user()->username,
@@ -180,7 +181,8 @@ $project->employees()->sync($request->input('employee_ids', []));
     'project_description' => 'required|string',
     'start_project'       => ['required', 'date', 'after_or_equal:' . $project->start_project],
     'end_project'         => 'required|date|after_or_equal:start_project',
-    'status'              => 'required|string',
+    //  'status'              => 'required|string',
+     'project_type'        => 'required|in:app,website',
     'manager_ids'         => 'nullable|array',
     'manager_ids.*'       => 'exists:users,user_id',
     'employee_ids'        => 'nullable|array',
@@ -193,7 +195,8 @@ $project->employees()->sync($request->input('employee_ids', []));
             'project_description' => $request->project_description,
             'start_project'       => $request->start_project,
             'end_project'         => $request->end_project,
-            'status'              => $request->status,
+            // 'status'              => $request->status,
+             'project_type'        => $request->project_type,
         ]);
 
        if (auth()->user()->isAdmin()) {
@@ -220,6 +223,42 @@ $project->employees()->sync($newEmployeeIds);
         return redirect()->route('projects.index')->with('success', 'تم تعديل المشروع بنجاح');
     }
     
+    public function updateStage(Request $request, $project_id, $stage_id)
+    {
+        $project = Project::findOrFail($project_id);
+
+        if (auth()->user()->isManager() && !$project->managers()->where('users.user_id', auth()->id())->exists()) {
+            abort(403, 'عذراً، لا تمتلك صلاحية تعديل مراحل هذا المشروع.');
+        }
+
+        $stage = $project->stages()->where('project_stage_id', $stage_id)->firstOrFail();
+
+        $request->validate([
+            'status' => 'required|in:not_started,in_progress,done',
+        ]);
+
+               $stage->status = $request->status;
+        $stage->save();
+
+        if ($stage->status === \App\Enums\ProjectStageStatus::Done) {
+            $nextStage = $project->stages()
+                ->where('stage_order', '>', $stage->stage_order)
+                ->where('status', \App\Enums\ProjectStageStatus::NotStarted->value)
+                ->orderBy('stage_order')
+                ->first();
+
+            if ($nextStage) {
+                $nextStage->status = \App\Enums\ProjectStageStatus::InProgress;
+                $nextStage->save();
+            }
+        }
+
+        $project->syncStatus();
+
+        return redirect()->route('projects.show', $project->project_id)->with('success', 'تم تحديث حالة المرحلة بنجاح');
+    }
+
+
     public function destroy($id)
 {
     $project = Project::findOrFail($id);

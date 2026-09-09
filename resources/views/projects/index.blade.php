@@ -52,6 +52,7 @@ $isAdmin = $user && $user->isAdmin();
                  data-start-date="{{ $project->start_project }}"
                  data-end-date="{{ $project->end_project }}"
                                  data-status="{{ $project->status }}"
+                                    data-project-type="{{ $project->project_type->value }}"
 data-manager-ids="{{ $project->managers->pluck('user_id')->implode(',') }}"
 data-employee-ids="{{ $project->employees->pluck('employee_id')->implode(',') }}"
 data-task-count="{{ $totalTasks }}"
@@ -173,22 +174,14 @@ data-open-ticket-count="{{ $project->open_tickets_count ?? 0 }}">
                             </div>
                         </div>
 
-                        <div class="mb-4 text-end">
-                            <label class="custom-label mb-1">الحالة <span class="text-danger">*</span></label>
-                            <select class="form-select custom-input text-center" id="projectStatusSelect" name="status" required>
-                                <option value="قيد التنفيذ">قيد التنفيذ</option>
-                                <option value="قيد المراجعة">قيد المراجعة</option>
-                                <option value="قيد الانتظار">قيد الانتظار</option>
-                                <option value="متوقف مؤقتاً">متوقف مؤقتاً</option>
-                                <option value="مكتملة">مكتملة</option>
-                            </select>
-                        </div>
+                        
 
                         <div class="mb-4 text-end">
                             <label class="custom-label mb-1">نوع المشروع <span class="text-danger">*</span></label>
                             <select class="form-select custom-input text-center" id="projectTypeSelect" name="project_type" required>
-                                <option value="app">تطوير تطبيق</option>
-                                <option value="website">تطوير موقع إلكتروني</option>
+                                @foreach($projectTypes as $type)
+                                    <option value="{{ $type->value }}">{{ $type->label() }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -300,7 +293,7 @@ data-open-ticket-count="{{ $project->open_tickets_count ?? 0 }}">
         endDateInput.min = today;
         endDateInput.value = '';
 
-        document.getElementById('projectStatusSelect').value = 'قيد التنفيذ';
+      //  document.getElementById('projectStatusSelect').value = 'قيد التنفيذ';
 
         var myModal = new bootstrap.Modal(document.getElementById('projectModal'));
         myModal.show();
@@ -320,6 +313,7 @@ data-open-ticket-count="{{ $project->open_tickets_count ?? 0 }}">
         document.getElementById('projectNameInput').value = card.getAttribute('data-project-name');
         document.getElementById('projectCompanyNameInput').value = card.getAttribute('data-company-name');
         document.getElementById('projectDescInput').value = card.getAttribute('data-project-desc');
+        document.getElementById('projectTypeSelect').value = card.getAttribute('data-project-type');
         
         // عند التعديل: يبقي تاريخ البدء كما هو، ويسمح بالبدء من تاريخ البدء الأصلي فصاعداً
         const startDateInput = document.getElementById('projectStartDateInput');
@@ -330,7 +324,7 @@ data-open-ticket-count="{{ $project->open_tickets_count ?? 0 }}">
         endDateInput.min = startDate;
         endDateInput.value = endDate;
 
-        document.getElementById('projectStatusSelect').value = card.getAttribute('data-status');
+       // document.getElementById('projectStatusSelect').value = card.getAttribute('data-status');
 
         var myModal = new bootstrap.Modal(document.getElementById('projectModal'));
         const managerIds = (card.getAttribute('data-manager-ids') || '').split(',').filter(Boolean);

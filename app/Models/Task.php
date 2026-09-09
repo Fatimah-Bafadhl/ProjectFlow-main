@@ -72,6 +72,11 @@ class Task extends Model
         return $this->belongsTo(Project::class, 'project_id', 'project_id');
     }
 
+    public function stage()
+    {
+        return $this->belongsTo(ProjectStage::class, 'stage_id', 'project_stage_id');
+    }
+
     public function comments()
     {
         return $this->hasMany(Comment::class, 'task_id', 'task_id');

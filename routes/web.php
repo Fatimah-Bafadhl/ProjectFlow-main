@@ -72,8 +72,9 @@ Route::middleware(['auth'])->group(function () {
     // الموارد الأساسية (Projects, Tasks, Clients, Employees)
     // Projects: everyone authenticated can view; only Admin/Manager can create, edit, or delete
     Route::resource('projects', ProjectController::class)->only(['index', 'show']);
-    Route::middleware('role:admin,manager')->group(function () {
+        Route::middleware('role:admin,manager')->group(function () {
         Route::resource('projects', ProjectController::class)->except(['index', 'show']);
+        Route::put('/projects/{project_id}/stages/{stage_id}', [ProjectController::class, 'updateStage'])->name('projects.stages.update');
     });
 
     // Tasks: everyone authenticated can view; Employees can only edit/update (their own, checked in controller);

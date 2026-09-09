@@ -134,6 +134,50 @@ $isAssignedManager = $isManager && $project->managers()->where('users.user_id', 
     </div>
 </div>
 
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white" style="border: 1px solid #EFEEF3 !important;">
+    <h4 class="mb-3" style="font-size: 16px; font-weight: 700;">مراحل المشروع</h4>
+    <div class="d-flex flex-column gap-3">
+        @foreach($project->stages as $stage)
+            @php
+                $stagePercent = match($stage->status) {
+                    \App\Enums\ProjectStageStatus::Done => 100,
+                    \App\Enums\ProjectStageStatus::InProgress => $stage->taskProgressPercent(),
+                    default => 0,
+                };
+            @endphp
+            <div class="border rounded-3 p-3" style="border-color: #EFEEF3 !important;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold" style="font-size: 13px;">{{ $stage->stage_key->label() }}</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted" style="font-size: 12px;">{{ $stage->status->label() }} — {{ $stagePercent }}%</span>
+                                               @if($isAdmin || $isAssignedManager)
+                            @if($stage->status !== \App\Enums\ProjectStageStatus::Done)
+                                <form action="{{ route('projects.stages.update', [$project->project_id, $stage->project_stage_id]) }}" method="POST" class="m-0">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="status" value="done">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">تحديد كمكتمل</button>
+                                </form>
+                            @else
+                                <form action="{{ route('projects.stages.update', [$project->project_id, $stage->project_stage_id]) }}" method="POST" class="m-0">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="status" value="in_progress">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">التراجع عن الإكتمال</button>
+                                </form>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+                <div class="progress" style="height: 6px; background-color: #EFEEF3;">
+                    <div class="progress-bar rounded-pill" role="progressbar" style="width: {{ $stagePercent }}%; background-color: #8A84AD;" aria-valuenow="{{ $stagePercent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
+
+
 @php
     $statuses = [
         'قيد التنفيذ'  => ['icon' => 'fa-regular fa-id-badge', 'class' => ''],

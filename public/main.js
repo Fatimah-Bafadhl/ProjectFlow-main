@@ -162,6 +162,9 @@ function prepareAddModal() {
     const endDateInput = document.getElementById('endDateInput');
     if (startDateInput) { startDateInput.removeAttribute('min'); startDateInput.removeAttribute('max'); }
     if (endDateInput) { endDateInput.removeAttribute('min'); endDateInput.removeAttribute('max'); }
+
+    const stageSelect = document.getElementById('stageIdInput');
+    if (stageSelect) stageSelect.innerHTML = '<option value="">اختر مشروعاً أولاً</option>';
 }
 
 function openEditModal(button) {
@@ -171,6 +174,7 @@ function openEditModal(button) {
     const taskId = taskCard.getAttribute('data-task-id');
     const taskTitle = taskCard.getAttribute('data-task-title') || '';
     const projectId = taskCard.getAttribute('data-project-id') || '';
+    const stageId = taskCard.getAttribute('data-stage-id') || '';
     const assignedTo = taskCard.getAttribute('data-assigned-to') || '';
     const description = taskCard.getAttribute('data-description') || '';
     const startDate = taskCard.getAttribute('data-start-date') || '';
@@ -192,7 +196,11 @@ function openEditModal(button) {
         document.getElementById('projectIdInput').value = projectId;
         document.getElementById('projectIdInput').setAttribute('disabled', 'disabled');
         updateProjectDatesLimits();
+         updateStageOptions();
     }
+
+     const stageSelect = document.getElementById('stageIdInput');
+    if (stageSelect) stageSelect.value = stageId;
 
     if (document.getElementById('companyNameInput') && companyName) {
         document.getElementById('companyNameInput').value = companyName;
@@ -256,6 +264,41 @@ function updateProjectDatesLimits() {
         if (projectEnd) startDateInput.max = projectEnd;
         if (projectStart) endDateInput.min = projectStart;
         if (projectEnd) endDateInput.max = projectEnd;
+    }
+}
+
+function updateStageOptions() {
+    const projectSelect = document.getElementById('projectIdInput');
+    const stageSelect = document.getElementById('stageIdInput');
+    if (!projectSelect || !stageSelect) return;
+
+    const selectedOption = projectSelect.options[projectSelect.selectedIndex];
+    stageSelect.innerHTML = '';
+
+    if (selectedOption && selectedOption.value) {
+        let stages = [];
+        try {
+            stages = JSON.parse(selectedOption.getAttribute('data-stages') || '[]');
+        } catch (e) {
+            stages = [];
+        }
+
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = stages.length ? 'بدون مرحلة' : 'لا توجد مراحل لهذا المشروع';
+        stageSelect.appendChild(emptyOption);
+
+        stages.forEach(stage => {
+            const opt = document.createElement('option');
+            opt.value = stage.id;
+            opt.textContent = stage.label;
+            stageSelect.appendChild(opt);
+        });
+    } else {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'اختر مشروعاً أولاً';
+        stageSelect.appendChild(opt);
     }
 }
 

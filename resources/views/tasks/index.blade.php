@@ -59,10 +59,11 @@
                 @endphp
 
                 @forelse($filteredTasks as $task)
-                    <div class="task-card p-3 rounded-3 bg-white border" 
+                        <div class="task-card p-3 rounded-3 bg-white border" 
                          data-task-id="{{ $task->task_id }}" 
                          data-task-title="{{ $task->task_title }}"
                          data-project-id="{{ $task->project_id }}"
+                         data-stage-id="{{ $task->stage_id }}"
                          data-company="{{ optional($task->project)->company_name }}"
                          data-assigned-to="{{ $task->assigned_to }}"
                          data-description="{{ $task->task_description }}"
@@ -139,18 +140,26 @@
                             <input class="form-control custom-input text-end" id="taskNameInput" name="task_title" required type="text" placeholder="أدخل اسم المهمة"/>
                         </div>
 
-                        <div class="mb-3 text-end">
+                                              <div class="mb-3 text-end">
                             <label class="custom-label mb-1">اسم المشروع <span class="text-danger">*</span></label>
-                            <select class="form-select custom-input text-center" id="projectIdInput" name="project_id" onchange="updateProjectDatesLimits()" required>
+                            <select class="form-select custom-input text-center" id="projectIdInput" name="project_id" onchange="updateProjectDatesLimits(); updateStageOptions();" required>
                                 <option value="">اختر المشروع</option>
                                 @foreach($projects ?? [] as $project)
                                     <option value="{{ $project->project_id }}" 
                                             data-start="{{ $project->start_project }}" 
                                             data-end="{{ $project->end_project }}"
-                                            data-company="{{ $project->company_name }}">
+                                            data-company="{{ $project->company_name }}"
+                                            data-stages="{{ $project->stages->map(fn($s) => ['id' => $s->project_stage_id, 'label' => $s->stage_key->label()])->toJson() }}">
                                         {{ $project->project_name }}
                                     </option>
                                 @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-3 text-end">
+                            <label class="custom-label mb-1">المرحلة</label>
+                            <select class="form-select custom-input text-center" id="stageIdInput" name="stage_id">
+                                <option value="">اختر مشروعاً أولاً</option>
                             </select>
                         </div>
 

@@ -17,19 +17,19 @@ class TaskController extends Controller
 {
     $user = auth()->user();
 
-    if ($user->isManager()) {
+      if ($user->isManager()) {
         $managedProjectIds = $user->managedProjects()->pluck('projects.project_id');
         $tasks = Task::whereIn('project_id', $managedProjectIds)->with('project')->get();
-        $projects = $user->managedProjects;
+        $projects = $user->managedProjects()->with('stages')->get();
     } elseif ($user->isEmployee()) {
         $employee = Employee::where('user_id', $user->user_id)->first();
         $employeeId = $employee->employee_id ?? 0;
         $tasks = Task::where('assigned_to', $employeeId)->with('project')->get();
         $projectIds = $tasks->pluck('project_id')->unique();
-        $projects = Project::whereIn('project_id', $projectIds)->get();
+        $projects = Project::whereIn('project_id', $projectIds)->with('stages')->get();
     } else {
         $tasks = Task::with('project')->get();
-        $projects = Project::all();
+        $projects = Project::with('stages')->get();
     }
 
     $employees = Employee::all();
@@ -57,7 +57,7 @@ class TaskController extends Controller
             abort(403, 'عذراً، لا تمتلك صلاحية إضافة مهام.');
         }
 
-        $request->validate([
+               $request->validate([
             'project_id'       => 'required|exists:projects,project_id',
             'task_title'       => 'required|string|max:255',
             'task_description' => 'required|string',
@@ -65,18 +65,24 @@ class TaskController extends Controller
             'start_task'       => 'required|date',
             'end_task'         => 'required|date|after_or_equal:start_task',
             'assigned_to'      => 'required',
+            'stage_id'         => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('project_stages', 'project_stage_id')
+                    ->where('project_id', $request->project_id),
+            ],
         ]);
 
         if (auth()->user()->isManager() && !auth()->user()->managedProjects()->where('projects.project_id', $request->project_id)->exists()) {
     abort(403, 'عذراً، لا تمتلك صلاحية إضافة مهام لهذا المشروع.');
 }
-
        // $task = Task::create($request->all());
                 $task = new Task($request->only([
             'task_title', 'task_description', 'status', 'start_task', 'end_task', 'assigned_to', 'company_name',
         ]));
         $task->project_id = $request->project_id;
+        $task->stage_id = $request->stage_id;
         $task->save();
+
         // المهام هي التي تحدد حالة المشروع ونسبته تلقائياً
         if ($task->project && method_exists($task->project, 'syncStatus')) {
             $task->project->syncStatus();
@@ -176,18 +182,25 @@ $client = auth()->user()->client;
             return redirect()->back()->with('success', 'تم تحديث حالة المهمة وتحديث المشروع بنجاح');
         }
 
-                $request->validate([
+                                $request->validate([
             'task_title'       => 'required|string|max:255',
             'task_description' => 'required|string',
             'status'           => 'required|string',
             'start_task'       => 'required|date',
             'end_task'         => 'required|date|after_or_equal:start_task',
             'assigned_to'      => 'required',
+            'stage_id'         => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('project_stages', 'project_stage_id')
+                    ->where('project_id', $task->project_id),
+            ],
         ]);
 
         $task->update($request->only([
             'task_title', 'task_description', 'status', 'start_task', 'end_task', 'assigned_to', 'company_name',
         ]));
+        $task->stage_id = $request->stage_id;
+        $task->save();
 
         // تحديث حالة المشروع بعد تعديل المهمة
         if ($task->project && method_exists($task->project, 'syncStatus')) {
