@@ -37,95 +37,119 @@ $isAdmin = $user && $user->isAdmin();
     @endif
 </div>
 
+<div class="search-filter-bar d-flex flex-wrap align-items-center gap-2 mb-3">
+    <input type="text" id="projectSearchInput" class="form-control custom-input text-end" style="max-width: 260px;" placeholder="بحث باسم المشروع أو الشركة...">
+
+    <select id="projectStatusFilter" class="form-select custom-input text-center" style="max-width: 200px;">
+        <option value="">كل الحالات</option>
+        @foreach(\App\Enums\ProjectStageName::cases() as $stageCase)
+            <option value="{{ $stageCase->label() }}">{{ $stageCase->label() }}</option>
+        @endforeach
+        <option value="مكتملة">مكتملة</option>
+    </select>
+
+    <select id="projectTypeFilter" class="form-select custom-input text-center" style="max-width: 200px;">
+        <option value="">كل الأنواع</option>
+        @foreach($projectTypes as $type)
+            <option value="{{ $type->value }}">{{ $type->label() }}</option>
+        @endforeach
+    </select>
+</div>
+
 <div class="projects-scroll-container">
-    <div class="row g-4" id="projectsGrid">
+    <div class="d-flex flex-column gap-2" id="projectsGrid">
         @forelse($projects as $project)
-           @php
-        $totalTasks = $project->tasks ? $project->tasks->count() : 0;
-        $progress = $project->progress ?? 0;
-    @endphp
-            <div class="col-12 col-md-6 col-lg-4 project-card-wrapper" 
+            @php
+                $totalTasks = $project->tasks ? $project->tasks->count() : 0;
+                $progress = $project->progress ?? 0;
+                $stageColor = $project->stageColor();
+                $openTickets = $project->open_tickets_count ?? 0;
+                $projectManagers = $project->managers ?? collect();
+                $managersCount = $projectManagers->count();
+            @endphp
+            <div class="project-row project-card-wrapper d-flex align-items-center justify-content-between gap-3 p-3"
                  data-project-id="{{ $project->project_id }}"
                  data-project-name="{{ $project->project_name }}"
                  data-company-name="{{ $project->company_name }}"
                  data-project-desc="{{ $project->project_description }}"
                  data-start-date="{{ $project->start_project }}"
                  data-end-date="{{ $project->end_project }}"
-                                 data-status="{{ $project->status }}"
-                                    data-project-type="{{ $project->project_type->value }}"
-data-manager-ids="{{ $project->managers->pluck('user_id')->implode(',') }}"
-data-employee-ids="{{ $project->employees->pluck('employee_id')->implode(',') }}"
-data-task-count="{{ $totalTasks }}"
-data-comment-count="{{ $project->comments_count ?? 0 }}"
-data-open-ticket-count="{{ $project->open_tickets_count ?? 0 }}">
+                 data-status="{{ $project->status }}"
+                 data-project-type="{{ $project->project_type->value }}"
+                 data-manager-ids="{{ $projectManagers->pluck('user_id')->implode(',') }}"
+                 data-employee-ids="{{ $project->employees->pluck('employee_id')->implode(',') }}"
+                 data-task-count="{{ $totalTasks }}"
+                 data-comment-count="{{ $project->comments_count ?? 0 }}"
+                 data-open-ticket-count="{{ $openTickets }}">
 
-                <div class="project-card position-relative p-3">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="d-flex flex-column align-items-start text-end gap-1">
-                            <h3 class="project-card-title m-0">
-                                <a class="text-decoration-none text-dark" href="{{ route('projects.show', $project->project_id) }}">
-                                    {{ $project->project_name }}
-                                </a>
-                            </h3>
-                            <span class="badge-project-status my-1">{{ $project->status }}</span>
-                            <p class="project-card-desc mb-0">{{ $project->project_description }}</p>
-                        </div>
-                        
-                        @if(!$isClient)
-                        <div class="d-flex align-items-center gap-1">
-                            @if(!$isEmployee)
-                                <button class="btn-icon text-muted border-0 bg-transparent p-0" title="تعديل" onclick="openEditProjectModal(this, '{{ route('projects.update', $project->project_id) }}')">
-                                    <i class="fa-regular fa-pen-to-square"></i>
-                                </button>
-                                <button class="btn-icon text-muted border-0 bg-transparent p-0 ms-1" title="حذف" onclick="openDeleteProjectModal(this, '{{ route('projects.destroy', $project->project_id) }}')">
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            @else
-                                <button class="btn-icon text-muted border-0 bg-transparent p-0" title="تعديل حالة المشروع" onclick="openEmployeeProjectStatusModal('{{ $project->project_id }}', '{{ $project->status }}', '{{ route('projects.update', $project->project_id) }}')">
-                                    <i class="fa-regular fa-pen-to-square"></i>
-                                </button>
+                <div class="d-flex flex-column align-items-start text-end" style="min-width: 160px;">
+                    <a class="text-decoration-none text-dark project-card-title" href="{{ route('projects.show', $project->project_id) }}">
+                        {{ $project->project_name }}
+                    </a>
+                    <span class="project-card-desc">{{ $project->company_name ?: 'غير محدد' }}</span>
+                </div>
+
+                @if($isAdmin)
+                <div class="d-flex flex-column align-items-start text-end extra-small text-muted" style="min-width: 100px;">
+                    <span>المدير:</span>
+                    <span class="fw-bold text-dark">
+                        @if($managersCount > 0)
+                            {{ $projectManagers->first()->username }}
+                            @if($managersCount > 1)
+                                <span class="badge-project-status">+{{ $managersCount - 1 }}</span>
                             @endif
-                        </div>
+                        @else
+                            غير محدد
                         @endif
-                    </div>
+                    </span>
+                </div>
+                @endif
 
-                    <!-- نسبة الإنجاز وشريط التقدم -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="fw-bold text-dark" style="font-size: 15px;">{{ $progress }}%</span>
-                            <span class="text-muted small">الإنجاز</span>
-                        </div>
-                        <div class="progress" style="height: 6px; background-color: #f0f0f5; border-radius: 3px;">
-                            <div class="progress-bar" role="progressbar" style="width: {{ $progress }}%; background-color: #8A84AD; border-radius: 3px;" aria-valuenow="{{ $progress }}" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
+                <span class="badge-project-status d-inline-flex align-items-center gap-1">
+                    <span class="stage-dot" style="background-color: {{ $stageColor }};"></span>
+                    {{ $project->status }}
+                </span>
 
-                    <div class="d-flex align-items-center justify-content-between text-muted extra-small mb-3">
-                        <div class="d-flex align-items-center gap-1">
-                            <i class="fa-regular fa-building"></i>
-                            <span>{{ $project->company_name ? $project->company_name : 'غير محدد' }}</span>
-                        </div>
-                        <div class="d-flex align-items-center gap-1">
-                            <i class="fa-solid fa-list-check"></i>
-                            <span>{{ $totalTasks }} مهام</span>
-                        </div>
+                <div style="min-width: 140px;">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-dark" style="font-size: 13px;">{{ $progress }}%</span>
+                        <span class="text-muted extra-small">الإنجاز الكلي</span>
                     </div>
-
-                    <hr class="my-2 text-muted opacity-25"/>
-                    <div class="d-flex align-items-center justify-content-between text-muted extra-small pt-1">
-                        <div class="d-flex align-items-center gap-1">
-                            <i class="fa-regular fa-calendar-days"></i>
-                            <span>البدء: {{ $project->start_project }}</span>
-                        </div>
-                        <div class="d-flex align-items-center gap-1">
-                            <i class="fa-regular fa-calendar-check"></i>
-                            <span>الانتهاء: {{ $project->end_project ?? 'غير محدد' }}</span>
-                        </div>
+                    <div class="progress" style="height: 6px; background-color: #f0f0f5; border-radius: 3px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ $progress }}%; background-color: #8A84AD; border-radius: 3px;" aria-valuenow="{{ $progress }}" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                 </div>
+
+                <div class="d-flex align-items-center gap-1 text-muted extra-small">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>{{ $totalTasks }} مهام</span>
+                </div>
+
+                @if($openTickets > 0)
+                <div class="d-flex align-items-center gap-1 text-danger extra-small">
+                    <i class="fa-solid fa-ticket"></i>
+                    <span>{{ $openTickets }}</span>
+                </div>
+                @endif
+
+                <div class="d-flex align-items-center gap-1 text-muted extra-small">
+                    <i class="fa-regular fa-calendar-check"></i>
+                    <span>{{ $project->end_project ?? 'غير محدد' }}</span>
+                </div>
+
+                @if(!$isClient && !$isEmployee)
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn-icon text-muted border-0 bg-transparent p-0" title="تعديل" onclick="openEditProjectModal(this, '{{ route('projects.update', $project->project_id) }}')">
+                        <i class="fa-regular fa-pen-to-square"></i>
+                    </button>
+                    <button class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف" onclick="openDeleteProjectModal(this, '{{ route('projects.destroy', $project->project_id) }}')">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                </div>
+                @endif
             </div>
         @empty
-            <div class="col-12 text-center py-5">
+            <div class="text-center py-5">
                 <p class="text-muted">لا توجد مشاريع مضافة حالياً.</p>
             </div>
         @endforelse
@@ -237,39 +261,8 @@ data-open-ticket-count="{{ $project->open_tickets_count ?? 0 }}">
         </div>
     </div>
     @endif
-
-    @if($isEmployee)
-    <div aria-hidden="true" class="modal fade" id="employeeProjectStatusModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content custom-modal p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="modal-title m-0" style="font-size: 18px; font-weight: 700;">تعديل حالة المشروع</h3>
-                    <button aria-label="Close" class="btn-close m-0" data-bs-dismiss="modal" type="button"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <form id="employeeProjectStatusForm" method="POST">
-                        @csrf
-                        @method('PUT')
-                        <div class="mb-4 text-end">
-                            <label class="custom-label mb-1">حالة المشروع <span class="text-danger">*</span></label>
-                            <select class="form-select custom-input text-center" id="employeeProjectStatusSelect" name="status" required>
-                                <option value="قيد التنفيذ">قيد التنفيذ</option>
-                                <option value="قيد المراجعة">قيد المراجعة</option>
-                                <option value="قيد الانتظار">قيد الانتظار</option>
-                                <option value="متوقف مؤقتاً">متوقف مؤقتاً</option>
-                                <option value="مكتملة">مكتملة</option>
-                            </select>
-                        </div>
-                        <div class="text-center pt-2">
-                            <button class="btn btn-save" type="submit">تحديث الحالة</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
 @endif
+ 
 @endpush
 
 @push('scripts')
@@ -355,12 +348,27 @@ document.querySelectorAll('.project-employee-checkbox').forEach(cb => {
         myModal.show();
     }
 
-    function openEmployeeProjectStatusModal(projectId, currentStatus, actionUrl) {
-        const form = document.getElementById('employeeProjectStatusForm');
-        form.action = actionUrl;
-        document.getElementById('employeeProjectStatusSelect').value = currentStatus;
-        var myModal = new bootstrap.Modal(document.getElementById('employeeProjectStatusModal'));
-        myModal.show();
+       function filterProjects() {
+        const searchTerm = (document.getElementById('projectSearchInput').value || '').trim().toLowerCase();
+        const statusValue = document.getElementById('projectStatusFilter').value;
+        const typeValue = document.getElementById('projectTypeFilter').value;
+
+        document.querySelectorAll('#projectsGrid .project-card-wrapper').forEach(row => {
+            const name = (row.getAttribute('data-project-name') || '').toLowerCase();
+            const company = (row.getAttribute('data-company-name') || '').toLowerCase();
+            const status = row.getAttribute('data-status') || '';
+            const type = row.getAttribute('data-project-type') || '';
+
+            const matchesSearch = !searchTerm || name.includes(searchTerm) || company.includes(searchTerm);
+            const matchesStatus = !statusValue || status === statusValue;
+            const matchesType = !typeValue || type === typeValue;
+
+            row.style.display = (matchesSearch && matchesStatus && matchesType) ? '' : 'none';
+        });
     }
+
+    document.getElementById('projectSearchInput')?.addEventListener('input', filterProjects);
+    document.getElementById('projectStatusFilter')?.addEventListener('change', filterProjects);
+    document.getElementById('projectTypeFilter')?.addEventListener('change', filterProjects);
 </script>
 @endpush

@@ -84,6 +84,58 @@ class Project extends Model
 
         $this->save();
     }
+
+
+/**
+     * يحدد المرحلة الحالية للمشروع (قراءة فقط، لا يحفظ أي تغيير)
+     * نفس منطق syncStatus(): أول مرحلة "قيد التنفيذ"، وإن لم توجد فأول مرحلة غير مكتملة،
+     * وإن كانت جميع المراحل مكتملة أو لا توجد مراحل يرجع null.
+     */
+    public function currentStageKey(): ?\App\Enums\ProjectStageName
+    {
+        $stages = $this->stages;
+
+        if ($stages->isEmpty()) {
+            return null;
+        }
+
+        $firstNonDone = null;
+
+        foreach ($stages as $stage) {
+            if ($stage->status === \App\Enums\ProjectStageStatus::InProgress) {
+                return $stage->stage_key;
+            }
+
+            if ($stage->status !== \App\Enums\ProjectStageStatus::Done && $firstNonDone === null) {
+                $firstNonDone = $stage;
+            }
+        }
+
+        return $firstNonDone?->stage_key;
+    }
+
+    /**
+     * لون شارة المرحلة/الحالة، للاستخدام في قائمة المشاريع وصفحة التفاصيل لاحقاً
+     */
+    public function stageColor(): string
+    {
+        if ($this->status === 'مكتملة') {
+            return '#198754';
+        }
+
+        return match ($this->currentStageKey()) {
+            \App\Enums\ProjectStageName::Planning => '#3B82F6',
+            \App\Enums\ProjectStageName::RequirementsAnalysis => '#6366F1',
+            \App\Enums\ProjectStageName::UxUiDesign => '#A855F7',
+            \App\Enums\ProjectStageName::Development => '#F59E0B',
+            \App\Enums\ProjectStageName::Testing => '#EF4444',
+            \App\Enums\ProjectStageName::PreLaunch => '#F97316',
+            \App\Enums\ProjectStageName::Launch => '#22C55E',
+            default => '#8C8C8C',
+        };
+    }
+
+
     // خاصية محسوبة لضمان قراءة النسبة بشكل صحيح
 
         public function archive()
