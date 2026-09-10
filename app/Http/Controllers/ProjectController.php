@@ -130,8 +130,9 @@ $project->employees()->sync($request->input('employee_ids', []));
         public function show($id)
 {
     $project = Project::withArchived()
-        ->with([
+                ->with([
             'user',
+            'clients',
             'stages.tasks.assignedUser',
             'comments' => function ($query) {
                 $query->whereNull('task_id')->with('user')->latest();

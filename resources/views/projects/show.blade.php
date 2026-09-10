@@ -70,6 +70,12 @@
 @php
     \Carbon\Carbon::setLocale('ar');
     $progressPercentage = $project->progress ?? 0;
+    $currentStageKey = $project->currentStageKey();
+    $daysDiff = null;
+    if ($project->end_project) {
+        $endCarbon = \Carbon\Carbon::parse($project->end_project)->startOfDay();
+        $daysDiff = \Carbon\Carbon::today()->diffInDays($endCarbon, false);
+    }
 @endphp
 
 <div class="d-flex justify-content-end mb-3">
@@ -82,25 +88,54 @@
 
 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white" style="border: 1px solid #EFEEF3 !important;">
     <div class="row align-items-center">
-        <div class="col-lg-8">
-            <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+        
+                <div class="col-lg-8">
+                                    <div class="d-flex align-items-center gap-3 mb-1 flex-wrap">
                 <h3 class="project-card-title m-0">{{ $project->project_name }}</h3>
-                <span class="badge-project-status">{{ $project->project_type->label() }}</span>
-                <span class="text-muted" style="font-size: 13px;">{{ $project->company_name ?? 'غير محدد' }}</span>
             </div>
+
+            <div class="text-muted mb-2" style="font-size: 13px;">{{ $project->company_name ?? 'غير محدد' }}</div>
+
+            <div class="mb-2">
+                <span class="badge-project-status">{{ $project->project_type->label() }}</span>
+            </div>
+
             <p class="text-secondary mb-3" style="font-size: 13px; line-height: 1.6;">
                 {{ $project->project_description ?? 'لا يوجد وصف متاح لهذا المشروع.' }}
             </p>
-            <div class="d-flex gap-4 flex-wrap text-muted" style="font-size: 12px;">
+
+            <div class="d-flex gap-4 flex-wrap text-muted align-items-center" style="font-size: 12px;">
                 <span>تاريخ البداية : {{ $project->start_project ? \Carbon\Carbon::parse($project->start_project)->translatedFormat('d F Y') : 'غير محدد' }}</span>
                 <span><i class="fa-solid fa-arrow-left-long mx-1"></i> تاريخ الانتهاء : {{ $project->end_project ? \Carbon\Carbon::parse($project->end_project)->translatedFormat('d F Y') : 'غير محدد' }}</span>
-                @if($lastActivityAt)
-                    <span><i class="fa-regular fa-clock me-1"></i> آخر نشاط : {{ $lastActivityAt->diffForHumans() }}</span>
+                @if($daysDiff !== null)
+                    @if($daysDiff > 0)
+                        <span class="badge-days-left"><i class="fa-regular fa-hourglass-half me-1"></i> متبقي {{ $daysDiff }} يوم</span>
+                    @elseif($daysDiff === 0)
+                        <span class="badge-days-overdue"><i class="fa-regular fa-hourglass-half me-1"></i> ينتهي اليوم</span>
+                    @else
+                        <span class="badge-days-overdue"><i class="fa-solid fa-triangle-exclamation me-1"></i> متأخر {{ abs($daysDiff) }} يوم</span>
+                    @endif
                 @endif
             </div>
-        </div>
 
-        <div class="col-lg-4 mt-3 mt-lg-0">
+            @if($lastActivityAt)
+                <div class="text-muted mt-2" style="font-size: 12px;">
+                    <i class="fa-regular fa-clock me-1"></i> آخر نشاط : {{ $lastActivityAt->diffForHumans() }}
+                </div>
+            @endif
+        </div>
+               <div class="col-lg-4 mt-3 mt-lg-0">
+            @if($currentStageKey)
+                <div class="mb-2 text-start">
+                    <span class="badge-stage-current" style="background-color: {{ $currentStageKey->color() }}1A; color: {{ $currentStageKey->color() }};">
+                        {{ $currentStageKey->label() }}
+                    </span>
+                </div>
+            @else
+                <div class="mb-2 text-start">
+                    <span class="badge-stage-current badge-stage-done">مكتملة</span>
+                </div>
+            @endif
             <div class="row g-2 text-center mb-3">
                 <div class="col-4">
                     <div class="stat-card">
@@ -157,9 +192,12 @@
         @endphp
         <div class="tab-pane fade {{ $stage->project_stage_id === $activeStageId ? 'show active' : '' }}" id="stage-pane-{{ $stage->project_stage_id }}" role="tabpanel">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="border: 1px solid #EFEEF3 !important;">
-                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                                                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-2">
                         <span class="text-muted" style="font-size: 12px;">{{ $stage->status->label() }} — {{ $stagePercent }}%</span>
+                        <div class="progress" style="height: 6px; width: 140px; background-color: #EFEEF3;">
+                            <div class="progress-bar rounded-pill" style="width: {{ $stagePercent }}%; background-color: {{ $stage->stage_key->color() }};"></div>
+                        </div>
                     </div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <select class="form-select form-select-sm stage-status-filter" data-stage-target="stage-tasks-{{ $stage->project_stage_id }}">
@@ -187,15 +225,18 @@
                         @endif
                     </div>
                 </div>
+                            
+                
+                                <div class="d-flex flex-column gap-2" id="stage-tasks-{{ $stage->project_stage_id }}">
+                
 
-                <div class="progress mb-3" style="height: 6px; background-color: #EFEEF3;">
-                    <div class="progress-bar rounded-pill" style="width: {{ $stagePercent }}%; background-color: {{ $stage->stage_key->color() }};"></div>
-                </div>
-
-                <div class="d-flex flex-column gap-2" id="stage-tasks-{{ $stage->project_stage_id }}">
                     @forelse($stage->tasks as $task)
-                        <div class="task-row-item task-card d-flex justify-content-between align-items-center p-3 border rounded-3"
-                             style="border-color: #EFEEF3 !important;"
+
+                                            
+                    
+                                                     <div class="task-row-item d-flex justify-content-between align-items-center py-3 px-3 border rounded-3"
+                            
+                    style="border-color: #EFEEF3 !important;"
                              data-status="{{ $task->status }}"
                              data-task-id="{{ $task->task_id }}"
                              data-task-title="{{ $task->task_title }}"
@@ -216,7 +257,17 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-3" style="font-size: 13px;">
-                                <span class="badge-project-status">{{ $task->status }}</span>
+                                                                @php
+                                    $statusClass = match($task->status) {
+                                        'قيد الانتظار' => 'badge-status-waiting',
+                                        'قيد التنفيذ' => 'badge-status-progress',
+                                        'قيد المراجعة' => 'badge-status-review',
+                                        'مكتملة' => 'badge-status-done',
+                                        'متوقف مؤقتاً' => 'badge-status-paused',
+                                        default => 'badge-status-default',
+                                    };
+                                @endphp
+                                <span class="badge-task-status {{ $statusClass }}">{{ $task->status }}</span>
                                 <div class="d-flex align-items-center gap-1" style="color: #8A84AD;">
                                     <i class="fa-regular fa-comment"></i>
                                     <span style="font-size: 12px;">{{ $task->comments ? $task->comments->count() : 0 }}</span>
@@ -235,74 +286,128 @@
         </div>
     @endforeach
 
-    <div class="tab-pane fade" id="comm-pane" role="tabpanel">
+      <div class="tab-pane fade" id="comm-pane" role="tabpanel">
         <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="border: 1px solid #EFEEF3 !important;">
 
-            @if($isClient)
-                <form action="{{ route('tickets.store', $project->project_id) }}" method="POST" class="mb-4">
-                    @csrf
-                    <textarea class="form-control custom-input w-100 mb-2" name="message" rows="2" placeholder="اكتب طلبك أو استفسارك هنا..." required></textarea>
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-save px-4">إرسال الطلب</button>
+            @if($project->clients->isNotEmpty())
+                <div class="client-info-strip mb-4">
+                                       <div class="comm-col-header">
+                        <i class="fa-regular fa-user me-1" style="color: #8A84AD;"></i>
+                        <span>العملاء</span>
                     </div>
-                </form>
-            @elseif($isAdmin || $isAssignedManager)
-                <form action="{{ route('comments.storeForProject', $project->project_id) }}" method="POST" enctype="multipart/form-data" class="mb-4">
-                    @csrf
-                    <textarea class="form-control custom-input w-100 mb-2" name="comment_text" rows="2" placeholder="اكتب تحديثاً للعميل..."></textarea>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <input type="file" name="attachment" class="form-control form-control-sm w-auto" accept=".pdf,.doc,.docx,.zip,.fig,.jpg,.jpeg,.png,.gif">
-                        <button type="submit" class="btn btn-save px-4">نشر</button>
+                    <div class="d-flex flex-column gap-2">
+                        @foreach($project->clients as $client)
+                            <div class="client-info-card">
+                                <div class="client-info-name">{{ $client->name ?? optional($client->user)->username ?? 'عميل' }}</div>
+                                <div class="client-info-meta-row">
+                                    @if($client->company_name)
+                                        <span><i class="fa-regular fa-building me-1"></i> {{ $client->company_name }}</span>
+                                    @endif
+                                    @if($client->email)
+                                        <span><i class="fa-regular fa-envelope me-1"></i> {{ $client->email }}</span>
+                                    @endif
+                                    @if($client->phone)
+                                        <span><i class="fa-solid fa-phone me-1"></i> {{ $client->phone }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                </form>
+                </div>
             @endif
 
-            <div class="d-flex flex-column gap-3">
-                @forelse($communicationFeed as $item)
-                    @if($item->type === 'comment')
-                        <div class="comm-feed-item comm-feed-comment">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="fw-bold" style="font-size: 13px;">{{ optional($item->data->user)->username ?? $item->data->author_name ?? 'مستخدم محذوف' }}</span>
-                                <span class="text-muted" style="font-size: 11px;">{{ $item->data->created_at->translatedFormat('d F Y - h:i A') }}</span>
-                            </div>
-                            @if($item->data->comment_text)
-                                <p class="mb-0" style="font-size: 13px;">{{ $item->data->comment_text }}</p>
-                            @endif
-                            @if($item->data->attachment)
-                                <a href="{{ Storage::url($item->data->attachment) }}" target="_blank" class="d-inline-block mt-2" style="font-size: 12px;">
-                                    <i class="fa-regular fa-paperclip me-1"></i> مرفق
-                                </a>
-                            @endif
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="comm-col">
+                        <div class="comm-col-header">
+                            <i class="fa-regular fa-ticket me-1" style="color: #F59E0B;"></i>
+                            <span>تذاكر العميل</span>
                         </div>
-                    @else
-                        <div class="comm-feed-item comm-feed-ticket">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                        <span class="fw-bold" style="font-size: 13px;">{{ optional(optional($item->data->client)->user)->username ?? $item->data->client_name ?? 'عميل' }}</span>
-                                        <span class="badge {{ $item->data->status === \App\Enums\TicketStatus::Handled ? 'bg-success' : 'bg-warning text-dark' }}" style="font-size: 10px;">
-                                            {{ $item->data->status->label() }}
-                                        </span>
-                                    </div>
-                                    <p class="mb-1" style="font-size: 13px;">{{ $item->data->message }}</p>
-                                    <span class="text-muted" style="font-size: 11px;">{{ $item->data->created_at->translatedFormat('d F Y - h:i A') }}</span>
+
+                        @if($isClient)
+                            <form action="{{ route('tickets.store', $project->project_id) }}" method="POST" class="mb-3">
+                                @csrf
+                                <textarea class="form-control custom-input w-100 mb-2" name="message" rows="2" placeholder="اكتب طلبك أو استفسارك هنا..." required></textarea>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-save px-4">إرسال الطلب</button>
                                 </div>
-                                @if(($isAdmin || $isAssignedManager) && $item->data->status !== \App\Enums\TicketStatus::Handled)
-                                    <form action="{{ route('tickets.update', $item->data->ticket_id) }}" method="POST" class="ms-2">
-                                        @csrf @method('PUT')
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">تحديد كمكتمل</button>
-                                    </form>
-                                @endif
-                            </div>
+                            </form>
+                        @endif
+
+                        <div class="d-flex flex-column gap-3">
+                            @forelse($project->tickets as $ticket)
+                                <div class="comm-feed-item comm-feed-ticket">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <span class="fw-bold" style="font-size: 13px;">{{ optional(optional($ticket->client)->user)->username ?? $ticket->client_name ?? 'عميل' }}</span>
+                                                <span class="badge {{ $ticket->status === \App\Enums\TicketStatus::Handled ? 'bg-success' : 'bg-warning text-dark' }}" style="font-size: 10px;">
+                                                    {{ $ticket->status->label() }}
+                                                </span>
+                                            </div>
+                                            <p class="mb-1" style="font-size: 13px;">{{ $ticket->message }}</p>
+                                            <span class="text-muted" style="font-size: 11px;">{{ $ticket->created_at->translatedFormat('d F Y - h:i A') }}</span>
+                                        </div>
+                                        @if(($isAdmin || $isAssignedManager) && $ticket->status !== \App\Enums\TicketStatus::Handled)
+                                            <form action="{{ route('tickets.update', $ticket->ticket_id) }}" method="POST" class="ms-2">
+                                                @csrf @method('PUT')
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary">تحديد كمكتمل</button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center text-muted py-3 small">لا توجد تذاكر على هذا المشروع بعد.</div>
+                            @endforelse
                         </div>
-                    @endif
-                @empty
-                    <div class="text-center text-muted py-3 small">لا توجد تذاكر أو تحديثات على هذا المشروع بعد.</div>
-                @endforelse
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="comm-col">
+                        <div class="comm-col-header">
+                            <i class="fa-regular fa-comment-dots me-1" style="color: #8A84AD;"></i>
+                            <span>تعليقات المدير</span>
+                        </div>
+
+                        @if($isAdmin || $isAssignedManager)
+                            <form action="{{ route('comments.storeForProject', $project->project_id) }}" method="POST" enctype="multipart/form-data" class="mb-3">
+                                @csrf
+                                <textarea class="form-control custom-input w-100 mb-2" name="comment_text" rows="2" placeholder="اكتب تحديثاً للعميل..."></textarea>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <input type="file" name="attachment" class="form-control form-control-sm w-auto" accept=".pdf,.doc,.docx,.zip,.fig,.jpg,.jpeg,.png,.gif">
+                                    <button type="submit" class="btn btn-save px-4">نشر</button>
+                                </div>
+                            </form>
+                        @endif
+
+                        <div class="d-flex flex-column gap-3">
+                            @forelse($project->comments as $comment)
+                                <div class="comm-feed-item comm-feed-comment">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-bold" style="font-size: 13px;">{{ optional($comment->user)->username ?? $comment->author_name ?? 'مستخدم محذوف' }}</span>
+                                        <span class="text-muted" style="font-size: 11px;">{{ $comment->created_at->translatedFormat('d F Y - h:i A') }}</span>
+                                    </div>
+                                    @if($comment->comment_text)
+                                        <p class="mb-0" style="font-size: 13px;">{{ $comment->comment_text }}</p>
+                                    @endif
+                                    @if($comment->attachment)
+                                        <a href="{{ Storage::url($comment->attachment) }}" target="_blank" class="d-inline-block mt-2" style="font-size: 12px;">
+                                            <i class="fa-regular fa-paperclip me-1"></i> مرفق
+                                        </a>
+                                    @endif
+                                </div>
+                            @empty
+                                <div class="text-center text-muted py-3 small">لا توجد تعليقات على هذا المشروع بعد.</div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+     </div>          
 @endsection
 
 @push('modals')

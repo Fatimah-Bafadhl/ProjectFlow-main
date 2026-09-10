@@ -1139,7 +1139,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const value = this.value;
             container.querySelectorAll('.task-row-item').forEach(item => {
                 const status = item.getAttribute('data-status') || '';
-                item.style.display = (!value || status === value) ? '' : 'none';
+                if (!value || status === value) {
+                    item.style.removeProperty('display');
+                } else {
+                    item.style.setProperty('display', 'none', 'important');
+                }
             });
         });
     });

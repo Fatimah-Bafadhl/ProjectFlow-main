@@ -1,3 +1,7 @@
+:root {
+    --bs-body-font-family: 'Lama Sans', system-ui, -apple-system, sans-serif;
+    --bs-font-sans-serif: 'Lama Sans', system-ui, -apple-system, sans-serif;
+}
 
 @font-face {
     font-family: 'Lama Sans';
@@ -799,7 +803,7 @@ body {
 }
 
 .project-card-title {
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 700;
     color: #1A1A3A;
 }
@@ -818,6 +822,17 @@ body {
     font-weight: 500;
     padding: 3px 10px;
     border-radius: 12px;
+}
+
+.badge-stage-current {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 12px;
+}
+.badge-stage-done {
+    background-color: #E6F4EA;
+    color: #198754;
 }
 
 /* تخصيص زري تاريخ البدء وتاريخ الانتهاء البنفسجي البيضاوي بنفس التصميم */
@@ -916,6 +931,10 @@ body {
 .search-filter-bar select.form-select option {
     text-align: center;
 }
+
+main.flex-grow-1 {
+    min-width: 0;
+}
 .project-stage-tabs {
     display: flex;
     flex-wrap: nowrap;
@@ -927,29 +946,121 @@ body {
 .project-stage-tabs::-webkit-scrollbar-thumb { background: #E0E0E0; border-radius: 10px; }
 
 .stage-tab-link {
+    position: relative;
     background: transparent;
     border: none;
-    padding: 10px 16px;
+    padding: 8px 10px 10px;
     font-family: 'Lama Sans', sans-serif;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 500;
     color: #6C757D;
     white-space: nowrap;
-    border-bottom: 3px solid transparent;
-    transition: color 0.2s ease, border-color 0.2s ease;
+    transition: color 0.2s ease;
+}
+.stage-tab-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: calc(100% - 16px);
+    height: 2px;
+    border-radius: 2px;
+    background: var(--stage-color, #8A84AD);
+    transition: transform 0.2s ease;
 }
 .stage-tab-link:hover { color: #1A1A3A; }
 .stage-tab-link.active {
     color: #1A1A3A;
-    border-bottom-color: var(--stage-color, #8A84AD);
     font-weight: 700;
 }
-
+.stage-tab-link.active::after {
+    transform: translateX(-50%) scaleX(1);
+}
 .task-row-item { transition: box-shadow 0.2s ease; }
 .task-row-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+
 
 .stage-status-filter { font-size: 12px; border-radius: 10px; width: auto; }
 
 .comm-feed-item { border: 1px solid #EFEEF3; border-radius: 12px; padding: 12px 14px; }
 .comm-feed-ticket { border-right: 3px solid #F59E0B; }
 .comm-feed-comment { border-right: 3px solid #8A84AD; }
+
+.badge-days-left {
+    background-color: #FFF4D6;
+    color: #B8860B;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.badge-days-overdue {
+    background-color: #FDECEC;
+    color: #D9534F;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.badge-task-status {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 12px;
+}
+.badge-status-waiting { background-color: #FFF4D6; color: #B8860B; }
+.badge-status-progress { background-color: #EAF2FE; color: #2E6FDB; }
+.badge-status-review { background-color: #F0EEF6; color: #8A84AD; }
+.badge-status-done { background-color: #E6F4EA; color: #198754; }
+.badge-status-paused { background-color: #F0F0F0; color: #6C757D; }
+.badge-status-default { background-color: #F0EEF6; color: #8A84AD; }
+
+.client-info-strip {
+    background-color: #FFFFFF;
+    border: 1px solid #EFEEF3;
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+.client-info-card {
+    background-color: #FFFFFF;
+    border: 1px solid #EFEEF3;
+    border-radius: 12px;
+    padding: 12px 16px;
+}
+.client-info-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: #1A1A3A;
+    margin-bottom: 6px;
+}
+.client-info-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 12px;
+    color: #6C757D;
+}
+.comm-col {
+    background-color: #FFFFFF;
+    border: 1px solid #EFEEF3;
+    border-radius: 14px;
+    padding: 16px;
+    height: 100%;
+}
+.comm-col-header {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1A1A3A;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #EFEEF3;
+}

@@ -216,4 +216,9 @@ public function employees()
 
      public function tickets()
       { return $this->hasMany(Ticket::class, 'project_id', 'project_id'); }
+
+          public function documents()
+    {
+        return $this->hasMany(ProjectDocument::class, 'project_id', 'project_id');
+    }
 }
