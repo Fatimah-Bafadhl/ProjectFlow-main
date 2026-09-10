@@ -66,7 +66,7 @@ class TaskController extends Controller
             'end_task'         => 'required|date|after_or_equal:start_task',
             'assigned_to'      => 'required',
             'stage_id'         => [
-                'nullable',
+                'required',
                 \Illuminate\Validation\Rule::exists('project_stages', 'project_stage_id')
                     ->where('project_id', $request->project_id),
             ],

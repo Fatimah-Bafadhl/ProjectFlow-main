@@ -37,4 +37,17 @@ enum ProjectStageName: string
             self::Launch => 7,
         };
     }
+
+        public function color(): string
+    {
+        return match ($this) {
+            self::Planning => '#3B82F6',
+            self::RequirementsAnalysis => '#6366F1',
+            self::UxUiDesign => '#A855F7',
+            self::Development => '#F59E0B',
+            self::Testing => '#EF4444',
+            self::PreLaunch => '#F97316',
+            self::Launch => '#22C55E',
+        };
+    }
 }

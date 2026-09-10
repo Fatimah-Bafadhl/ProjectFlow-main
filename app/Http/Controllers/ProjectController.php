@@ -127,35 +127,77 @@ $project->employees()->sync($request->input('employee_ids', []));
         return redirect()->route('projects.index')->with('success', 'تم إضافة المشروع بنجاح');
     }
 
-    public function show($id)
+        public function show($id)
 {
-    $project = Project::withArchived()->with(['tasks', 'user'])->findOrFail($id);
- // $project = Project::with(['tasks', 'user'])->findOrFail($id);
+    $project = Project::withArchived()
+        ->with([
+            'user',
+            'stages.tasks.assignedUser',
+            'comments' => function ($query) {
+                $query->whereNull('task_id')->with('user')->latest();
+            },
+            'tickets' => function ($query) {
+                $query->with('client')->latest();
+            },
+        ])
+        ->findOrFail($id);
 
     $isManagerOfThisProject = false;
 
     if (auth()->user()->isClient()) {
-          $client = auth()->user()->client;
-       $client = auth()->user()->client;
+        $client = auth()->user()->client;
         if (!$client || !$client->projects()->where('projects.project_id', $project->project_id)->exists()) {
             abort(403, 'عذراً، ليس لديك صلاحية استعراض هذا المشروع.');
         }
-       } elseif (auth()->user()->isManager()) {
+    } elseif (auth()->user()->isManager()) {
         if (!$project->managers()->where('users.user_id', auth()->id())->exists()) {
             abort(403, 'عذراً، ليس لديك صلاحية استعراض هذا المشروع.');
         }
+        $isManagerOfThisProject = true;
     } elseif (auth()->user()->isEmployee()) {
         $employee = Employee::where('user_id', auth()->user()->user_id)->first();
         $employeeId = $employee->employee_id ?? 0;
         if (!Task::where('project_id', $project->project_id)->where('assigned_to', $employeeId)->exists()) {
             abort(403, 'عذراً، ليس لديك صلاحية استعراض هذا المشروع.');
         }
-    }
-        elseif (auth()->user()->isAdmin()) {
+    } elseif (auth()->user()->isAdmin()) {
         $isManagerOfThisProject = true;
     }
 
-    return view('projects.show', compact('project', 'isManagerOfThisProject'));}
+    // إحصائيات المشروع للشريط العلوي
+    $allTasks = $project->stages->flatMap->tasks;
+    $totalTasksCount = $allTasks->count();
+    $doneTasksCount = $allTasks->filter(fn ($task) => trim($task->status) === 'مكتملة')->count();
+    $openTicketsCount = $project->tickets->where('status', \App\Enums\TicketStatus::Open)->count();
+
+        $lastActivityAt = collect([
+        $project->comments->first()?->created_at,
+        $project->tickets->first()?->created_at,
+        $allTasks->max('updated_at'),
+    ])->filter()->max();
+
+    $sortedStages = $project->stages->sortBy('stage_order')->values();
+    $activeStageId = $sortedStages->firstWhere('stage_key', $project->currentStageKey())?->project_stage_id
+        ?? $sortedStages->first()?->project_stage_id;
+
+    $communicationFeed = $project->comments
+        ->map(fn ($c) => (object) ['type' => 'comment', 'data' => $c, 'created_at' => $c->created_at])
+        ->concat($project->tickets->map(fn ($t) => (object) ['type' => 'ticket', 'data' => $t, 'created_at' => $t->created_at]))
+        ->sortByDesc('created_at')
+        ->values();
+
+    return view('projects.show', compact(
+        'project',
+        'isManagerOfThisProject',
+        'totalTasksCount',
+        'doneTasksCount',
+        'openTicketsCount',
+        'lastActivityAt',
+        'sortedStages',
+        'activeStageId',
+        'communicationFeed'
+    ));
+}
 
     public function update(Request $request, $id)
     {

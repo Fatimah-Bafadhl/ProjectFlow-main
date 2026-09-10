@@ -1130,3 +1130,17 @@ function openEmployeeTaskStatusModal(taskId, currentStatus, updateUrl) {
     var myModal = new bootstrap.Modal(document.getElementById('employeeTaskStatusModal'));
     myModal.show();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.stage-status-filter').forEach(select => {
+        select.addEventListener('change', function () {
+            const container = document.getElementById(this.getAttribute('data-stage-target'));
+            if (!container) return;
+            const value = this.value;
+            container.querySelectorAll('.task-row-item').forEach(item => {
+                const status = item.getAttribute('data-status') || '';
+                item.style.display = (!value || status === value) ? '' : 'none';
+            });
+        });
+    });
+});

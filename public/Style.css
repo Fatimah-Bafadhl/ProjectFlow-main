@@ -888,3 +888,68 @@ body {
     min-width: auto !important;
     width: auto !important;
 }
+
+.search-filter-bar .form-control,
+.search-filter-bar .form-select { font-size: 13px; border-radius: 10px; }
+.project-row { background-color: #FFFFFF; border: 1px solid #F0F0F0; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; }
+.stage-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.stage-badge {
+    width: 130px;
+    white-space: normal;
+    line-height: 1.3;
+    text-align: center;
+    padding: 4px 10px;
+}
+.projects-scroll-container {
+    direction: ltr;
+}
+.projects-scroll-container > * {
+    direction: rtl;
+}
+
+.search-filter-bar select.form-select {
+    text-align: center;
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 14px;
+}
+.search-filter-bar select.form-select option {
+    text-align: center;
+}
+.project-stage-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 4px;
+    border-bottom: 1px solid #EFEEF3;
+}
+.project-stage-tabs::-webkit-scrollbar { height: 4px; }
+.project-stage-tabs::-webkit-scrollbar-thumb { background: #E0E0E0; border-radius: 10px; }
+
+.stage-tab-link {
+    background: transparent;
+    border: none;
+    padding: 10px 16px;
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6C757D;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+.stage-tab-link:hover { color: #1A1A3A; }
+.stage-tab-link.active {
+    color: #1A1A3A;
+    border-bottom-color: var(--stage-color, #8A84AD);
+    font-weight: 700;
+}
+
+.task-row-item { transition: box-shadow 0.2s ease; }
+.task-row-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+
+.stage-status-filter { font-size: 12px; border-radius: 10px; width: auto; }
+
+.comm-feed-item { border: 1px solid #EFEEF3; border-radius: 12px; padding: 12px 14px; }
+.comm-feed-ticket { border-right: 3px solid #F59E0B; }
+.comm-feed-comment { border-right: 3px solid #8A84AD; }

@@ -117,22 +117,13 @@ class Project extends Model
     /**
      * لون شارة المرحلة/الحالة، للاستخدام في قائمة المشاريع وصفحة التفاصيل لاحقاً
      */
-    public function stageColor(): string
+       public function stageColor(): string
     {
         if ($this->status === 'مكتملة') {
             return '#198754';
         }
 
-        return match ($this->currentStageKey()) {
-            \App\Enums\ProjectStageName::Planning => '#3B82F6',
-            \App\Enums\ProjectStageName::RequirementsAnalysis => '#6366F1',
-            \App\Enums\ProjectStageName::UxUiDesign => '#A855F7',
-            \App\Enums\ProjectStageName::Development => '#F59E0B',
-            \App\Enums\ProjectStageName::Testing => '#EF4444',
-            \App\Enums\ProjectStageName::PreLaunch => '#F97316',
-            \App\Enums\ProjectStageName::Launch => '#22C55E',
-            default => '#8C8C8C',
-        };
+        return $this->currentStageKey()?->color() ?? '#8C8C8C';
     }
 
 

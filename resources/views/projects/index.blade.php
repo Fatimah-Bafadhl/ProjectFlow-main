@@ -105,8 +105,7 @@ $isAdmin = $user && $user->isAdmin();
                 </div>
                 @endif
 
-                <span class="badge-project-status d-inline-flex align-items-center gap-1">
-                    <span class="stage-dot" style="background-color: {{ $stageColor }};"></span>
+                               <span class="badge-project-status stage-badge d-inline-flex align-items-center justify-content-center" style="background-color: {{ $stageColor }}1A; color: {{ $stageColor }};">
                     {{ $project->status }}
                 </span>
 
@@ -125,12 +124,10 @@ $isAdmin = $user && $user->isAdmin();
                     <span>{{ $totalTasks }} مهام</span>
                 </div>
 
-                @if($openTickets > 0)
-                <div class="d-flex align-items-center gap-1 text-danger extra-small">
+                               <div class="d-flex align-items-center gap-1 extra-small {{ $openTickets > 0 ? 'text-danger' : 'text-muted' }}">
                     <i class="fa-solid fa-ticket"></i>
                     <span>{{ $openTickets }}</span>
                 </div>
-                @endif
 
                 <div class="d-flex align-items-center gap-1 text-muted extra-small">
                     <i class="fa-regular fa-calendar-check"></i>
@@ -363,7 +360,12 @@ document.querySelectorAll('.project-employee-checkbox').forEach(cb => {
             const matchesStatus = !statusValue || status === statusValue;
             const matchesType = !typeValue || type === typeValue;
 
-            row.style.display = (matchesSearch && matchesStatus && matchesType) ? '' : 'none';
+                        const shouldShow = matchesSearch && matchesStatus && matchesType;
+            if (shouldShow) {
+                row.style.removeProperty('display');
+            } else {
+                row.style.setProperty('display', 'none', 'important');
+            }
         });
     }
 
