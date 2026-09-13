@@ -28,8 +28,8 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="task-page-title m-0">المهام</h2>
-       @if($isAdmin || $isManager)
-    <button class="btn btn-add-task d-flex align-items-center gap-2" data-bs-target="#taskModal" data-bs-toggle="modal" onclick="prepareAddModal()">
+              @if($isAdmin || $isManager)
+    <button class="btn btn-add-task d-flex align-items-center gap-2" data-bs-target="#taskPanel" data-bs-toggle="offcanvas" onclick="prepareAddModal()">
         <span>إضافة مهمة +</span>
     </button>
     @endif
@@ -59,6 +59,16 @@
                 @endphp
 
                 @forelse($filteredTasks as $task)
+                                             @php
+                            $attachmentsJson = $task->attachments->map(function ($a) {
+                                return [
+                                    'id'    => $a->task_attachment_id,
+                                    'title' => $a->title,
+                                    'type'  => $a->type,
+                                    'url'   => $a->type === 'link' ? $a->url : asset('storage/' . $a->file_path),
+                                ];
+                            })->values()->all();
+                        @endphp
                         <div class="task-card p-3 rounded-3 bg-white border" 
                          data-task-id="{{ $task->task_id }}" 
                          data-task-title="{{ $task->task_title }}"
@@ -69,7 +79,9 @@
                          data-description="{{ $task->task_description }}"
                          data-start-date="{{ $task->start_task }}"
                          data-end-date="{{ $task->end_task }}"
-                         data-status="{{ $task->status }}">
+                                                  data-status="{{ $task->status }}"
+                         data-priority="{{ $task->priority ?? 'متوسط' }}"
+                         data-attachments="{{ json_encode($attachmentsJson, JSON_UNESCAPED_UNICODE) }}">
                         
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <h4 class="task-name m-0" style="font-size: 14px; font-weight: 600;">
@@ -81,10 +93,8 @@
                             @if(!$isClient)
                             <div class="task-actions d-flex align-items-center gap-2">
                                                                 @if($isAdmin || $isManager)
-                                    <button class="btn-icon text-muted border-0 bg-transparent p-0" onclick="openEditModal(this)"><i class="fa-regular fa-pen-to-square"></i></button>
-                                    @if($isAdmin)
-                                        <button class="btn-icon text-muted border-0 bg-transparent p-0" onclick="openDeleteModal(this)"><i class="fa-regular fa-trash-can"></i></button>
-                                    @endif
+                                                                       <button class="btn-icon text-muted border-0 bg-transparent p-0" onclick="openEditModal(this)"><i class="fa-regular fa-pen-to-square"></i></button>
+                                    <button class="btn-icon text-muted border-0 bg-transparent p-0" onclick="openDeleteModal(this)"><i class="fa-regular fa-trash-can"></i></button>
                                 @elseif($isEmployee)
                                     <button class="btn-icon text-muted border-0 bg-transparent p-0" title="تعديل الحالة" onclick="openEmployeeTaskStatusModal('{{ $task->task_id }}', '{{ $task->status }}', '{{ route('tasks.update', $task->task_id) }}')">
                                         <i class="fa-regular fa-pen-to-square"></i>
@@ -98,10 +108,13 @@
                             اسم المشروع : {{ $task->project ? $task->project->project_name : 'غير محدد' }}
                         </p>
 
-                        <div class="d-flex justify-content-between align-items-center" style="font-size: 11px;">
-                            <span class="end-date text-muted">
-                                تاريخ الانتهاء : {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->format('Y/m/d') : 'غير محدد' }}
-                            </span>
+                                                <div class="d-flex justify-content-between align-items-center" style="font-size: 11px;">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="end-date text-muted">
+                                    تاريخ الانتهاء : {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->format('Y/m/d') : 'غير محدد' }}
+                                </span>
+                                <span class="badge-task-priority {{ $task->priority_class }}">{{ $task->priority_label }}</span>
+                            </div>
                             <div class="comments-count d-flex align-items-center gap-1 text-muted">
                                 <i class="fa-regular fa-comment comment-icon"></i>
                                 <span class="comment-num">{{ $task->comments_count ?? ($task->comments ? $task->comments->count() : 0) }}</span>
@@ -121,107 +134,9 @@
 
 @push('modals')
 @if(!$isClient)
-   
-    <div aria-hidden="true" class="modal fade" id="taskModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content custom-modal p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="modal-title m-0" id="taskModalTitle" style="font-size: 18px; font-weight: 700;">إضافة مهمة</h3>
-                    <button aria-label="Close" class="btn-close m-0" data-bs-dismiss="modal" type="button"></button>
-                </div>
-                
-                <div class="modal-body p-0">
-                    <form id="taskForm" action="{{ route('tasks.store') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="_method" id="taskFormMethod" value="POST">
 
-                        <div class="mb-3 text-end">
-                            <label class="custom-label mb-1">اسم المهمة <span class="text-danger">*</span></label>
-                            <input class="form-control custom-input text-end" id="taskNameInput" name="task_title" required type="text" placeholder="أدخل اسم المهمة"/>
-                        </div>
-
-                                              <div class="mb-3 text-end">
-                            <label class="custom-label mb-1">اسم المشروع <span class="text-danger">*</span></label>
-                            <select class="form-select custom-input text-center" id="projectIdInput" name="project_id" onchange="updateProjectDatesLimits(); updateStageOptions();" required>
-                                <option value="">اختر المشروع</option>
-                                @foreach($projects ?? [] as $project)
-                                    <option value="{{ $project->project_id }}" 
-                                            data-start="{{ $project->start_project }}" 
-                                            data-end="{{ $project->end_project }}"
-                                            data-company="{{ $project->company_name }}"
-                                            data-stages="{{ $project->stages->map(fn($s) => ['id' => $s->project_stage_id, 'label' => $s->stage_key->label()])->toJson() }}">
-                                        {{ $project->project_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3 text-end">
-                            <label class="custom-label mb-1">المرحلة</label>
-                            <select class="form-select custom-input text-center" id="stageIdInput" name="stage_id">
-                                <option value="">اختر مشروعاً أولاً</option>
-                            </select>
-                        </div>
-
-                        <div class="row g-2 mb-3">
-                            <div class="col-6 text-end">
-                                <label class="custom-label mb-1">اسم الشركة <span class="text-danger">*</span></label>
-                                <select class="form-select custom-input text-center" id="companyNameInput" name="company_name" required>
-                                    <option value="">اختر الشركة</option>
-                                    @foreach(collect($projects ?? [])->unique('company_name') as $project)
-                                        <option value="{{ $project->company_name }}">{{ $project->company_name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            
-                         <div class="col-6">
-    <label class="form-label custom-label">مسند إلى <span class="text-danger">*</span></label>
-    <select class="form-select custom-input w-100" id="assignedToInput" name="assigned_to" required>
-        <option value="">اختر الموظف</option>
-        @foreach($employees ?? [] as $employee)
-            <option value="{{ $employee->employee_id ?? $employee->id }}">
-                {{ $employee->name }} {{ isset($employee->department) ? '('.$employee->department.')' : '' }}
-            </option>
-        @endforeach
-    </select>
-</div>
-                        </div>
-
-                        <div class="mb-3 text-end">
-                            <label class="custom-label mb-1">الوصف <span class="text-danger">*</span></label>
-                            <textarea class="form-control custom-input text-end" id="descriptionInput" name="task_description" required rows="2" placeholder="أدخل وصف المهمة"></textarea>
-                        </div>
-
-                        <div class="row g-2 mb-3">
-                            <div class="col-6 text-end">
-                                <label class="custom-label mb-1">تاريخ البدء <span class="text-danger">*</span></label>
-                                <input class="form-control custom-date-btn text-center" id="startDateInput" name="start_task" required type="date" onchange="document.getElementById('endDateInput').min = this.value;"/>
-                            </div>
-                            <div class="col-6 text-end">
-                                <label class="custom-label mb-1">تاريخ الانتهاء <span class="text-danger">*</span></label>
-                                <input class="form-control custom-date-btn text-center" id="endDateInput" name="end_task" required type="date"/>
-                            </div>
-                        </div>
-
-                        <div class="mb-4 text-end">
-                            <label class="custom-label mb-1">الحالة <span class="text-danger">*</span></label>
-                            <select class="form-select custom-input text-center" id="statusSelect" name="status" required>
-                                <option value="قيد التنفيذ">قيد التنفيذ</option>
-                                <option value="قيد المراجعة">قيد المراجعة</option>
-                                <option value="مكتملة">مكتملة</option>
-                                <option value="متوقف مؤقتاً">متوقف مؤقتاً</option>
-                                <option value="قيد الانتظار">قيد الانتظار</option>
-                            </select>
-                        </div>
-
-                        <div class="text-center pt-2">
-                            <button class="btn btn-save" type="submit">حفظ</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    {{-- لوحة إضافة/تعديل المهمة (Offcanvas) --}}
+    @include('partials.task-panel')
 
     @if($isAdmin)
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
@@ -242,9 +157,8 @@
         </div>
     </div>
     @endif
-    
 
-       @if($isEmployee)
+    @if($isEmployee)
     <div aria-hidden="true" class="modal fade" id="employeeTaskStatusModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content custom-modal p-4">
@@ -275,5 +189,6 @@
         </div>
     </div>
     @endif
+
 @endif
 @endpush

@@ -17,18 +17,18 @@ class TaskController extends Controller
 {
     $user = auth()->user();
 
-      if ($user->isManager()) {
+            if ($user->isManager()) {
         $managedProjectIds = $user->managedProjects()->pluck('projects.project_id');
-        $tasks = Task::whereIn('project_id', $managedProjectIds)->with('project')->get();
+        $tasks = Task::whereIn('project_id', $managedProjectIds)->with(['project', 'attachments'])->get();
         $projects = $user->managedProjects()->with('stages')->get();
     } elseif ($user->isEmployee()) {
         $employee = Employee::where('user_id', $user->user_id)->first();
         $employeeId = $employee->employee_id ?? 0;
-        $tasks = Task::where('assigned_to', $employeeId)->with('project')->get();
+        $tasks = Task::where('assigned_to', $employeeId)->with(['project', 'attachments'])->get();
         $projectIds = $tasks->pluck('project_id')->unique();
         $projects = Project::whereIn('project_id', $projectIds)->with('stages')->get();
     } else {
-        $tasks = Task::with('project')->get();
+        $tasks = Task::with(['project', 'attachments'])->get();
         $projects = Project::with('stages')->get();
     }
 
@@ -61,6 +61,7 @@ class TaskController extends Controller
             'project_id'       => 'required|exists:projects,project_id',
             'task_title'       => 'required|string|max:255',
             'task_description' => 'required|string',
+            'priority'         => 'required|in:منخفض,متوسط,عالي',
             'status'           => 'required|string',
             'start_task'       => 'required|date',
             'end_task'         => 'required|date|after_or_equal:start_task',
@@ -70,18 +71,39 @@ class TaskController extends Controller
                 \Illuminate\Validation\Rule::exists('project_stages', 'project_stage_id')
                     ->where('project_id', $request->project_id),
             ],
+
+             'attachments'      => 'nullable|array',
+            'attachments.*'    => 'file|max:20480',
         ]);
 
         if (auth()->user()->isManager() && !auth()->user()->managedProjects()->where('projects.project_id', $request->project_id)->exists()) {
     abort(403, 'عذراً، لا تمتلك صلاحية إضافة مهام لهذا المشروع.');
 }
-       // $task = Task::create($request->all());
+              // $task = Task::create($request->all());
                 $task = new Task($request->only([
-            'task_title', 'task_description', 'status', 'start_task', 'end_task', 'assigned_to', 'company_name',
+            'task_title', 'task_description', 'status', 'priority', 'start_task', 'end_task', 'assigned_to', 'company_name',
         ]));
         $task->project_id = $request->project_id;
         $task->stage_id = $request->stage_id;
         $task->save();
+
+        // معالجة مرفقات المهمة المُرسلة مع نموذج الإضافة (ملفات فقط)
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                if (!$file->isValid()) {
+                    continue;
+                }
+                $path = $file->store('task_attachments', 'public');
+                $task->attachments()->create([
+                    'type'              => 'file',
+                    'title'             => $file->getClientOriginalName(),
+                    'file_path'         => $path,
+                    'original_filename' => $file->getClientOriginalName(),
+                    'added_by_user_id'  => auth()->id(),
+                    'added_by_name'     => auth()->user()->username,
+                ]);
+            }
+        }
 
         // المهام هي التي تحدد حالة المشروع ونسبته تلقائياً
         if ($task->project && method_exists($task->project, 'syncStatus')) {
@@ -101,7 +123,7 @@ class TaskController extends Controller
 
 public function show($id)
 {
-    $task = Task::with('project')->findOrFail($id);
+            $task = Task::with(['project', 'stage', 'attachments'])->findOrFail($id);
 
     if (auth()->user()->isClient()) {
 $client = auth()->user()->client;
@@ -121,7 +143,16 @@ $client = auth()->user()->client;
             }
         }
 
-    return view('tasks.project-show', compact('task'));
+        $projects = collect();
+    $employees = collect();
+    if (auth()->user()->isAdmin() || auth()->user()->isManager()) {
+        $projects = auth()->user()->isManager()
+            ? auth()->user()->managedProjects()->with('stages')->get()
+            : Project::with('stages')->get();
+        $employees = Employee::all();
+    }
+
+    return view('tasks.project-show', compact('task', 'projects', 'employees'));
 }
     public function edit($id)
 {
@@ -185,6 +216,7 @@ $client = auth()->user()->client;
                                 $request->validate([
             'task_title'       => 'required|string|max:255',
             'task_description' => 'required|string',
+            'priority'         => 'required|in:منخفض,متوسط,عالي',
             'status'           => 'required|string',
             'start_task'       => 'required|date',
             'end_task'         => 'required|date|after_or_equal:start_task',
@@ -194,13 +226,33 @@ $client = auth()->user()->client;
                 \Illuminate\Validation\Rule::exists('project_stages', 'project_stage_id')
                     ->where('project_id', $task->project_id),
             ],
+                'attachments'      => 'nullable|array',
+            'attachments.*'    => 'file|max:20480',
         ]);
 
-        $task->update($request->only([
-            'task_title', 'task_description', 'status', 'start_task', 'end_task', 'assigned_to', 'company_name',
+                $task->update($request->only([
+            'task_title', 'task_description', 'status', 'priority', 'start_task', 'end_task', 'assigned_to', 'company_name',
         ]));
         $task->stage_id = $request->stage_id;
         $task->save();
+
+        // معالجة مرفقات المهمة المُرسلة مع نموذج التعديل (ملفات فقط)
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                if (!$file->isValid()) {
+                    continue;
+                }
+                $path = $file->store('task_attachments', 'public');
+                $task->attachments()->create([
+                    'type'              => 'file',
+                    'title'             => $file->getClientOriginalName(),
+                    'file_path'         => $path,
+                    'original_filename' => $file->getClientOriginalName(),
+                    'added_by_user_id'  => auth()->id(),
+                    'added_by_name'     => auth()->user()->username,
+                ]);
+            }
+        }
 
         // تحديث حالة المشروع بعد تعديل المهمة
         if ($task->project && method_exists($task->project, 'syncStatus')) {

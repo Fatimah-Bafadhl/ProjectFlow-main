@@ -8,45 +8,213 @@
 @php
     $user = auth()->user();
     $isClient = $user && $user->isClient();
+    $isAdmin = $user && $user->isAdmin();
+    $isManager = $user && $user->isManager();
+    $isEmployee = $user && $user->isEmployee();
+    $canUploadAttachment = $user && ($isAdmin || $isManager || $isEmployee);
+    $canDeleteAttachment = $user && ($isAdmin || $isManager);
 @endphp
-<!-- Navigation / Breadcrumb قابل للنقر -->
-<div class="mb-2 text-start">
-    <a class="text-muted small text-decoration-none me-1 hover-link" href="{{ route('tasks.index') }}">المهام</a>
-    <span class="text-muted small me-1">&lt;</span>
-    <span class="fw-bold small text-dark">{{ $task->task_title }}</span>
-</div>
 
-<!-- عنوان الصفحة -->
-<h3 class="task-page-title">المهام</h3>
+<!-- Breadcrumb: المشاريع > المشروع > المرحلة > المهمة -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0" style="font-size: 14px;">
+        <li class="breadcrumb-item">
+            <a class="text-decoration-none text-muted" href="{{ route('projects.index') }}">المشاريع</a>
+        </li>
+        @if($task->project)
+            <li class="breadcrumb-item">
+                <a class="text-decoration-none text-muted" href="{{ route('projects.show', $task->project->project_id) }}">
+                    {{ $task->project->project_name }}
+                </a>
+            </li>
+        @endif
+        @if($task->stage)
+            <li class="breadcrumb-item">
+                <a class="text-decoration-none text-muted" href="{{ route('projects.show', $task->project_id) }}">
+                    {{ $task->stage->stage_key->label() }}
+                </a>
+            </li>
+        @endif
+        <li class="breadcrumb-item active fw-semibold text-dark" aria-current="page">
+            {{ $task->task_title }}
+        </li>
+    </ol>
+</nav>
 
-<!-- Task Details Main Header Card -->
+@php
+    $statusClass = match($task->status) {
+        'قيد الانتظار' => 'badge-status-waiting',
+        'قيد التنفيذ' => 'badge-status-progress',
+        'قيد المراجعة' => 'badge-status-review',
+        'مكتملة' => 'badge-status-done',
+        'متوقف مؤقتاً' => 'badge-status-paused',
+        default => 'badge-status-default',
+    };
+@endphp
+
+<!-- Header Card -->
 <div class="card custom-task-card p-4 mb-4 bg-white">
-    <div class="d-flex justify-content-between align-items-start mb-4">
-        <div class="text-start">
-            <div class="mb-2">
-                <h3 class="project-card-title m-0">{{ $task->task_title }}</h3>
-            </div>
-            <p class="text-muted small m-0">{{ $task->task_description ?? 'لا يوجد وصف للمهمة.' }}</p>
+    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div class="text-start" style="min-width: 0; flex: 1;">
+            <h3 class="project-card-title m-0 mb-2" style="overflow-wrap: anywhere;">{{ $task->task_title }}</h3>
+            <p class="text-muted small m-0" style="overflow-wrap: anywhere;">{{ $task->task_description ?? 'لا يوجد وصف للمهمة.' }}</p>
         </div>
-        <div class="d-inline-flex align-items-center gap-2 p-0 border-0 bg-transparent flex-shrink-0">
-            <span class="fw-normal text-secondary small">{{ $task->status }}</span>
-            <i class="fa-regular fa-id-badge text-muted" style="font-size: 1rem;"></i>
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <span class="badge-task-priority {{ $task->priority_class }}">{{ $task->priority_label }}</span>
+            <span class="badge-task-status {{ $statusClass }}">{{ $task->status }}</span>
+                        @if($isAdmin || $isManager)
+                @php
+                    $headerAttachmentsJson = $task->attachments->map(function ($a) {
+                        return [
+                            'id'    => $a->task_attachment_id,
+                            'title' => $a->title,
+                            'type'  => $a->type,
+                            'url'   => $a->type === 'link' ? $a->url : asset('storage/' . $a->file_path),
+                        ];
+                    })->values()->all();
+                @endphp
+                <button type="button" class="btn btn-sm task-attach-btn" onclick="openEditModal(this)"
+                        data-task-id="{{ $task->task_id }}"
+                        data-task-title="{{ $task->task_title }}"
+                        data-project-id="{{ $task->project_id }}"
+                        data-stage-id="{{ $task->stage_id }}"
+                        data-assigned-to="{{ $task->assigned_to }}"
+                        data-description="{{ $task->task_description }}"
+                        data-start-date="{{ $task->start_task }}"
+                        data-end-date="{{ $task->end_task }}"
+                        data-status="{{ $task->status }}"
+                        data-priority="{{ $task->priority ?? 'متوسط' }}"
+                        data-attachments="{{ json_encode($headerAttachmentsJson, JSON_UNESCAPED_UNICODE) }}">
+                    <i class="fa-regular fa-pen-to-square me-1"></i> تعديل
+                </button>
+            @endif
+        </div>
+    </div>
+</div>
+
+<!-- Two-column layout: main (start/right in RTL) + sidebar (end/left in RTL) -->
+<div class="row g-4">
+
+    {{-- Sidebar — FIRST in DOM so it stacks above on mobile --}}
+    <div class="col-12 col-lg-4 order-lg-last">
+        <div class="card border border-light-subtle rounded-4 p-4 shadow-sm task-detail-sidebar">
+            <h6 class="task-page-title mb-3" style="font-size: 15px;">تفاصيل المهمة</h6>
+
+            <div class="task-meta-item">
+                <span class="task-meta-label">المسند إلى</span>
+                <span class="task-meta-value">{{ optional($task->assignedUser)->name ?? 'غير مسند' }}</span>
+            </div>
+
+
+            <div class="task-meta-item">
+                <span class="task-meta-label">تاريخ البدء</span>
+                <span class="task-meta-value">
+                    {{ $task->start_task ? \Carbon\Carbon::parse($task->start_task)->locale('ar')->translatedFormat('d F Y') : 'غير محدد' }}
+                </span>
+            </div>
+
+            <div class="task-meta-item">
+                <span class="task-meta-label">تاريخ الانتهاء</span>
+                <span class="task-meta-value">
+                    {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->locale('ar')->translatedFormat('d F Y') : 'غير محدد' }}
+                </span>
+            </div>
+
+                        <div class="task-meta-item">
+                <span class="task-meta-label">آخر تحديث</span>
+                <span class="task-meta-value">
+                    {{ $task->updated_at ? $task->updated_at->locale('ar')->diffForHumans() : 'غير محدد' }}
+                </span>
+            </div>
         </div>
     </div>
 
-    <div class="d-flex align-content-center justify-content-between text-muted small pt-2 border-top-0">
-        <div class="text-start text-nowrap">
-            <span>
-                تاريخ البداية: {{ $task->start_task ? \Carbon\Carbon::parse($task->start_task)->locale('ar')->translatedFormat('d F Y') : 'غير محدد' }} 
-                ← تاريخ الانتهاء: {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->locale('ar')->translatedFormat('d F Y') : 'غير محدد' }}
-            </span>
+    {{-- Main column — start/right on desktop --}}
+    <div class="col-12 col-lg-8 order-lg-first">
+<!-- Attachments Card -->
+@if(!$isClient)
+<div class="card border border-light-subtle rounded-4 p-4 shadow-sm mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-paperclip fs-4" style="color: #8A84AD;"></i>
+            <h5 class="task-page-title m-0">المرفقات</h5>
+            <span class="badge rounded-circle text-dark bg-light border ms-1">{{ $task->attachments->count() }}</span>
         </div>
-        <div class="text-center px-4">
-            <span><strong>مُسند:</strong> {{ optional($task->assignedUser)->name ?? 'غير مسند' }}</span>
-        </div>
-        <div></div>
+        @if($canUploadAttachment)
+            <button type="button" class="btn btn-sm task-attach-btn"
+                    data-bs-toggle="collapse" data-bs-target="#addAttachmentForm"
+                    aria-expanded="false" aria-controls="addAttachmentForm">
+                <i class="fa-solid fa-plus me-1"></i> إضافة مرفق
+            </button>
+        @endif
     </div>
+
+    @if($canUploadAttachment)
+    <div class="collapse mb-3" id="addAttachmentForm">
+        <form action="{{ route('task_attachments.store', $task->task_id) }}" method="POST" enctype="multipart/form-data"
+              class="border rounded-3 p-3" style="background-color: #FAF9FB; border-color: #E5E5E5 !important;">
+            @csrf
+            <div class="row g-2 mb-2">
+                <div class="col-md-4">
+                    <label class="custom-label mb-1">النوع</label>
+                    <select name="type" id="attachmentTypeSelect" class="form-select custom-input" onchange="toggleAttachmentFields(this.value)">
+                        <option value="file">ملف</option>
+                        <option value="link">رابط</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <label class="custom-label mb-1">العنوان <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control custom-input" required maxlength="255" placeholder="عنوان المرفق">
+                </div>
+            </div>
+
+            <div id="attachmentFileField" class="mb-2">
+                <label class="custom-label mb-1">الملف <span class="text-danger">*</span></label>
+                <input type="file" name="file" id="attachmentFileInput" class="form-control custom-input">
+            </div>
+
+            <div id="attachmentUrlField" class="mb-2 d-none">
+                <label class="custom-label mb-1">الرابط <span class="text-danger">*</span></label>
+                <input type="url" name="url" id="attachmentUrlInput" class="form-control custom-input" placeholder="https://..." maxlength="2048">
+            </div>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-save px-4">حفظ المرفق</button>
+            </div>
+        </form>
+    </div>
+    @endif
+
+    @if($task->attachments->isEmpty())
+        <p class="text-muted small m-0 text-center py-3">لا توجد مرفقات على هذه المهمة بعد.</p>
+    @else
+        <div class="d-flex flex-column gap-2">
+            @foreach($task->attachments as $attachment)
+                <div class="task-existing-attachment">
+                    <div class="file-info">
+                        @if($attachment->type === 'link')
+                            <i class="fa-solid fa-link file-icon"></i>
+                            <a class="file-name" href="{{ $attachment->url }}" target="_blank" rel="noopener">{{ $attachment->title }}</a>
+                        @else
+                            <i class="fa-solid fa-paperclip file-icon"></i>
+                            <a class="file-name" href="{{ asset('storage/' . $attachment->file_path) }}" target="_blank" rel="noopener">{{ $attachment->title }}</a>
+                        @endif
+                        <span class="text-muted small ms-1" style="font-size: 11px;">
+                            — {{ $attachment->added_by_name ?? 'غير معروف' }}
+                        </span>
+                    </div>
+                    @if($canDeleteAttachment)
+                        <button type="button" class="delete-btn" title="حذف المرفق"
+                                onclick="openDeleteAttachmentConfirm('{{ route('task_attachments.destroy', $attachment->task_attachment_id) }}', @js($attachment->title))">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    @endif
 </div>
+@endif
 
 <!-- Comments Box Container -->
 <div class="card border border-light-subtle rounded-4 p-4 shadow-sm">
@@ -247,8 +415,12 @@
             </button>
         </div>
     </form>
+
+        </form>
     @endif
 </div>
+    </div>{{-- /Main column --}}
+</div>{{-- /Two-column layout --}}
 
 <!-- Modal تعديل التعليق (محدث ليدعم التعليقات بملفات أو بدون ملفات) -->
 <div class="modal fade" id="editCommentModal" tabindex="-1" aria-hidden="true">
@@ -328,10 +500,30 @@
                         <button type="submit" class="btn btn-delete-confirm">حذف</button>
                     </div>
                 </div>
+                        </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal تأكيد حذف المرفق -->
+<div class="modal fade" id="deleteAttachmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-modal">
+            <form id="deleteAttachmentForm" method="POST" action="">
+                @csrf
+                @method('DELETE')
+                <div class="modal-body text-center">
+                    <p class="delete-text mb-4" id="deleteAttachmentText">هل أنت متأكد من حذف هذا المرفق؟</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-delete-confirm">حذف</button>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
 @push('scripts')
 <script>
     function openEditCommentModal(button, updateUrl) {
@@ -359,11 +551,76 @@
         }
     }
 
-    function removeFile(inputId, previewId) {
+       function removeFile(inputId, previewId) {
         document.getElementById(inputId).value = '';
         document.getElementById(previewId).classList.add('d-none');
         document.getElementById(previewId).classList.remove('d-flex');
     }
+
+    /* ==========================================
+       Task Attachments — Add form toggle + Delete confirm
+    ========================================== */
+    function toggleAttachmentFields(type) {
+        const fileField = document.getElementById('attachmentFileField');
+        const urlField  = document.getElementById('attachmentUrlField');
+        const fileInput = document.getElementById('attachmentFileInput');
+        const urlInput  = document.getElementById('attachmentUrlInput');
+        if (!fileField || !urlField) return;
+
+        if (type === 'link') {
+            fileField.classList.add('d-none');
+            urlField.classList.remove('d-none');
+            if (fileInput) { fileInput.value = ''; fileInput.removeAttribute('required'); }
+            if (urlInput)  { urlInput.setAttribute('required', 'required'); }
+        } else {
+            fileField.classList.remove('d-none');
+            urlField.classList.add('d-none');
+            if (fileInput) { fileInput.setAttribute('required', 'required'); }
+            if (urlInput)  { urlInput.value = ''; urlInput.removeAttribute('required'); }
+        }
+    }
+
+    function openDeleteAttachmentConfirm(deleteUrl, title) {
+        const form = document.getElementById('deleteAttachmentForm');
+        const textEl = document.getElementById('deleteAttachmentText');
+        if (form && deleteUrl) form.action = deleteUrl;
+        if (textEl) textEl.innerText = 'هل تريد حذف المرفق "' + title + '"؟';
+
+        const modalEl = document.getElementById('deleteAttachmentModal');
+        if (modalEl) {
+            let instance = bootstrap.Modal.getInstance(modalEl);
+            if (!instance) instance = new bootstrap.Modal(modalEl);
+            instance.show();
+        }
+    }
+
+        document.addEventListener('DOMContentLoaded', function () {
+        if (document.getElementById('attachmentTypeSelect')) {
+            toggleAttachmentFields('file');
+        }
+    });
 </script>
 @endpush
 @endsection
+
+@push('modals')
+@if($isAdmin || $isManager)
+    @include('partials.task-panel')
+
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+            <div class="modal-content custom-modal text-center p-4">
+                <h4 class="delete-text mb-4 fw-bold" id="deleteModalText">هل تريد حذف المهمة؟</h4>
+                <form id="deleteTaskForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <div class="d-flex justify-content-center gap-3">
+                        <button type="submit" class="btn btn-delete-confirm">حذف</button>
+                        <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endif
+@endpush

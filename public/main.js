@@ -143,21 +143,57 @@ function validateDates() {
     }
 }
 
-function prepareAddModal() {
-    const modalTitle = document.getElementById('taskModalTitle');
+/* ==========================================
+   Task Panel (Offcanvas) — Add / Edit + Attachments
+========================================== */
+
+// JS-side queue for files not yet uploaded (mirrored to the real input)
+let taskAttachmentQueue = [];
+
+function openTaskPanel() {
+    const panelEl = document.getElementById('taskPanel');
+    if (!panelEl) return;
+    let instance = bootstrap.Offcanvas.getInstance(panelEl);
+    if (!instance) instance = new bootstrap.Offcanvas(panelEl);
+    instance.show();
+}
+
+function clearTaskAttachmentQueue() {
+    taskAttachmentQueue = [];
+    const input = document.getElementById('taskAttachmentsInput');
+    if (input) input.value = '';
+    renderTaskAttachmentsPreview();
+}
+
+function prepareAddModal(button) {
+    const panelTitle = document.getElementById('taskPanelTitle');
     const taskForm = document.getElementById('taskForm');
     const methodInput = document.getElementById('taskFormMethod');
-    
-    if (modalTitle) modalTitle.innerText = "إضافة مهمة";
+
+    if (panelTitle) panelTitle.innerText = "إضافة مهمة";
     if (taskForm) {
         taskForm.reset();
         taskForm.action = "/tasks";
     }
     if (methodInput) methodInput.value = "POST";
 
-    const projectIdInput = document.getElementById('projectIdInput');
-    if (projectIdInput) projectIdInput.removeAttribute('disabled');
+    // Add-mode never shows existing attachments
+    const existingBlock = document.getElementById('existingAttachmentsBlock');
+    const existingList = document.getElementById('existingAttachmentsList');
+    if (existingBlock) existingBlock.classList.add('d-none');
+    if (existingList) existingList.innerHTML = '';
 
+    // Reset new-files queue
+    clearTaskAttachmentQueue();
+
+    // Reset project (may have been disabled by a prior edit)
+    const projectSelect = document.getElementById('projectIdInput');
+    if (projectSelect) {
+        projectSelect.removeAttribute('disabled');
+        projectSelect.value = '';
+    }
+
+    // Reset date limits + stage dropdown
     const startDateInput = document.getElementById('startDateInput');
     const endDateInput = document.getElementById('endDateInput');
     if (startDateInput) { startDateInput.removeAttribute('min'); startDateInput.removeAttribute('max'); }
@@ -165,68 +201,194 @@ function prepareAddModal() {
 
     const stageSelect = document.getElementById('stageIdInput');
     if (stageSelect) stageSelect.innerHTML = '<option value="">اختر مشروعاً أولاً</option>';
+
+    // Optional project preselect (used by the add button on projects/show)
+    const preselectId = button && button.dataset ? button.dataset.preselectProject : null;
+    if (preselectId && projectSelect) {
+        projectSelect.value = preselectId;
+        updateProjectDatesLimits();
+        updateStageOptions();
+    }
+
+    openTaskPanel();
 }
 
 function openEditModal(button) {
-    const taskCard = button.closest('.task-card');
-    if (!taskCard) return;
+    const taskRow = button.closest('[data-task-id]');
+    if (!taskRow) return;
 
-    const taskId = taskCard.getAttribute('data-task-id');
-    const taskTitle = taskCard.getAttribute('data-task-title') || '';
-    const projectId = taskCard.getAttribute('data-project-id') || '';
-    const stageId = taskCard.getAttribute('data-stage-id') || '';
-    const assignedTo = taskCard.getAttribute('data-assigned-to') || '';
-    const description = taskCard.getAttribute('data-description') || '';
-    const startDate = taskCard.getAttribute('data-start-date') || '';
-    const endDate = taskCard.getAttribute('data-end-date') || '';
-    const status = taskCard.getAttribute('data-status') || '';
-    const companyName = taskCard.getAttribute('data-company') || '';
+    const taskId       = taskRow.getAttribute('data-task-id');
+    const taskTitle    = taskRow.getAttribute('data-task-title') || '';
+    const projectId    = taskRow.getAttribute('data-project-id') || '';
+    const stageId      = taskRow.getAttribute('data-stage-id') || '';
+    const assignedTo   = taskRow.getAttribute('data-assigned-to') || '';
+    const description  = taskRow.getAttribute('data-description') || '';
+    const startDate    = taskRow.getAttribute('data-start-date') || '';
+    const endDate      = taskRow.getAttribute('data-end-date') || '';
+    const status       = taskRow.getAttribute('data-status') || '';
+    const priority     = taskRow.getAttribute('data-priority') || 'متوسط';
+    const attachmentsRaw = taskRow.getAttribute('data-attachments') || '[]';
 
-    const modalTitle = document.getElementById('taskModalTitle');
+    const panelTitle = document.getElementById('taskPanelTitle');
     const taskForm = document.getElementById('taskForm');
     const methodInput = document.getElementById('taskFormMethod');
 
-    if (modalTitle) modalTitle.innerText = "تعديل المهمة";
+    if (panelTitle) panelTitle.innerText = "تعديل المهمة";
     if (taskForm) taskForm.action = `/tasks/${taskId}`;
     if (methodInput) methodInput.value = "PUT";
 
+    // Text fields
     if (document.getElementById('taskNameInput')) document.getElementById('taskNameInput').value = taskTitle;
-    
-        if (document.getElementById('projectIdInput')) {
-        document.getElementById('projectIdInput').value = projectId;
-        document.getElementById('projectIdInput').setAttribute('disabled', 'disabled');
-        updateProjectDatesLimits();
-         updateStageOptions();
-    }
+    if (document.getElementById('descriptionInput')) document.getElementById('descriptionInput').value = description;
 
-     const stageSelect = document.getElementById('stageIdInput');
+    // Project: lock to the current one
+    const projectSelect = document.getElementById('projectIdInput');
+    if (projectSelect) {
+        projectSelect.value = projectId;
+        projectSelect.setAttribute('disabled', 'disabled');
+    }
+    // Order matters: dates + stages depend on project selection above
+    updateProjectDatesLimits();
+    updateStageOptions();
+
+    const stageSelect = document.getElementById('stageIdInput');
     if (stageSelect) stageSelect.value = stageId;
 
-    if (document.getElementById('companyNameInput') && companyName) {
-        document.getElementById('companyNameInput').value = companyName;
-    }
-
     if (document.getElementById('assignedToInput')) document.getElementById('assignedToInput').value = assignedTo;
-    if (document.getElementById('descriptionInput')) document.getElementById('descriptionInput').value = description;
-    
-    if (document.getElementById('startDateInput')) {
-        document.getElementById('startDateInput').value = startDate ? startDate.split('T')[0] : '';
-    }
-    if (document.getElementById('endDateInput')) {
-        document.getElementById('endDateInput').value = endDate ? endDate.split('T')[0] : '';
-    }
+    if (document.getElementById('startDateInput')) document.getElementById('startDateInput').value = startDate ? startDate.split('T')[0] : '';
+    if (document.getElementById('endDateInput')) document.getElementById('endDateInput').value = endDate ? endDate.split('T')[0] : '';
     if (document.getElementById('statusSelect')) document.getElementById('statusSelect').value = status;
+    if (document.getElementById('prioritySelect')) document.getElementById('prioritySelect').value = priority;
 
-    const modalEl = document.getElementById('taskModal');
-    if (modalEl) {
-        let modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if (!modalInstance) modalInstance = new bootstrap.Modal(modalEl);
-        modalInstance.show();
+    // Reset new-files queue for this edit session
+    clearTaskAttachmentQueue();
+
+    // Populate existing-attachments block from data-attachments JSON
+    let attachments = [];
+    try { attachments = JSON.parse(attachmentsRaw) || []; } catch (e) { attachments = []; }
+    renderExistingTaskAttachments(attachments);
+
+    openTaskPanel();
+}
+
+function renderExistingTaskAttachments(attachments) {
+    const block = document.getElementById('existingAttachmentsBlock');
+    const list = document.getElementById('existingAttachmentsList');
+    if (!block || !list) return;
+
+    list.innerHTML = '';
+
+    if (!attachments || attachments.length === 0) {
+        block.classList.add('d-none');
+        return;
+    }
+
+    attachments.forEach(function (att) {
+        const row = document.createElement('div');
+        row.className = 'task-existing-attachment';
+
+        const deleteUrl = `/attachments/${att.id}`;
+        const safeTitle = escapeHtml(att.title || '');
+        const safeUrl = String(att.url || '#').replace(/"/g, '&quot;');
+
+        row.innerHTML =
+            '<div class="file-info">' +
+                '<i class="fa-solid fa-paperclip file-icon"></i>' +
+                '<a class="file-name" href="' + safeUrl + '" target="_blank" rel="noopener">' + safeTitle + '</a>' +
+            '</div>' +
+            '<button type="button" class="delete-btn" title="حذف المرفق"><i class="fa-regular fa-trash-can"></i></button>';
+
+        row.querySelector('.delete-btn').addEventListener('click', function () {
+            openDeleteTaskAttachment(deleteUrl, att.title || '');
+        });
+
+        list.appendChild(row);
+    });
+
+    block.classList.remove('d-none');
+}
+
+function showTaskAttachmentsPreview(input) {
+    if (!input.files) return;
+
+    // Merge newly selected files into the queue (dedupe by name+size)
+    Array.from(input.files).forEach(function (file) {
+        const exists = taskAttachmentQueue.some(function (f) {
+            return f.name === file.name && f.size === file.size;
+        });
+        if (!exists) taskAttachmentQueue.push(file);
+    });
+
+    // Clear the input's own FileList; we own the queue from here.
+    input.value = '';
+    syncTaskAttachmentQueueToInput();
+    renderTaskAttachmentsPreview();
+}
+
+function renderTaskAttachmentsPreview() {
+    const preview = document.getElementById('taskAttachmentsPreview');
+    if (!preview) return;
+    preview.innerHTML = '';
+
+    taskAttachmentQueue.forEach(function (file, index) {
+        const chip = document.createElement('div');
+        chip.className = 'task-attachment-chip';
+        const safeName = escapeHtml(file.name);
+        chip.innerHTML =
+            '<i class="fa-regular fa-file chip-icon"></i>' +
+            '<span class="chip-name">' + safeName + '</span>' +
+            '<button type="button" class="chip-remove" title="إزالة"><i class="fa-solid fa-xmark"></i></button>';
+
+        chip.querySelector('.chip-remove').addEventListener('click', function () {
+            taskAttachmentQueue.splice(index, 1);
+            syncTaskAttachmentQueueToInput();
+            renderTaskAttachmentsPreview();
+        });
+
+        preview.appendChild(chip);
+    });
+}
+
+function syncTaskAttachmentQueueToInput() {
+    const input = document.getElementById('taskAttachmentsInput');
+    if (!input) return;
+    try {
+        const dt = new DataTransfer();
+        taskAttachmentQueue.forEach(function (file) { dt.items.add(file); });
+        input.files = dt.files;
+    } catch (e) {
+        // DataTransfer unsupported (very old browsers): the queue still
+        // works for display, but removing items won't reflect in the form.
+        console.warn('DataTransfer not supported; attachment removal limited.', e);
     }
 }
 
+function openDeleteTaskAttachment(deleteUrl, title) {
+    const form = document.getElementById('deleteTaskAttachmentForm');
+    const textEl = document.getElementById('deleteTaskAttachmentText');
+    if (form) form.action = deleteUrl;
+    if (textEl) textEl.innerText = 'هل تريد حذف المرفق "' + title + '"؟';
+
+    const modalEl = document.getElementById('deleteTaskAttachmentModal');
+    if (modalEl) {
+        let instance = bootstrap.Modal.getInstance(modalEl);
+        if (!instance) instance = new bootstrap.Modal(modalEl);
+        instance.show();
+    }
+}
+
+function submitDeleteTaskAttachment() {
+    const form = document.getElementById('deleteTaskAttachmentForm');
+    if (form) form.submit();
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
 function openDeleteModal(button) {
-    const taskCard = button.closest('.task-card');
+    const taskCard = button.closest('[data-task-id]');
     if (!taskCard) return;
 
     const taskId = taskCard.getAttribute('data-task-id');
@@ -1131,20 +1293,177 @@ function openEmployeeTaskStatusModal(taskId, currentStatus, updateUrl) {
     myModal.show();
 }
 
+/* ==========================================
+   Stage Filters (status + priority, per stage tab)
+========================================== */
+function applyStageFilters(targetId) {
+    const container = document.getElementById(targetId);
+    if (!container) return;
+
+    const statusSelect = document.querySelector(
+        `.stage-filter[data-filter-type="status"][data-stage-target="${targetId}"]`
+    );
+    const prioritySelect = document.querySelector(
+        `.stage-filter[data-filter-type="priority"][data-stage-target="${targetId}"]`
+    );
+
+    const statusValue = statusSelect ? statusSelect.value : '';
+    const priorityValue = prioritySelect ? prioritySelect.value : '';
+
+    container.querySelectorAll('.task-row-item').forEach(item => {
+        const status = item.getAttribute('data-status') || '';
+        const priority = item.getAttribute('data-priority') || '';
+
+        const statusMatch = !statusValue || status === statusValue;
+        const priorityMatch = !priorityValue || priority === priorityValue;
+
+        if (statusMatch && priorityMatch) {
+            item.style.removeProperty('display');
+        } else {
+            item.style.setProperty('display', 'none', 'important');
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.stage-status-filter').forEach(select => {
+    document.querySelectorAll('.stage-filter').forEach(select => {
         select.addEventListener('change', function () {
-            const container = document.getElementById(this.getAttribute('data-stage-target'));
-            if (!container) return;
-            const value = this.value;
-            container.querySelectorAll('.task-row-item').forEach(item => {
-                const status = item.getAttribute('data-status') || '';
-                if (!value || status === value) {
-                    item.style.removeProperty('display');
-                } else {
-                    item.style.setProperty('display', 'none', 'important');
-                }
-            });
+            applyStageFilters(this.getAttribute('data-stage-target'));
         });
     });
 });
+
+/* ==========================================
+   Reusable List Paginator (Client-side)
+   ------------------------------------------------------------
+   Usage:
+     <div id="myGrid">
+         <div class="paginate-item" data-filter-match="1">...</div>
+     </div>
+     <div id="myPagination" class="pagination-controls"></div>
+
+     const paginator = createListPaginator({
+         gridSelector: '#myGrid',
+         itemSelector: '.paginate-item',
+         controlsId:   'myPagination',
+         perPage:      8,
+     });
+     paginator.render();          // initial render
+     paginator.reset();           // after filter change (resets to page 1)
+========================================== */
+function createListPaginator(config) {
+    const perPage = config.perPage || 8;
+    let currentPage = 1;
+
+    const grid = document.querySelector(config.gridSelector);
+    const controls = document.getElementById(config.controlsId);
+
+    if (!grid || !controls) {
+        console.warn('Paginator: grid or controls not found.', config);
+        return { render() {}, reset() {}, goToPage() {} };
+    }
+
+    const allItems = () => Array.from(grid.querySelectorAll(config.itemSelector));
+    const matchedItems = () => allItems().filter(el => el.getAttribute('data-filter-match') !== '0');
+
+    function render() {
+        const matched = matchedItems();
+        const totalPages = Math.max(1, Math.ceil(matched.length / perPage));
+
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        // Hide every row, then reveal only the current page slice.
+        // Using setProperty('display','none','important') to defeat Bootstrap's
+        // .d-flex !important if it's ever added to a row.
+        allItems().forEach(el => el.style.setProperty('display', 'none', 'important'));
+        const start = (currentPage - 1) * perPage;
+        matched.slice(start, start + perPage).forEach(el => el.style.removeProperty('display'));
+
+        renderControls(totalPages, matched.length);
+    }
+
+    // Builds what to render between the arrows.
+    // Numbers become buttons; gaps become '...'.
+    // Examples (total=12):
+    //   current=1  -> [1, 2, 3, '...', 12]
+    //   current=6  -> [1, '...', 5, 6, 7, '...', 12]
+    //   current=12 -> [1, '...', 11, 12]
+    function buildPageList(current, total) {
+        if (total <= 5) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+
+        const pages = new Set([1, total]);
+        for (let offset = -1; offset <= 1; offset++) {
+            const p = current + offset;
+            if (p >= 1 && p <= total) pages.add(p);
+        }
+
+        const sorted = [...pages].sort((a, b) => a - b);
+        const result = [];
+        let prev = 0;
+        for (const p of sorted) {
+            if (p - prev === 2) {
+                // Single missing page: show it instead of a wasteful ellipsis
+                result.push(prev + 1);
+            } else if (p - prev > 2) {
+                result.push('...');
+            }
+            result.push(p);
+            prev = p;
+        }
+        return result;
+    }
+
+    function renderControls(totalPages, totalItems) {
+        if (totalItems === 0 || totalPages <= 1) {
+            controls.innerHTML = '';
+            return;
+        }
+
+        const prevDisabled = currentPage === 1;
+        const nextDisabled = currentPage === totalPages;
+        const list = buildPageList(currentPage, totalPages);
+
+        let html = `
+            <button type="button" class="page-btn ${prevDisabled ? 'disabled' : ''}" data-page="${currentPage - 1}" ${prevDisabled ? 'disabled' : ''} aria-label="السابق">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        `;
+
+        for (const item of list) {
+            if (item === '...') {
+                html += `<span class="page-ellipsis">…</span>`;
+            } else {
+                const active = item === currentPage;
+                html += `<button type="button" class="page-btn ${active ? 'active' : ''}" data-page="${item}" ${active ? 'aria-current="page"' : ''}>${item}</button>`;
+            }
+        }
+
+        html += `
+            <button type="button" class="page-btn ${nextDisabled ? 'disabled' : ''}" data-page="${currentPage + 1}" ${nextDisabled ? 'disabled' : ''} aria-label="التالي">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+        `;
+
+        controls.innerHTML = html;
+
+        controls.querySelectorAll('.page-btn:not(.disabled):not(.active)').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const page = parseInt(btn.getAttribute('data-page'), 10);
+                if (page >= 1 && page <= totalPages) {
+                    currentPage = page;
+                    render();
+                    grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    }
+
+    return {
+        render,
+        reset()   { currentPage = 1; render(); },
+        goToPage(page) { currentPage = page; render(); },
+    };
+}

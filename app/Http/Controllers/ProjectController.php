@@ -147,6 +147,7 @@ $project->employees()->sync($request->input('employee_ids', []));
             'user',
             'clients',
             'stages.tasks.assignedUser',
+            'stages.tasks.attachments',
             'comments' => function ($query) {
                 $query->whereNull('task_id')->with('user')->latest();
             },
@@ -200,8 +201,11 @@ $project->employees()->sync($request->input('employee_ids', []));
         ->sortByDesc('created_at')
         ->values();
 
+
+        $employees = Employee::all(); 
     return view('projects.show', compact(
         'project',
+          'employees',
         'isManagerOfThisProject',
         'totalTasksCount',
         'doneTasksCount',

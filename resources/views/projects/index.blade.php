@@ -56,7 +56,7 @@ $isAdmin = $user && $user->isAdmin();
     </select>
 </div>
 
-<div class="projects-scroll-container">
+<div class="projects-scroll-container projects-list-unscrolled">
     <div class="d-flex flex-column gap-2" id="projectsGrid">
         @forelse($projects as $project)
             @php
@@ -145,13 +145,15 @@ $isAdmin = $user && $user->isAdmin();
                 </div>
                 @endif
             </div>
-        @empty
+               @empty
             <div class="text-center py-5">
                 <p class="text-muted">لا توجد مشاريع مضافة حالياً.</p>
             </div>
         @endforelse
     </div>
 </div>
+
+<div id="projectsPagination" class="pagination-controls"></div>
 @endsection
 
 @push('modals')
@@ -345,7 +347,18 @@ document.querySelectorAll('.project-employee-checkbox').forEach(cb => {
         myModal.show();
     }
 
-       function filterProjects() {
+           /* ==========================================
+       Projects Pagination (client-side, 8 per page)
+    ========================================== */
+    const projectsPaginator = createListPaginator({
+        gridSelector: '#projectsGrid',
+        itemSelector: '.project-card-wrapper',
+        controlsId:   'projectsPagination',
+        perPage:      8,
+    });
+    projectsPaginator.render();
+
+    function filterProjects() {
         const searchTerm = (document.getElementById('projectSearchInput').value || '').trim().toLowerCase();
         const statusValue = document.getElementById('projectStatusFilter').value;
         const typeValue = document.getElementById('projectTypeFilter').value;
@@ -359,14 +372,14 @@ document.querySelectorAll('.project-employee-checkbox').forEach(cb => {
             const matchesSearch = !searchTerm || name.includes(searchTerm) || company.includes(searchTerm);
             const matchesStatus = !statusValue || status === statusValue;
             const matchesType = !typeValue || type === typeValue;
+            const shouldShow = matchesSearch && matchesStatus && matchesType;
 
-                        const shouldShow = matchesSearch && matchesStatus && matchesType;
-            if (shouldShow) {
-                row.style.removeProperty('display');
-            } else {
-                row.style.setProperty('display', 'none', 'important');
-            }
+            // Mark the row; the paginator will handle visibility.
+            row.setAttribute('data-filter-match', shouldShow ? '1' : '0');
         });
+
+        // Filter change => jump back to page 1.
+        projectsPaginator.reset();
     }
 
     document.getElementById('projectSearchInput')?.addEventListener('input', filterProjects);

@@ -981,7 +981,7 @@ main.flex-grow-1 {
 .task-row-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 
 
-.stage-status-filter { font-size: 12px; border-radius: 10px; width: auto; }
+.stage-filter { font-size: 12px; border-radius: 10px; width: auto; }
 
 .comm-feed-item { border: 1px solid #EFEEF3; border-radius: 12px; padding: 12px 14px; }
 .comm-feed-ticket { border-right: 3px solid #F59E0B; }
@@ -1015,12 +1015,30 @@ main.flex-grow-1 {
     padding: 3px 10px;
     border-radius: 12px;
 }
-.badge-status-waiting { background-color: #FFF4D6; color: #B8860B; }
-.badge-status-progress { background-color: #EAF2FE; color: #2E6FDB; }
-.badge-status-review { background-color: #F0EEF6; color: #8A84AD; }
-.badge-status-done { background-color: #E6F4EA; color: #198754; }
+
+.badge-task-priority {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.badge-priority-low    { background-color: #E6F4EA; color: #198754; }
+.badge-priority-medium { background-color: #FFF4D6; color: #B8860B; }
+.badge-priority-high   { background-color: #FDECEC; color: #D9534F; }
+
+/* Unified status badges — review-style lavender for all, except done (green) and paused (dimmed gray) */
+.badge-status-waiting,
+.badge-status-progress,
+.badge-status-review,
+.badge-status-default {
+    background-color: #F0EEF6;
+    color: #8A84AD;
+}
+.badge-status-done   { background-color: #E6F4EA; color: #198754; }
 .badge-status-paused { background-color: #F0F0F0; color: #6C757D; }
-.badge-status-default { background-color: #F0EEF6; color: #8A84AD; }
 
 .client-info-strip {
     background-color: #FFFFFF;
@@ -1063,4 +1081,306 @@ main.flex-grow-1 {
     padding-bottom: 10px;
     margin-bottom: 14px;
     border-bottom: 1px solid #EFEEF3;
+}
+/* ==========================================
+   Task Offcanvas Panel (Add / Edit)
+========================================== */
+.task-panel {
+    width: 440px !important;
+    max-width: 100vw;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 576px) {
+    .task-panel { width: 100% !important; }
+}
+
+.task-panel .offcanvas-header {
+    padding: 20px 24px;
+    border-color: #F0F0F0 !important;
+}
+
+.task-panel .offcanvas-body {
+    padding: 20px 24px;
+}
+
+.task-panel-title {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0;
+}
+
+/* زر اختيار الملفات داخل اللوحة */
+.task-attach-btn {
+    background-color: #FAF9FB !important;
+    border: 1px solid #E5E5E5 !important;
+    color: #6C757D !important;
+    border-radius: 12px;
+    font-size: 13px;
+    padding: 8px 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.task-attach-btn:hover {
+    background-color: #F0EDF5 !important;
+    color: #8A84AD !important;
+    border-color: #8A84AD !important;
+}
+
+/* شرائح معاينة الملفات الجديدة */
+.task-attachment-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #FAF9FB;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+    color: #2B2B2B;
+    max-width: 100%;
+}
+.task-attachment-chip .chip-icon { color: #8A84AD; }
+.task-attachment-chip .chip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 260px;
+}
+.task-attachment-chip .chip-remove {
+    color: #FF5252;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    padding: 0;
+    line-height: 1;
+}
+
+/* صف المرفق الحالي في وضع التعديل */
+.task-existing-attachment {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background-color: #FAF9FB;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+    color: #2B2B2B;
+}
+.task-existing-attachment .file-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+    min-width: 0;
+}
+.task-existing-attachment .file-info .file-icon { color: #8A84AD; flex-shrink: 0; }
+.task-existing-attachment .file-info .file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #2B2B2B;
+    text-decoration: none;
+}
+.task-existing-attachment .file-info .file-name:hover { color: #8A84AD; }
+.task-existing-attachment .delete-btn {
+    color: #FF5252;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* ==========================================
+   Task Detail Page — Two-Column Layout
+========================================== */
+
+/* Sidebar stays visible while main column scrolls */
+.task-detail-sidebar {
+    position: sticky;
+    top: 20px;
+}
+
+.task-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 0;
+    border-bottom: 1px solid #F0F0F0;
+}
+.task-meta-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.task-meta-item:first-of-type {
+    padding-top: 0;
+}
+
+.task-meta-label {
+    font-size: 11px;
+    color: #8C8C8C;
+    font-weight: 500;
+}
+
+.task-meta-value {
+    font-size: 13.5px;
+    color: #1A1A1A;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.task-meta-link {
+    text-decoration: none;
+    color: #8A84AD;
+    transition: color 0.2s ease;
+}
+.task-meta-link:hover {
+    color: #6B5E96;
+    text-decoration: underline;
+}
+
+/* Disable sticky on mobile — the sidebar stacks normally */
+@media (max-width: 991.98px) {
+    .task-detail-sidebar {
+        position: static;
+    }
+}
+/* ==========================================
+   Reusable List Pagination Controls
+========================================== */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 20px;
+    padding-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid #E5E5E5;
+    background-color: #FFFFFF;
+    color: #2B2B2B;
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.page-btn:hover:not(.disabled):not(.active) {
+    background-color: #F0EDF5;
+    border-color: #8A84AD;
+    color: #8A84AD;
+}
+
+.page-btn.active {
+    background-color: #8A84AD;
+    border-color: #8A84AD;
+    color: #FFFFFF;
+    font-weight: 700;
+    cursor: default;
+}
+
+.page-btn.disabled,
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: #FAF9FB;
+}
+
+.page-btn i {
+    font-size: 11px;
+}
+
+/* Neutralize inner scroll on lists that use the paginator */
+.projects-list-unscrolled {
+    max-height: none !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+}
+.page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 36px;
+    color: #B0B0B0;
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    user-select: none;
+    cursor: default;
+    padding: 0 2px;
+}
+
+/* ==========================================
+   Documents Page
+========================================== */
+
+/* Secondary action button — purple outline, pairs with .btn-add-task */
+.btn-doc-secondary,
+.btn-doc-secondary:hover,
+.btn-doc-secondary:active,
+.btn-doc-secondary:focus {
+    background-color: #FFFFFF !important;
+    color: #8A84AD !important;
+    border: 1.5px solid #8A84AD !important;
+    border-radius: 10px;
+    font-family: 'Lama Sans', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 8px 16px;
+    box-shadow: none !important;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-doc-secondary:hover {
+    background-color: #F0EDF5 !important;
+}
+
+/* Small type chip inside a document row */
+.doc-type-badge {
+    font-size: 10.5px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.doc-type-link {
+    background-color: #EAF2FE;
+    color: #2E6FDB;
+}
+.doc-type-file {
+    background-color: #F0EEF6;
+    color: #8A84AD;
+}
+
+/* Documents two-column search input icon alignment */
+#docSearchInput {
+    padding-right: 14px;
+}
+
+@media (max-width: 991.98px) {
+    /* On mobile, columns stack — files first, then links */
+    #filesNoResults,
+    #linksNoResults { padding: 12px 0; }
 }

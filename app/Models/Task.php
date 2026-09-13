@@ -22,6 +22,7 @@ class Task extends Model
         'start_task',
         'end_task',
         'status',
+        'priority',
     ];
 
     // مراقبة المهام لتحديث المشروع تلقائياً عند أي تعديل أو حذف
@@ -52,6 +53,31 @@ class Task extends Model
         ];
     }
 
+// التسمية العربية للأولوية (بصيغة المؤنث لأنها تُقرأ بعد كلمة "أولوية")
+    public function getPriorityLabelAttribute(): string
+    {
+        return match ($this->priority) {
+            'منخفض' => 'أولوية منخفضة',
+            'متوسط' => 'أولوية متوسطة',
+            'عالي'  => 'أولوية عالية',
+            default => 'أولوية متوسطة',
+        };
+    }
+
+    // كلاس التلوين للأولوية (يُستخدم مباشرة في Blade)
+    public function getPriorityClassAttribute(): string
+    {
+        return match ($this->priority) {
+            'منخفض' => 'badge-priority-low',
+            'متوسط' => 'badge-priority-medium',
+            'عالي'  => 'badge-priority-high',
+            default => 'badge-priority-medium',
+        };
+    }
+
+
+
+
     // خاصية محسوبة لنسبة إنجاز المهمة بناءً على الحالة
     public function getProgressAttribute()
     {
@@ -80,6 +106,11 @@ class Task extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class, 'task_id', 'task_id');
+    }
+
+      public function attachments()
+    {
+        return $this->hasMany(TaskAttachment::class, 'task_id', 'task_id');
     }
 
     public function assignedUser()

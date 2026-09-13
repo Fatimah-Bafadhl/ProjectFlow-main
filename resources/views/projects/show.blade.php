@@ -80,12 +80,16 @@
 
 <div class="d-flex justify-content-end gap-2 mb-3">
     @if(!$isClient)
-    <a href="{{ route('documents.index', $project->project_id) }}" class="btn btn-outline-secondary d-flex align-items-center gap-2">
+        <a href="{{ route('documents.index', $project->project_id) }}" class="btn btn-add-task d-flex align-items-center gap-2">
         <span>المستندات</span>
     </a>
     @endif
-    @if(!$isClient && !$isEmployee)
-    <button class="btn btn-add-task d-flex align-items-center gap-2" data-bs-target="#taskModal" data-bs-toggle="modal" onclick="prepareAddModal(); updateProjectDatesLimits(); updateStageOptions();">
+        @if(!$isClient && !$isEmployee)
+    <button class="btn btn-add-task d-flex align-items-center gap-2"
+            data-bs-target="#taskPanel"
+            data-bs-toggle="offcanvas"
+            data-preselect-project="{{ $project->project_id }}"
+            onclick="prepareAddModal(this)">
         <span>إضافة مهمة +</span>
     </button>
     @endif
@@ -204,14 +208,20 @@
                             <div class="progress-bar rounded-pill" style="width: {{ $stagePercent }}%; background-color: {{ $stage->stage_key->color() }};"></div>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <select class="form-select form-select-sm stage-status-filter" data-stage-target="stage-tasks-{{ $stage->project_stage_id }}">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <select class="form-select form-select-sm stage-filter" data-filter-type="status" data-stage-target="stage-tasks-{{ $stage->project_stage_id }}">
                             <option value="">كل الحالات</option>
                             <option value="قيد الانتظار">قيد الانتظار</option>
                             <option value="قيد التنفيذ">قيد التنفيذ</option>
                             <option value="قيد المراجعة">قيد المراجعة</option>
                             <option value="مكتملة">مكتملة</option>
                             <option value="متوقف مؤقتاً">متوقف مؤقتاً</option>
+                        </select>
+                        <select class="form-select form-select-sm stage-filter" data-filter-type="priority" data-stage-target="stage-tasks-{{ $stage->project_stage_id }}">
+                            <option value="">كل الأولويات</option>
+                            <option value="منخفض">منخفض</option>
+                            <option value="متوسط">متوسط</option>
+                            <option value="عالي">عالي</option>
                         </select>
                         @if($isAdmin || $isAssignedManager)
                             @if($stage->status !== \App\Enums\ProjectStageStatus::Done)
@@ -239,27 +249,37 @@
 
                                             
                     
-                                                     <div class="task-row-item d-flex justify-content-between align-items-center py-3 px-3 border rounded-3"
-                            
-                    style="border-color: #EFEEF3 !important;"
-                             data-status="{{ $task->status }}"
-                             data-task-id="{{ $task->task_id }}"
-                             data-task-title="{{ $task->task_title }}"
-                             data-project-id="{{ $task->project_id }}"
-                             data-stage-id="{{ $task->stage_id }}"
-                             data-assigned-to="{{ $task->assigned_to }}"
-                             data-description="{{ $task->task_description }}"
-                             data-start-date="{{ $task->start_task }}"
-                             data-end-date="{{ $task->end_task }}"
-                             data-company="{{ $project->company_name }}">
-                            <div>
+                                                                                @php
+                                $attachmentsJson = $task->attachments->map(function ($a) {
+                                    return [
+                                        'id'    => $a->task_attachment_id,
+                                        'title' => $a->title,
+                                        'type'  => $a->type,
+                                        'url'   => $a->type === 'link' ? $a->url : asset('storage/' . $a->file_path),
+                                    ];
+                                })->values()->all();
+                            @endphp
+                            <div class="task-row-item d-flex justify-content-between align-items-center py-3 px-3 border rounded-3"
+                                 style="border-color: #EFEEF3 !important;"
+                                 data-status="{{ $task->status }}"
+                                 data-task-id="{{ $task->task_id }}"
+                                 data-task-title="{{ $task->task_title }}"
+                                 data-project-id="{{ $task->project_id }}"
+                                 data-stage-id="{{ $task->stage_id }}"
+                                 data-assigned-to="{{ $task->assigned_to }}"
+                                 data-description="{{ $task->task_description }}"
+                                 data-start-date="{{ $task->start_task }}"
+                                 data-end-date="{{ $task->end_task }}"
+                                                                 data-company="{{ $project->company_name }}"
+                                 data-priority="{{ $task->priority ?? 'متوسط' }}"
+                                 data-attachments="{{ json_encode($attachmentsJson, JSON_UNESCAPED_UNICODE) }}">
                                 <a class="fw-bold task-name text-decoration-none text-dark" href="{{ route('tasks.show', $task->task_id) }}" style="font-size: 14px;">
                                     {{ $task->task_title }}
                                 </a>
                                 <div class="text-muted" style="font-size: 11px;">
                                     {{ optional($task->assignedUser)->name ?? 'غير مسند' }}
                                     · {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->translatedFormat('d F Y') : 'غير محدد' }}
-                                </div>
+                                
                             </div>
                             <div class="d-flex align-items-center gap-3" style="font-size: 13px;">
                                                                 @php
@@ -272,12 +292,13 @@
                                         default => 'badge-status-default',
                                     };
                                 @endphp
+                                <span class="badge-task-priority {{ $task->priority_class }}">{{ $task->priority_label }}</span>
                                 <span class="badge-task-status {{ $statusClass }}">{{ $task->status }}</span>
                                 <div class="d-flex align-items-center gap-1" style="color: #8A84AD;">
                                     <i class="fa-regular fa-comment"></i>
                                     <span style="font-size: 12px;">{{ $task->comments ? $task->comments->count() : 0 }}</span>
                                 </div>
-                                @if($isAdmin)
+                                 @if($isAdmin || ($isManager && $isAssignedManager))
                                     <button class="btn-icon border-0 bg-transparent p-0" onclick="openEditModal(this)" style="color: #8A84AD;"><i class="fa-regular fa-pen-to-square"></i></button>
                                     <button class="btn-icon border-0 bg-transparent p-0" onclick="openDeleteModal(this)" style="color: #8A84AD;"><i class="fa-regular fa-trash-can"></i></button>
                                 @endif
@@ -417,117 +438,9 @@
 
 @push('modals')
 @if(!$isClient && !$isEmployee)
-    <div aria-hidden="true" class="modal fade" id="taskModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content custom-modal p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="modal-title m-0" id="taskModalTitle" style="font-size: 18px; font-weight: 700;">إضافة مهمة</h3>
-                    <button aria-label="Close" class="btn-close m-0" data-bs-dismiss="modal" type="button"></button>
-                </div>
-                
-                <form id="taskForm" action="{{ route('tasks.store') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="_method" id="taskFormMethod" value="POST">
 
-                    <div class="mb-3">
-                        <label class="form-label custom-label">اسم المهمة <span class="text-danger">*</span></label>
-                        <input class="form-control custom-input w-100" id="taskNameInput" name="task_title" required type="text" placeholder="أدخل اسم المهمة"/>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label custom-label">اسم المشروع <span class="text-danger">*</span></label>
-                        <select class="form-select custom-input w-100" id="projectIdInput" name="project_id" required onchange="updateProjectDatesLimits(); updateStageOptions();">
-                            <option value="{{ $project->project_id }}" selected
-                                    data-start="{{ $project->start_project }}"
-                                    data-end="{{ $project->end_project }}"
-                                    data-company="{{ $project->company_name }}"
-                                    data-stages="{{ $project->stages->sortBy('stage_order')->map(fn($s) => ['id' => $s->project_stage_id, 'label' => $s->stage_key->label()])->values()->toJson() }}">
-                                {{ $project->project_name }}
-                            </option>
-                            @foreach($projects ?? [] as $p)
-                                @if($p->project_id != $project->project_id)
-                                    <option value="{{ $p->project_id }}"
-                                            data-start="{{ $p->start_project }}"
-                                            data-end="{{ $p->end_project }}"
-                                            data-company="{{ $p->company_name }}"
-                                            data-stages="{{ $p->stages->sortBy('stage_order')->map(fn($s) => ['id' => $s->project_stage_id, 'label' => $s->stage_key->label()])->values()->toJson() }}">
-                                        {{ $p->project_name }}
-                                    </option>
-                                @endif
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label custom-label">المرحلة <span class="text-danger">*</span></label>
-                        <select class="form-select custom-input w-100" id="stageIdInput" name="stage_id" required>
-                            <option value="">اختر مشروعاً أولاً</option>
-                        </select>
-                    </div>
-
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label custom-label">اسم الشركة <span class="text-danger">*</span></label>
-                            <select class="form-select custom-input w-100" id="companyNameInput" required>
-                                <option value="{{ $project->company_name }}" selected>{{ $project->company_name ?? 'اختر الشركة' }}</option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-6">
-                            <label class="form-label custom-label">مسند إلى</label>
-                            <select class="form-select custom-input w-100" id="assignedToInput" name="assigned_to">
-                                <option value="">اختر الموظف</option>
-                                @php
-                                    $allEmployees = isset($employees) && count($employees) > 0 
-                                        ? $employees 
-                                        : (\class_exists(\App\Models\Employee::class) ? \App\Models\Employee::all() : \App\Models\User::all());
-                                @endphp
-                                @foreach($allEmployees as $employee)
-                                    <option value="{{ $employee->employee_id ?? $employee->id }}">{{ $employee->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label custom-label">الوصف <span class="text-danger">*</span></label>
-                        <textarea class="form-control custom-input w-100" id="descriptionInput" name="task_description" required rows="2" placeholder="أدخل وصف المهمة"></textarea>
-                    </div>
-
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label custom-label">تاريخ البدء <span class="text-danger">*</span></label>
-                            <input class="form-control custom-date-btn w-100" id="startDateInput" name="start_task" required type="date" min="{{ $project->start_project }}" max="{{ $project->end_project }}" onchange="document.getElementById('endDateInput').min = this.value;"/>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label custom-label">تاريخ الانتهاء <span class="text-danger">*</span></label>
-                            <input class="form-control custom-date-btn w-100" id="endDateInput" name="end_task" required type="date" min="{{ $project->start_project }}" max="{{ $project->end_project }}"/>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label custom-label">الحالة <span class="text-danger">*</span></label>
-                        <select class="form-select custom-input w-100" id="statusSelect" name="status" required>
-                            <option value="قيد التنفيذ">قيد التنفيذ</option>
-                            <option value="قيد المراجعة">قيد المراجعة</option>
-                            <option value="مكتملة">مكتملة</option>
-                            <option value="متوقف مؤقتاً">متوقف مؤقتاً</option>
-                            <option value="قيد الانتظار">قيد الانتظار</option>
-                        </select>
-                        @error('status')
-                            <div class="text-danger mt-1 text-end" style="color: red; font-size: 0.85rem; font-weight: bold;">
-                                {{ $message }}
-                            </div>
-                        @enderror
-                    </div>
-
-                    <div class="text-center">
-                        <button class="btn btn-save px-5" type="submit">حفظ</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    {{-- لوحة إضافة/تعديل المهمة (Offcanvas) — مشتركة مع صفحة المهام --}}
+    @include('partials.task-panel')
 
     @if($isAdmin)
     <div aria-hidden="true" class="modal fade" id="deleteModal" tabindex="-1">
@@ -546,5 +459,6 @@
         </div>
     </div>
     @endif
+
 @endif
 @endpush

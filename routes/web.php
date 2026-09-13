@@ -15,6 +15,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TrashController;
 use App\Http\Controllers\ProjectDocumentController;
+use App\Http\Controllers\TaskAttachmentController;
 
 
 
@@ -97,6 +98,14 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/documents/{project_document_id}', [ProjectDocumentController::class, 'destroy'])->name('documents.destroy');
     });
 
+  // Task Attachments: task participants (Admin/Manager/Employee) can add; only Admin/Manager can delete
+    Route::middleware('role:admin,manager,employee')->group(function () {
+        Route::post('/tasks/{task_id}/attachments', [TaskAttachmentController::class, 'store'])->name('task_attachments.store');
+    });
+    Route::middleware('role:admin,manager')->group(function () {
+        Route::delete('/attachments/{task_attachment_id}', [TaskAttachmentController::class, 'destroy'])->name('task_attachments.destroy');
+    });
+    
     
         // Clients management: Admin/Manager. Employees resource (HR-level record management): Admin only.
     Route::middleware('role:admin,manager')->group(function () {
