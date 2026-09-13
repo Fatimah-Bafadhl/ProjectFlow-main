@@ -78,7 +78,12 @@
     }
 @endphp
 
-<div class="d-flex justify-content-end mb-3">
+<div class="d-flex justify-content-end gap-2 mb-3">
+    @if(!$isClient)
+    <a href="{{ route('documents.index', $project->project_id) }}" class="btn btn-outline-secondary d-flex align-items-center gap-2">
+        <span>المستندات</span>
+    </a>
+    @endif
     @if(!$isClient && !$isEmployee)
     <button class="btn btn-add-task d-flex align-items-center gap-2" data-bs-target="#taskModal" data-bs-toggle="modal" onclick="prepareAddModal(); updateProjectDatesLimits(); updateStageOptions();">
         <span>إضافة مهمة +</span>

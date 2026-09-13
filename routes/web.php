@@ -14,6 +14,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TrashController;
+use App\Http\Controllers\ProjectDocumentController;
 
 
 
@@ -86,6 +87,15 @@ Route::middleware(['auth'])->group(function () {
     });
     Route::middleware('role:admin,manager')->group(function () {
         Route::resource('tasks', TaskController::class)->only(['create', 'store', 'destroy']);
+    });
+
+    // Project Documents: Admin/Manager/Employee can view; only Admin/Manager can add or delete
+    Route::middleware('role:admin,manager,employee')->group(function () {
+        Route::get('/projects/{project_id}/documents', [ProjectDocumentController::class, 'index'])->name('documents.index');
+    });
+    Route::middleware('role:admin,manager')->group(function () {
+        Route::post('/projects/{project_id}/documents', [ProjectDocumentController::class, 'store'])->name('documents.store');
+        Route::delete('/documents/{project_document_id}', [ProjectDocumentController::class, 'destroy'])->name('documents.destroy');
     });
 
     
