@@ -69,14 +69,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.notifications');
     Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
-
     // الموارد الأساسية (Projects, Tasks, Clients, Employees)
     // Projects: everyone authenticated can view; only Admin/Manager can create, edit, or delete
-    Route::resource('projects', ProjectController::class)->only(['index', 'show']);
-        Route::middleware('role:admin,manager')->group(function () {
+    Route::middleware('role:admin,manager')->group(function () {
         Route::resource('projects', ProjectController::class)->except(['index', 'show']);
         Route::put('/projects/{project_id}/stages/{stage_id}', [ProjectController::class, 'updateStage'])->name('projects.stages.update');
     });
+    Route::resource('projects', ProjectController::class)->only(['index', 'show']);
 
     // Tasks: everyone authenticated can view; Employees can only edit/update (their own, checked in controller);
     // only Admin/Manager can create or delete

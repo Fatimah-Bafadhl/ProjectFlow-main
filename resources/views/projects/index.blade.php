@@ -31,9 +31,9 @@ $isAdmin = $user && $user->isAdmin();
     </div>
 
     @if(!$isClient && !$isEmployee)
-    <button class="btn btn-add-project px-4 py-2" onclick="prepareAddProjectModal('{{ route('projects.store') }}')" type="button">
-        مشروع جديد +
-    </button>
+    <a href="{{ route('projects.create') }}" class="btn btn-add-project px-4 py-2">
+    مشروع جديد +
+</a>
     @endif
 </div>
 

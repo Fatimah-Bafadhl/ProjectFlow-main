@@ -57,6 +57,19 @@ class ProjectController extends Controller
     return view('projects.index', compact('projects', 'managers', 'employees', 'allUsers', 'projectTypes'));
 }
 
+    public function create()
+    {
+        if (auth()->user()->isClient() || auth()->user()->isEmployee()) {
+            abort(403, 'عذراً، لا تمتلك صلاحية إضافة مشاريع.');
+        }
+
+        $managers = User::where('role', 'manager')->get();
+        $employees = Employee::all();
+        $projectTypes = \App\Enums\ProjectType::cases();
+
+        return view('projects.create', compact('managers', 'employees', 'projectTypes'));
+    }
+
     public function store(Request $request)
     {
         if (auth()->user()->isClient() || auth()->user()->isEmployee()) {
