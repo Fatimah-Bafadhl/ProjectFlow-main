@@ -76,8 +76,9 @@ $isAdmin = $user && $user->isAdmin();
                  data-end-date="{{ $project->end_project }}"
                  data-status="{{ $project->status }}"
                  data-project-type="{{ $project->project_type->value }}"
-                 data-manager-ids="{{ $projectManagers->pluck('user_id')->implode(',') }}"
+                                  data-manager-ids="{{ $projectManagers->pluck('user_id')->implode(',') }}"
                  data-employee-ids="{{ $project->employees->pluck('employee_id')->implode(',') }}"
+                 data-client-ids="{{ $project->clients->pluck('client_id')->implode(',') }}"
                  data-task-count="{{ $totalTasks }}"
                  data-comment-count="{{ $project->comments_count ?? 0 }}"
                  data-open-ticket-count="{{ $openTickets }}">
@@ -233,6 +234,20 @@ $isAdmin = $user && $user->isAdmin();
         @endforeach
     </div>
 </div>
+
+<div class="mb-4 text-end">
+    <label class="custom-label mb-1">العميل</label>
+    <div class="border rounded-3 p-2" style="max-height: 150px; overflow-y: auto;">
+        @forelse($clients as $client)
+            <div class="form-check text-end">
+                <input class="form-check-input project-client-checkbox" type="checkbox" name="client_ids[]" value="{{ $client->client_id }}" id="modal_client_{{ $client->client_id }}">
+                <label class="form-check-label" for="modal_client_{{ $client->client_id }}">{{ $client->name }} ({{ $client->company_name }})</label>
+            </div>
+        @empty
+            <p class="text-muted small mb-0">لا يوجد عملاء بعد.</p>
+        @endforelse
+    </div>
+</div>
                         <div class="text-center pt-2">
                             <button class="btn btn-save" type="submit">حفظ المشروع</button>
                         </div>
@@ -273,8 +288,7 @@ $isAdmin = $user && $user->isAdmin();
         document.getElementById('projectNameInput').value = '';
         document.getElementById('projectCompanyNameInput').value = '';
         document.getElementById('projectDescInput').value = '';
-        document.querySelectorAll('.project-manager-checkbox, .project-employee-checkbox').forEach(cb => cb.checked = false);
-        
+                document.querySelectorAll('.project-manager-checkbox, .project-employee-checkbox, .project-client-checkbox').forEach(cb => cb.checked = false);
         // عند الإضافة: يقبل من تاريخ اليوم فصاعداً ولا يقبل تواريخ ماضية
         const today = new Date().toISOString().split('T')[0];
         const startDateInput = document.getElementById('projectStartDateInput');
@@ -327,6 +341,11 @@ document.querySelectorAll('.project-manager-checkbox').forEach(cb => {
 const employeeIds = (card.getAttribute('data-employee-ids') || '').split(',').filter(Boolean);
 document.querySelectorAll('.project-employee-checkbox').forEach(cb => {
     cb.checked = employeeIds.includes(cb.value);
+});
+
+const clientIds = (card.getAttribute('data-client-ids') || '').split(',').filter(Boolean);
+document.querySelectorAll('.project-client-checkbox').forEach(cb => {
+    cb.checked = clientIds.includes(cb.value);
 });
         myModal.show();
     }

@@ -76,7 +76,7 @@
         </div>
         @endif
 
-        <div class="mb-4 text-end">
+                <div class="mb-4 text-end">
             <label class="custom-label mb-1">فريق العمل (الموظفون)</label>
             <div class="border rounded-3 p-2" style="max-height: 150px; overflow-y: auto;">
                 @foreach($employees as $employee)
@@ -85,6 +85,20 @@
                         <label class="form-check-label" for="employee_{{ $employee->employee_id }}">{{ $employee->name }}</label>
                     </div>
                 @endforeach
+            </div>
+        </div>
+
+        <div class="mb-4 text-end">
+            <label class="custom-label mb-1">العميل</label>
+            <div class="border rounded-3 p-2" style="max-height: 150px; overflow-y: auto;">
+                @forelse($clients as $client)
+                    <div class="form-check text-end">
+                        <input class="form-check-input" type="checkbox" name="client_ids[]" value="{{ $client->client_id }}" id="client_{{ $client->client_id }}" @checked(in_array($client->client_id, old('client_ids', [])))>
+                        <label class="form-check-label" for="client_{{ $client->client_id }}">{{ $client->name }} ({{ $client->company_name }})</label>
+                    </div>
+                @empty
+                    <p class="text-muted small mb-0">لا يوجد عملاء بعد. يمكنك إضافة عميل من صفحة المستخدمين ثم اختياره هنا.</p>
+                @endforelse
             </div>
         </div>
 

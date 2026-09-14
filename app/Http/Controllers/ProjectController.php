@@ -49,15 +49,16 @@ class ProjectController extends Controller
             ])
             ->get();
     }
-         $managers = User::where('role', 'manager')->get();
+                  $managers = User::where('role', 'manager')->get();
     $employees = Employee::all();
+    $clients = Client::all();
     $allUsers = User::whereIn('role', ['admin', 'manager'])->get();
     $projectTypes = \App\Enums\ProjectType::cases();
 
-    return view('projects.index', compact('projects', 'managers', 'employees', 'allUsers', 'projectTypes'));
+    return view('projects.index', compact('projects', 'managers', 'employees', 'clients', 'allUsers', 'projectTypes'));
 }
 
-    public function create()
+        public function create()
     {
         if (auth()->user()->isClient() || auth()->user()->isEmployee()) {
             abort(403, 'عذراً، لا تمتلك صلاحية إضافة مشاريع.');
@@ -65,9 +66,10 @@ class ProjectController extends Controller
 
         $managers = User::where('role', 'manager')->get();
         $employees = Employee::all();
+        $clients = Client::all();
         $projectTypes = \App\Enums\ProjectType::cases();
 
-        return view('projects.create', compact('managers', 'employees', 'projectTypes'));
+        return view('projects.create', compact('managers', 'employees', 'clients', 'projectTypes'));
     }
 
     public function store(Request $request)
@@ -86,8 +88,10 @@ class ProjectController extends Controller
     'project_type'        => 'required|in:app,website',
     'manager_ids'         => 'nullable|array',
     'manager_ids.*'       => 'exists:users,user_id',
-    'employee_ids'        => 'nullable|array',
+        'employee_ids'        => 'nullable|array',
     'employee_ids.*'      => 'exists:employees,employee_id',
+    'client_ids'          => 'nullable|array',
+    'client_ids.*'        => 'exists:clients,client_id',
         ]);
 
         $project = Project::create([
@@ -109,6 +113,7 @@ class ProjectController extends Controller
 }
 
 $project->employees()->sync($request->input('employee_ids', []));
+$project->clients()->sync($request->input('client_ids', []));
 
 
         foreach (\App\Enums\ProjectStageName::cases() as $stageName) {
@@ -245,8 +250,10 @@ $project->employees()->sync($request->input('employee_ids', []));
      'project_type'        => 'required|in:app,website',
     'manager_ids'         => 'nullable|array',
     'manager_ids.*'       => 'exists:users,user_id',
-    'employee_ids'        => 'nullable|array',
+       'employee_ids'        => 'nullable|array',
     'employee_ids.*'      => 'exists:employees,employee_id',
+    'client_ids'          => 'nullable|array',
+    'client_ids.*'        => 'exists:clients,client_id',
         ]);
 
         $project->update([
@@ -274,7 +281,9 @@ if (! empty($removedEmployeeIds)) {
 }
 
 $project->employees()->sync($newEmployeeIds);
+$project->clients()->sync($request->input('client_ids', []));
 
+        // تحديث حالة المشروع ونسبته بناءً على المهام بعد التعديل
         // تحديث حالة المشروع ونسبته بناءً على المهام بعد التعديل
         if (method_exists($project, 'syncStatus')) {
             $project->syncStatus();

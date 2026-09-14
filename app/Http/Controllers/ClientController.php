@@ -42,7 +42,7 @@ class ClientController extends Controller
             'company_name'  => 'required|string|max:255',
             'email'         => 'required|email|max:255',
             'phone'         => 'required|string|max:20',
-            'project_ids'   => 'required|array|min:1',
+            'project_ids'   => 'nullable|array',
             'project_ids.*' => 'exists:projects,project_id',
         ]);
 
@@ -53,12 +53,11 @@ class ClientController extends Controller
             'phone'        => $request->phone,
         ]);
 
-        $client->projects()->sync($request->project_ids);
+               $projectIds = $request->input('project_ids', []);
+        $client->projects()->sync($projectIds);
 
-        $firstProject = Project::find($request->project_ids[0]);
-        if ($firstProject) {
-            $client->update(['project_name' => $firstProject->project_name]);
-        }
+        $firstProject = !empty($projectIds) ? Project::find($projectIds[0]) : null;
+        $client->update(['project_name' => $firstProject?->project_name]);
 
         if (auth()->check()) {
             auth()->user()->notify(new SystemActivityNotification(

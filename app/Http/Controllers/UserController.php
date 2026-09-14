@@ -39,7 +39,7 @@ class UserController extends Controller
             'role'         => 'required|in:admin,manager,employee,client',
             'phone'        => 'nullable|string|max:20',
             'department' => 'nullable|string|max:255',
-            'project_ids'   => 'required_if:role,client|array',
+                        'project_ids'   => 'nullable|array',
             'project_ids.*' => 'exists:projects,project_id',
            // 'project_id' => 'nullable|exists:projects,project_id',
            // 'department'   => 'required_if:role,employee|string|max:255',
@@ -59,7 +59,8 @@ class UserController extends Controller
         'phone'      => $user->phone,
     ]);
 } elseif ($validated['role'] === 'client') {
-    $firstProject = Project::findOrFail($validated['project_ids'][0]);
+    $projectIds = $validated['project_ids'] ?? [];
+    $firstProject = !empty($projectIds) ? Project::find($projectIds[0]) : null;
 
     $client = Client::create([
         'user_id'      => $user->user_id,
@@ -67,10 +68,12 @@ class UserController extends Controller
         'company_name' => $validated['company_name'],
         'email'        => $user->email,
         'phone'        => $user->phone,
-        'project_name' => $firstProject->project_name,
+        'project_name' => $firstProject?->project_name,
     ]);
 
-    $client->projects()->attach($validated['project_ids']);
+    if (!empty($projectIds)) {
+        $client->projects()->attach($projectIds);
+    }
 }
 
         auth()->user()->notify(new SystemActivityNotification(
