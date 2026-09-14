@@ -152,8 +152,10 @@ class Project extends Model
             $query->whereNull('archived_at');
         });
 
-        static::deleting(function (Project $project) {
-            if (! $project->isForceDeleting()) {
+                static::deleting(function (Project $project) {
+            if ($project->isForceDeleting()) {
+                $project->stages()->withTrashed()->each(fn ($stage) => $stage->forceDelete());
+            } else {
                 $project->stages()->each(fn ($stage) => $stage->delete());
             }
         });

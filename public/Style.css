@@ -1384,3 +1384,134 @@ main.flex-grow-1 {
     #filesNoResults,
     #linksNoResults { padding: 12px 0; }
 }
+
+/* ==========================================
+   Users Management Table
+========================================== */
+.users-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.users-table thead th {
+    background-color: #F0EEF6;
+    color: #5B5480;
+    font-family: 'Lama Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #E5E0EE;
+    white-space: nowrap;
+}
+.users-table thead th:first-child { border-top-right-radius: 12px; }
+.users-table thead th:last-child  { border-top-left-radius: 12px; }
+
+.users-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+.users-table tbody tr:hover {
+    background-color: #FAF9FB;
+}
+.users-table tbody td {
+    padding: 14px;
+    font-size: 13.5px;
+    color: #2B2B2B;
+    vertical-align: middle;
+    border-bottom: 1px solid #F0F0F0;
+}
+
+.users-table .user-name {
+    font-weight: 500;
+    color: #1A1A3A;
+}
+
+.users-table .btn-icon {
+    font-size: 15px;
+    line-height: 1;
+    color: #8C8C8C;
+    transition: color 0.15s ease;
+}
+.users-table .btn-icon:hover {
+    color: #8A84AD;
+}
+
+/* Role badges — admin is red (high privilege, rare);
+   manager/employee share lavender (internal team);
+   client is gray (external). */
+.role-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+.role-badge-admin    { background-color: #FDECEC; color: #D9534F; }
+.role-badge-manager  { background-color: #F0EEF6; color: #5B5480; }
+.role-badge-employee { background-color: #F0EEF6; color: #5B5480; }
+.role-badge-client   { background-color: #F0F0F0; color: #6C757D; }
+
+/* ==========================================
+   Team Page Tabs (Employees / Managers)
+========================================== */
+.nav-tabs {
+    border-bottom: 1px solid #EFEEF3;
+    margin-bottom: 20px;
+}
+.nav-tabs .nav-link {
+    color: #6C757D;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    font-family: 'Lama Sans', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 10px 18px;
+    background: transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.nav-tabs .nav-link:hover {
+    color: #1A1A3A;
+    border-bottom-color: #E5E0EE;
+}
+.nav-tabs .nav-link.active {
+    color: #8A84AD;
+    background: transparent;
+    border-bottom-color: #8A84AD;
+    font-weight: 700;
+}
+
+/* Tab count badge */
+.tab-count-badge {
+    display: inline-block;
+    min-width: 22px;
+    padding: 1px 8px;
+    margin-right: 6px;
+    background-color: #F0EEF6;
+    color: #8A84AD;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.6;
+    text-align: center;
+}
+.nav-tabs .nav-link.active .tab-count-badge {
+    background-color: #8A84AD;
+    color: #FFFFFF;
+}
+
+/* Tab / title count badge */
+.tab-count-badge {
+    display: inline-block;
+    min-width: 22px;
+    padding: 1px 8px;
+    margin-right: 6px;
+    background-color: #F0EEF6;
+    color: #8A84AD;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.6;
+    text-align: center;
+    vertical-align: middle;
+}

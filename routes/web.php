@@ -108,7 +108,7 @@ Route::middleware(['auth'])->group(function () {
     
     
         // Clients management: Admin/Manager. Employees resource (HR-level record management): Admin only.
-    Route::middleware('role:admin,manager')->group(function () {
+    Route::middleware('role:admin')->group(function () {
         Route::resource('clients', ClientController::class);
     });
     Route::middleware('role:admin')->group(function () {

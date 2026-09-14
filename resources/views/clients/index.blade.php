@@ -7,74 +7,112 @@
     $user = auth()->user();
     $email = $user->email ?? '';
     $isClient = $user->role === \App\Enums\Role::Client;
-$isEmployee = $user->role === \App\Enums\Role::Employee;
-    $canManage = !$isClient && !$isEmployee;
+    $isEmployee = $user->role === \App\Enums\Role::Employee;
+    $canManage = $user->isAdmin();
 @endphp
-
 <!-- هيدر قسم العملاء -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="task-page-title m-0">العملاء</h2>
-    
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="task-page-title m-0">العملاء <span class="tab-count-badge">{{ $clients->count() }}</span></h2>
+    @if(auth()->user()->isAdmin())
+        <button type="button" class="btn btn-add-project px-4 py-2" onclick="prepareAddClientModal('{{ route('users.store') }}')">
+            عميل جديد +
+        </button>
+    @endif
 </div>
 
-<!-- كارد إجمالي العملاء -->
-<div class="total-clients-card mb-4">
-    <div class="count-number" id="totalClientsCount">{{ $clients->count() }}</div>
-    <div class="label-text">
-        <span>اجمالي العملاء</span>
-        <i class="fa-solid fa-users-rectangle card-icon"></i>
-    </div>
+<!-- شريط البحث -->
+<div class="search-filter-bar d-flex flex-wrap align-items-center gap-2 mb-3">
+    <input type="text" id="clientSearchInput" class="form-control custom-input text-end" style="max-width: 320px;" placeholder="بحث بالاسم أو البريد الإلكتروني أو الشركة...">
 </div>
 
-<!-- قائمة العملاء -->
-<div class="clients-container-scroll px-1" style="max-height: 480px; overflow-y: auto;">
-    <div class="row g-3 row-cols-1 row-cols-md-2 row-cols-lg-3" id="clientsList">
-        @forelse($clients as $client)
-                       <div class="col client-card-wrapper" 
-                 data-client-id="{{ $client->client_id ?? $client->id }}"
-                 data-client-name="{{ $client->name }}"
-                 data-company-name="{{ $client->company_name }}"
-                 data-client-email="{{ $client->email }}"
-                 data-client-phone="{{ $client->phone }}"
-                 data-client-project="{{ $client->project_name }}"
-                 data-client-project-ids="{{ $client->projects->pluck('project_id')->implode(',') }}">
-                 
-                <div class="client-card p-3 rounded-3 w-100 border">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                            <h3 class="client-name m-0">{{ $client->name }}</h3>
-                            <div class="company-name">{{ $client->company_name }}</div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="client-badge">عميل</span>
-                            
-                            @if($canManage)
-                            <div class="task-actions">
-                                <button type="button" class="btn-icon text-muted me-1 border-0 bg-transparent p-0" onclick="openEditClientModal(this, '{{ route('clients.update', $client) }}')">
+<!-- جدول العملاء -->
+<div class="table-responsive">
+    <table class="table align-middle users-table">
+        <thead>
+            <tr>
+                <th class="text-end">اسم العميل</th>
+                <th class="text-end">البريد الإلكتروني</th>
+                <th class="text-end">الشركة</th>
+                <th class="text-end">المشاريع</th>
+                <th class="text-end">الهاتف</th>
+                <th class="text-end">تاريخ الإضافة</th>
+                <th class="text-center">إجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="clientsTableBody">
+            @forelse($clients as $client)
+                <tr class="paginate-item"
+                    data-filter-match="1"
+                    data-search-text="{{ strtolower($client->name . ' ' . $client->email . ' ' . $client->company_name) }}"
+                    data-client-id="{{ $client->client_id ?? $client->id }}"
+                    data-client-name="{{ $client->name }}"
+                    data-company-name="{{ $client->company_name }}"
+                    data-client-email="{{ $client->email }}"
+                    data-client-phone="{{ $client->phone }}"
+                    data-client-project="{{ $client->project_name }}"
+                    data-client-project-ids="{{ $client->projects->pluck('project_id')->implode(',') }}">
+                    <td class="text-end"><span class="user-name">{{ $client->name }}</span></td>
+                    <td class="text-end"><span class="text-muted">{{ $client->email }}</span></td>
+                    <td class="text-end">{{ $client->company_name ?? '-' }}</td>
+                                        <td class="text-end">
+                        @if($client->projects->count() > 0)
+                            <div class="d-flex flex-wrap justify-content-end gap-1">
+                                @foreach($client->projects as $project)
+                                    <span class="badge-project-status">{{ $project->project_name }}</span>
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="text-muted">-</span>
+                        @endif
+                    </td>
+                    <td class="text-end"><span dir="ltr">{{ $client->phone ?? '-' }}</span></td>
+                    <td class="text-end"><span class="text-muted" dir="ltr">{{ $client->created_at?->format('Y-m-d') ?? '-' }}</span></td>
+                    <td class="text-center">
+                        @if($canManage)
+                            <div class="d-inline-flex align-items-center gap-2">
+                                <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="تعديل" onclick="openEditClientModal(this, '{{ route('clients.update', $client) }}')">
                                     <i class="fa-regular fa-pen-to-square"></i>
                                 </button>
-                                <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" onclick="openDeleteClientModal(this, '{{ route('clients.destroy', $client) }}')">
+                                <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف" onclick="openDeleteClientModal(this, '{{ route('clients.destroy', $client) }}')">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             </div>
-                            @endif
-                        </div>
-                    </div>
-                    <hr class="my-2 text-muted"/>
-                    <div class="client-details d-flex flex-column gap-1 text-muted" style="font-size: 13px;">
-                        <div><i class="fa-regular fa-envelope me-2"></i><span class="client-email">{{ $client->email }}</span></div>
-                        <div><i class="fa-solid fa-phone me-2"></i><span class="client-phone" dir="ltr">{{ $client->phone }}</span></div>
-                        <div><i class="fa-solid fa-briefcase me-2"></i>اسم المشروع: <span class="client-project">{{ $client->project_name }}</span></div>
-                    </div>
-                </div>
-            </div>
-        @empty
-            <div class="col-12 text-center py-4" id="noClientsMessage">
-                <p class="text-muted">لا يوجد عملاء حالياً</p>
-            </div>
-        @endforelse
-    </div>
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="7" class="text-center text-muted py-4">لا يوجد عملاء حالياً</td></tr>
+            @endforelse
+        </tbody>
+    </table>
 </div>
+
+<div id="clientsPagination" class="pagination-controls"></div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const paginator = createListPaginator({
+        gridSelector: '#clientsTableBody',
+        itemSelector: 'tr.paginate-item',
+        controlsId:   'clientsPagination',
+        perPage:      8,
+    });
+    paginator.render();
+
+    function filterClients() {
+        const term = (document.getElementById('clientSearchInput')?.value || '').trim().toLowerCase();
+        document.querySelectorAll('#clientsTableBody tr.paginate-item').forEach(row => {
+            const haystack = row.getAttribute('data-search-text') || '';
+            row.setAttribute('data-filter-match', (!term || haystack.includes(term)) ? '1' : '0');
+        });
+        paginator.reset();
+    }
+
+    document.getElementById('clientSearchInput')?.addEventListener('input', filterClients);
+});
+</script>
+@endpush
 @endsection
 
 @push('modals')
@@ -89,23 +127,23 @@ $isEmployee = $user->role === \App\Enums\Role::Employee;
             </div>
             <div class="modal-body p-0">
                 <form id="clientForm" method="POST" action="{{ route('clients.store') }}">
-                    @csrf
-                    <input type="hidden" name="_method" id="clientFormMethod" value="POST">
+    @csrf
+    <input type="hidden" name="_method" id="clientFormMethod" value="POST">
+    <input type="hidden" name="role" id="clientRoleInput" value="client" disabled>
 
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">اسم العميل <span class="text-danger">*</span></label>
-                        <input class="form-control custom-input text-end" id="clientNameInput" name="name" required type="text"/>
-                    </div>
+    <div class="mb-3 text-end">
+        <label class="custom-label mb-1">اسم العميل <span class="text-danger">*</span></label>
+        <input class="form-control custom-input text-end" id="clientNameInput" name="name" required type="text"/>
+    </div>
 
-                    <!-- حقل اسم الشركة (قائمة منسدلة إلزامية مرتبطة بقاعدة البيانات) -->
-                    <div class="mb-3 text-end">
+    <div class="mb-3 text-end d-none" id="clientPasswordGroup">
+        <label class="custom-label mb-1">كلمة المرور <span class="text-danger">*</span></label>
+        <input class="form-control custom-input text-end" id="clientPasswordInput" name="password" type="password" minlength="8" disabled/>
+    </div>
+
+                                        <div class="mb-3 text-end">
                         <label class="custom-label mb-1">اسم الشركة <span class="text-danger">*</span></label>
-                        <select class="form-control custom-input text-end" id="companyNameInput" name="company_name" required>
-                            <option value="" disabled selected>اختر الشركة المناسبة</option>
-                            @foreach($companies as $company)
-                                <option value="{{ $company->company_name }}">{{ $company->company_name }}</option>
-                            @endforeach
-                        </select>
+                        <input class="form-control custom-input text-end" id="companyNameInput" name="company_name" required type="text"/>
                     </div>
 
                     <div class="mb-3 text-end">

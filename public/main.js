@@ -469,6 +469,10 @@ function prepareAddClientModal(storeUrl) {
     const modalTitle = document.getElementById('clientModalTitle');
     const clientForm = document.getElementById('clientForm');
     const methodInput = document.getElementById('clientFormMethod');
+    const nameInput = document.getElementById('clientNameInput');
+    const roleInput = document.getElementById('clientRoleInput');
+    const passwordGroup = document.getElementById('clientPasswordGroup');
+    const passwordInput = document.getElementById('clientPasswordInput');
 
     if (modalTitle) modalTitle.innerText = "إضافة عميل جديد";
     if (clientForm) {
@@ -476,6 +480,19 @@ function prepareAddClientModal(storeUrl) {
         if (storeUrl) clientForm.action = storeUrl;
     }
     if (methodInput) methodInput.value = "POST";
+
+    // Add mode -> users.store expects 'username', not 'name'
+    if (nameInput) nameInput.setAttribute('name', 'username');
+
+    // Add mode -> submit role=client (enabled hidden input)
+    if (roleInput) roleInput.removeAttribute('disabled');
+
+    // Add mode -> reveal + enable password
+    if (passwordGroup) passwordGroup.classList.remove('d-none');
+    if (passwordInput) {
+        passwordInput.removeAttribute('disabled');
+        passwordInput.setAttribute('required', 'required');
+    }
 
     const checkboxContainer = document.getElementById('clientProjectsCheckboxes');
     if (checkboxContainer) {
@@ -490,14 +507,32 @@ function prepareAddClientModal(storeUrl) {
 }
 
 function openEditClientModal(button, updateUrl) {
-    const clientCard = button.closest('.client-card-wrapper');
+    const clientCard = button.closest('[data-client-id]');
     const modalTitle = document.getElementById('clientModalTitle');
     const clientForm = document.getElementById('clientForm');
     const methodInput = document.getElementById('clientFormMethod');
+    const nameInput = document.getElementById('clientNameInput');
+    const roleInput = document.getElementById('clientRoleInput');
+    const passwordGroup = document.getElementById('clientPasswordGroup');
+    const passwordInput = document.getElementById('clientPasswordInput');
 
     if (modalTitle) modalTitle.innerText = "تعديل بيانات العميل";
     if (clientForm && updateUrl) clientForm.action = updateUrl;
     if (methodInput) methodInput.value = "PUT";
+
+    // Edit mode -> clients.update expects 'name', not 'username'
+    if (nameInput) nameInput.setAttribute('name', 'name');
+
+    // Edit mode -> drop role entirely
+    if (roleInput) roleInput.setAttribute('disabled', 'disabled');
+
+    // Edit mode -> hide + disable password so it isn't sent empty
+    if (passwordGroup) passwordGroup.classList.add('d-none');
+    if (passwordInput) {
+        passwordInput.setAttribute('disabled', 'disabled');
+        passwordInput.removeAttribute('required');
+        passwordInput.value = '';
+    }
 
         if (clientCard) {
         if (document.getElementById('clientNameInput')) document.getElementById('clientNameInput').value = clientCard.getAttribute('data-client-name') || '';
@@ -523,7 +558,7 @@ function openEditClientModal(button, updateUrl) {
 }
 
 function openDeleteClientModal(button, deleteUrl) {
-    const clientCard = button.closest('.client-card-wrapper');
+    const clientCard = button.closest('[data-client-id]');
     const clientName = clientCard ? clientCard.getAttribute('data-client-name') : 'العميل';
     
     const deleteModalText = document.getElementById('deleteClientModalText');
@@ -538,6 +573,22 @@ function openDeleteClientModal(button, deleteUrl) {
     if (modalEl) {
         const deleteModal = new bootstrap.Modal(modalEl);
         deleteModal.show();
+    }
+}
+
+/* Users page — delete confirmation (shared modal) */
+function openDeleteUserModal(deleteUrl, username) {
+    const textEl = document.getElementById('deleteUserModalText');
+    if (textEl) textEl.innerText = `هل تريد بالتأكيد حذف المستخدم "${username}"؟`;
+
+    const form = document.getElementById('deleteUserForm');
+    if (form && deleteUrl) form.action = deleteUrl;
+
+    const modalEl = document.getElementById('deleteUserModal');
+    if (modalEl) {
+        let instance = bootstrap.Modal.getInstance(modalEl);
+        if (!instance) instance = new bootstrap.Modal(modalEl);
+        instance.show();
     }
 }
 
@@ -1230,46 +1281,98 @@ function removeCurrentAttachment() {
    10. إدارة الموظفين (Employee Operations)[cite: 1]
 ========================================== */
 function prepareAddEmployeeModal(storeRoute) {
-    document.getElementById('employeeModalTitle').innerText = 'إضافة موظف جديد';
-    document.getElementById('employeeForm').action = storeRoute;
-    document.getElementById('employeeFormMethod').value = 'POST';
-    document.getElementById('employeeNameInput').value = '';
-    document.getElementById('departmentInput').value = '';
-    document.getElementById('employeeEmailInput').value = '';
-    document.getElementById('employeePhoneInput').value = '';
-    
-    var myModal = new bootstrap.Modal(document.getElementById('employeeModal'));
-    myModal.show();
+    const modalTitle    = document.getElementById('employeeModalTitle');
+    const form          = document.getElementById('employeeForm');
+    const methodInput   = document.getElementById('employeeFormMethod');
+    const nameInput     = document.getElementById('employeeNameInput');
+    const roleInput     = document.getElementById('employeeRoleInput');
+    const passwordGroup = document.getElementById('employeePasswordGroup');
+    const passwordInput = document.getElementById('employeePasswordInput');
+
+    if (modalTitle) modalTitle.innerText = 'إضافة موظف جديد';
+    if (form) {
+        form.reset();
+        if (storeRoute) form.action = storeRoute;
+    }
+    if (methodInput) methodInput.value = 'POST';
+
+    // Add mode -> users.store expects 'username', not 'name'
+    if (nameInput) nameInput.setAttribute('name', 'username');
+
+    // Add mode -> submit role=employee (enabled hidden input)
+    if (roleInput) roleInput.removeAttribute('disabled');
+
+    // Add mode -> reveal + enable password
+    if (passwordGroup) passwordGroup.classList.remove('d-none');
+    if (passwordInput) {
+        passwordInput.removeAttribute('disabled');
+        passwordInput.setAttribute('required', 'required');
+    }
+
+    if (document.getElementById('departmentInput'))     document.getElementById('departmentInput').value = '';
+    if (document.getElementById('employeeEmailInput'))  document.getElementById('employeeEmailInput').value = '';
+    if (document.getElementById('employeePhoneInput'))  document.getElementById('employeePhoneInput').value = '';
+
+    const modalEl = document.getElementById('employeeModal');
+    if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
 }
 
+
+
 function openEditEmployeeModal(button, updateRoute) {
-    var wrapper = button.closest('.employee-card-wrapper');
-    var name = wrapper.getAttribute('data-employee-name');
-    var department = wrapper.getAttribute('data-department');
-    var email = wrapper.getAttribute('data-employee-email');
-    var phone = wrapper.getAttribute('data-employee-phone');
+    const row = button.closest('[data-employee-id]');
+    if (!row) return;
+
+    const nameInput     = document.getElementById('employeeNameInput');
+    const roleInput     = document.getElementById('employeeRoleInput');
+    const passwordGroup = document.getElementById('employeePasswordGroup');
+    const passwordInput = document.getElementById('employeePasswordInput');
 
     document.getElementById('employeeModalTitle').innerText = 'تعديل بيانات الموظف';
     document.getElementById('employeeForm').action = updateRoute;
     document.getElementById('employeeFormMethod').value = 'PUT';
-    document.getElementById('employeeNameInput').value = name;
-    document.getElementById('departmentInput').value = department;
-    document.getElementById('employeeEmailInput').value = email;
-    document.getElementById('employeePhoneInput').value = phone;
 
-    var myModal = new bootstrap.Modal(document.getElementById('employeeModal'));
-    myModal.show();
+    if (nameInput) {
+        nameInput.setAttribute('name', 'name');
+        nameInput.value = row.getAttribute('data-employee-name') || '';
+    }
+    if (roleInput) roleInput.setAttribute('disabled', 'disabled');
+    if (passwordGroup) passwordGroup.classList.add('d-none');
+    if (passwordInput) {
+        passwordInput.setAttribute('disabled', 'disabled');
+        passwordInput.removeAttribute('required');
+        passwordInput.value = '';
+    }
+    if (document.getElementById('departmentInput'))    document.getElementById('departmentInput').value = row.getAttribute('data-department') || '';
+    if (document.getElementById('employeeEmailInput')) document.getElementById('employeeEmailInput').value = row.getAttribute('data-employee-email') || '';
+    if (document.getElementById('employeePhoneInput')) document.getElementById('employeePhoneInput').value = row.getAttribute('data-employee-phone') || '';
+
+    const modalEl = document.getElementById('employeeModal');
+    if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
 }
 
 function openDeleteEmployeeModal(button, destroyRoute) {
-    var wrapper = button.closest('.employee-card-wrapper');
-    var name = wrapper.getAttribute('data-employee-name');
-    
-    document.getElementById('deleteEmployeeModalText').innerText = 'هل تريد حذف الموظف (' + name + ')؟';
-    document.getElementById('deleteEmployeeForm').action = destroyRoute;
+    const row = button.closest('[data-employee-id]');
+    const name = row ? (row.getAttribute('data-employee-name') || 'الموظف') : 'الموظف';
 
-    var myModal = new bootstrap.Modal(document.getElementById('deleteEmployeeModal'));
-    myModal.show();
+    const textEl = document.getElementById('deleteEmployeeModalText');
+    if (textEl) textEl.innerText = 'هل تريد حذف الموظف (' + name + ')؟';
+
+    const form = document.getElementById('deleteEmployeeForm');
+    if (form) form.action = destroyRoute;
+
+    const modalEl = document.getElementById('deleteEmployeeModal');
+    if (modalEl) {
+        let instance = bootstrap.Modal.getInstance(modalEl);
+        if (!instance) instance = new bootstrap.Modal(modalEl);
+        instance.show();
+    }
 }
 
 function openEmployeeProjectStatusModal(projectId, currentStatus, updateUrl) {
@@ -1466,4 +1569,47 @@ function createListPaginator(config) {
         reset()   { currentPage = 1; render(); },
         goToPage(page) { currentPage = page; render(); },
     };
+}
+/* Manager Operations (Team page) */
+function openEditManagerModal(button, updateUrl) {
+    const row = button.closest('[data-manager-id]');
+    if (!row) return;
+
+    const username = row.getAttribute('data-manager-username') || '';
+    const email    = row.getAttribute('data-manager-email') || '';
+    const phone    = row.getAttribute('data-manager-phone') || '';
+
+    document.getElementById('managerModalTitle').innerText = 'تعديل بيانات المدير';
+    const form = document.getElementById('managerForm');
+    if (form) form.action = updateUrl;
+
+    if (document.getElementById('managerNameInput'))  document.getElementById('managerNameInput').value = username;
+    if (document.getElementById('managerEmailInput')) document.getElementById('managerEmailInput').value = email;
+    if (document.getElementById('managerPhoneInput')) document.getElementById('managerPhoneInput').value = phone;
+    if (document.getElementById('managerPasswordInput')) document.getElementById('managerPasswordInput').value = '';
+
+    const modalEl = document.getElementById('managerModal');
+    if (modalEl) {
+        let instance = bootstrap.Modal.getInstance(modalEl);
+        if (!instance) instance = new bootstrap.Modal(modalEl);
+        instance.show();
+    }
+}
+
+function openDeleteManagerModal(button, deleteUrl) {
+    const row = button.closest('[data-manager-id]');
+    const username = row ? (row.getAttribute('data-manager-username') || 'المدير') : 'المدير';
+
+    const textEl = document.getElementById('deleteManagerModalText');
+    if (textEl) textEl.innerText = 'هل تريد حذف المدير (' + username + ')؟';
+
+    const form = document.getElementById('deleteManagerForm');
+    if (form) form.action = deleteUrl;
+
+    const modalEl = document.getElementById('deleteManagerModal');
+    if (modalEl) {
+        let instance = bootstrap.Modal.getInstance(modalEl);
+        if (!instance) instance = new bootstrap.Modal(modalEl);
+        instance.show();
+    }
 }

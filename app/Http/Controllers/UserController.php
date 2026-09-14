@@ -107,7 +107,13 @@ class UserController extends Controller
             $validated['password'] = Hash::make($validated['password']);
         }
 
-        $user->update($validated);
+                $user->update($validated);
+
+        if ($user->role === \App\Enums\Role::Employee) {
+            Employee::where('user_id', $user->user_id)->update(['name' => $user->username]);
+        } elseif ($user->role === \App\Enums\Role::Client) {
+            Client::where('user_id', $user->user_id)->update(['name' => $user->username]);
+        }
 
         $newRole = $user->role->value;
 

@@ -41,17 +41,8 @@ class Task extends Model
         });
     }
 
-    // خريطة الحالات الذكية
-    public static function getStatusMap()
-    {
-        return [
-            'انتظار' => 0,
-            'not started' => 0,
-            'تنفيذ' => 50,
-            'مراجعة' => 80,
-            'مكتمل' => 100,
-        ];
-    }
+    
+   
 
 // التسمية العربية للأولوية (بصيغة المؤنث لأنها تُقرأ بعد كلمة "أولوية")
     public function getPriorityLabelAttribute(): string
@@ -78,20 +69,7 @@ class Task extends Model
 
 
 
-    // خاصية محسوبة لنسبة إنجاز المهمة بناءً على الحالة
-    public function getProgressAttribute()
-    {
-        // إزالة المسافات المخفية وتحويل الحروف لصغيرة لضمان دقة المطابقة
-        $status = trim(str_replace("\xC2\xA0", ' ', mb_strtolower($this->status)));
-
-        foreach (self::getStatusMap() as $keyword => $progress) {
-            if (str_contains($status, mb_strtolower($keyword))) {
-                return $progress;
-            }
-        }
-        
-        return 0; // القيمة الافتراضية
-    }
+   
     
     public function project()
     {

@@ -25,9 +25,13 @@ class EmployeeController extends Controller
         $tasks = Task::with(['assignedUser'])->latest()->get();
         $projects = Project::all();
         $clients = Client::all();
-        $employees = Employee::all();
+               $employees = Employee::with(['projects', 'user'])->withCount('tasks')->get();
+        $managers  = User::where('role', \App\Enums\Role::Manager)
+                         ->withCount('managedProjects')
+                         ->latest()
+                         ->get();
 
-        return view('employees.index', compact('employees', 'tasks', 'projects', 'clients'));
+        return view('employees.index', compact('employees', 'managers', 'tasks', 'projects', 'clients'));
     }
 
     public function store(Request $request)
@@ -72,7 +76,11 @@ class EmployeeController extends Controller
             'phone'      => 'required|string|max:20',
         ]);
 
-        $employee->update($validated);
+                $employee->update($validated);
+
+        if ($employee->user_id) {
+            User::where('user_id', $employee->user_id)->update(['username' => $employee->name]);
+        }
 
         if (auth()->check()) {
             auth()->user()->notify(new SystemActivityNotification(

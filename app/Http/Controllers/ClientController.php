@@ -23,9 +23,9 @@ class ClientController extends Controller
         $projects = Project::all();
         
         // جلب أسماء الشركات الفريدة من جدول المشاريع (Projects)
-        $companies = Project::select('company_name')->distinct()->get();
+       
 
-        return view('clients.index', compact('clients', 'projects', 'companies'));
+        return view('clients.index', compact('clients', 'projects'));
     }
 
     public function store(Request $request)
@@ -46,14 +46,18 @@ class ClientController extends Controller
             'project_ids.*' => 'exists:projects,project_id',
         ]);
 
-        $client->update([
+               $client->update([
             'name'         => $request->name,
             'company_name' => $request->company_name,
             'email'        => $request->email,
             'phone'        => $request->phone,
         ]);
 
-               $projectIds = $request->input('project_ids', []);
+        if ($client->user_id) {
+            User::where('user_id', $client->user_id)->update(['username' => $client->name]);
+        }
+
+        $projectIds = $request->input('project_ids', []);
         $client->projects()->sync($projectIds);
 
         $firstProject = !empty($projectIds) ? Project::find($projectIds[0]) : null;
