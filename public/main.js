@@ -1611,5 +1611,76 @@ function openDeleteManagerModal(button, deleteUrl) {
         let instance = bootstrap.Modal.getInstance(modalEl);
         if (!instance) instance = new bootstrap.Modal(modalEl);
         instance.show();
-    }
+    }  
+}
+
+/* ==========================================
+   Project List Popovers (Team page count chips)
+========================================== */
+function initProjectListPopovers() {
+    document.querySelectorAll('.project-count-trigger').forEach(function (trigger) {
+        if (trigger.dataset.popoverInit === '1') return;
+        trigger.dataset.popoverInit = '1';
+
+        let projects = [];
+        try {
+            projects = JSON.parse(trigger.getAttribute('data-projects') || '[]');
+        } catch (e) {
+            projects = [];
+        }
+
+        if (!projects.length) return;
+
+        const html = projects
+            .map(p => '<a href="/projects/' + encodeURIComponent(p.id) + '" class="project-popover-link">' + escapeHtml(p.name) + '</a>')
+            .join('');
+
+        new bootstrap.Popover(trigger, {
+            html: true,
+            content: html,
+            trigger: 'manual',
+            placement: 'bottom',
+            container: 'body',
+            sanitize: false,
+            customClass: 'project-list-popover',
+        });
+    });
+
+    // Toggle a popover on its own trigger; close any other open popover.
+    document.addEventListener('click', function (e) {
+        const trigger = e.target.closest('.project-count-trigger');
+
+        // Close every open popover first (only one at a time)
+        document.querySelectorAll('.project-count-trigger').forEach(function (t) {
+            if (t === trigger) return;
+            const inst = bootstrap.Popover.getInstance(t);
+            if (inst) inst.hide();
+        });
+
+        if (trigger) {
+            const inst = bootstrap.Popover.getInstance(trigger);
+            if (inst) {
+                inst.toggle();
+            }
+            return;
+        }
+
+        // Click was outside any trigger — close everything,
+        // unless the click was inside an open popover (so links inside work).
+        if (!e.target.closest('.popover')) {
+            document.querySelectorAll('.project-count-trigger').forEach(function (t) {
+                const inst = bootstrap.Popover.getInstance(t);
+                if (inst) inst.hide();
+            });
+        }
+    });
+
+    // Escape closes any open popover.
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        document.querySelectorAll('.project-count-trigger').forEach(function (t) {
+            const inst = bootstrap.Popover.getInstance(t);
+            if (inst) inst.hide();
+        });
+    });
 }

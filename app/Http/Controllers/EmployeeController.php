@@ -26,7 +26,8 @@ class EmployeeController extends Controller
         $projects = Project::all();
         $clients = Client::all();
                $employees = Employee::with(['projects', 'user'])->withCount('tasks')->get();
-        $managers  = User::where('role', \App\Enums\Role::Manager)
+               $managers  = User::where('role', \App\Enums\Role::Manager)
+                         ->with('managedProjects')
                          ->withCount('managedProjects')
                          ->latest()
                          ->get();

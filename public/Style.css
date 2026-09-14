@@ -1515,3 +1515,35 @@ main.flex-grow-1 {
     text-align: center;
     vertical-align: middle;
 }
+/* ==========================================
+   Project List Popover (Team page)
+========================================== */
+.project-list-popover {
+    --bs-popover-max-width: 320px;
+    --bs-popover-border-color: #EFEEF3;
+    --bs-popover-border-radius: 12px;
+    --bs-popover-box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.project-list-popover .popover-body {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.project-popover-link {
+    display: block;
+    padding: 7px 12px;
+    border-radius: 8px;
+    color: #2B2B2B;
+    text-decoration: none;
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+.project-popover-link:hover {
+    background-color: #F0EDF5;
+    color: #8A84AD;
+}

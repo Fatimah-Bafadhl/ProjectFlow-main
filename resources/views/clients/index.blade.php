@@ -33,7 +33,7 @@
                 <th class="text-end">اسم العميل</th>
                 <th class="text-end">البريد الإلكتروني</th>
                 <th class="text-end">الشركة</th>
-                <th class="text-end">المشاريع</th>
+                <th class="text-center">المشاريع</th>
                 <th class="text-end">الهاتف</th>
                 <th class="text-end">تاريخ الإضافة</th>
                 <th class="text-center">إجراءات</th>
@@ -54,13 +54,21 @@
                     <td class="text-end"><span class="user-name">{{ $client->name }}</span></td>
                     <td class="text-end"><span class="text-muted">{{ $client->email }}</span></td>
                     <td class="text-end">{{ $client->company_name ?? '-' }}</td>
-                                        <td class="text-end">
-                        @if($client->projects->count() > 0)
-                            <div class="d-flex flex-wrap justify-content-end gap-1">
-                                @foreach($client->projects as $project)
-                                    <span class="badge-project-status">{{ $project->project_name }}</span>
-                                @endforeach
-                            </div>
+                                               <td class="text-center">
+                        @php
+                            $projCount = $client->projects->count();
+                            $projectsJson = $client->projects->map(fn($p) => [
+                                'id'   => $p->project_id,
+                                'name' => $p->project_name,
+                            ])->values()->toJson(JSON_UNESCAPED_UNICODE);
+                        @endphp
+                        @if($projCount > 0)
+                            <button type="button"
+                                    class="badge-project-status border-0 project-count-trigger"
+                                    data-projects="{{ $projectsJson }}"
+                                    aria-label="عرض المشاريع">
+                                {{ $projCount }} <i class="fa-solid fa-chevron-down ms-1"></i>
+                            </button>
                         @else
                             <span class="text-muted">-</span>
                         @endif
@@ -102,14 +110,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function filterClients() {
         const term = (document.getElementById('clientSearchInput')?.value || '').trim().toLowerCase();
+
         document.querySelectorAll('#clientsTableBody tr.paginate-item').forEach(row => {
             const haystack = row.getAttribute('data-search-text') || '';
             row.setAttribute('data-filter-match', (!term || haystack.includes(term)) ? '1' : '0');
         });
+
+        // Close any open project popovers before re-paginating
+        document.querySelectorAll('.project-count-trigger').forEach(function (t) {
+            const inst = bootstrap.Popover.getInstance(t);
+            if (inst) inst.hide();
+        });
+
         paginator.reset();
     }
 
     document.getElementById('clientSearchInput')?.addEventListener('input', filterClients);
+
+    if (typeof initProjectListPopovers === 'function') {
+        initProjectListPopovers();
+    }
 });
 </script>
 @endpush

@@ -68,10 +68,21 @@
                                 @php $taskCount = $employee->tasks_count ?? 0; @endphp
                                 <span class="{{ $taskCount > 0 ? 'fw-bold text-danger' : 'text-muted' }}">{{ $taskCount }}</span>
                             </td>
-                            <td class="text-center">
-                                @php $projCount = $employee->projects->count(); @endphp
+                                                        <td class="text-center">
+                                @php
+                                    $projCount = $employee->projects->count();
+                                    $projectsJson = $employee->projects->map(fn($p) => [
+                                        'id'   => $p->project_id,
+                                        'name' => $p->project_name,
+                                    ])->values()->toJson(JSON_UNESCAPED_UNICODE);
+                                @endphp
                                 @if($projCount > 0)
-                                    <span class="badge-project-status" title="{{ $employee->projects->pluck('project_name')->implode(' · ') }}">{{ $projCount }}</span>
+                                    <button type="button"
+                                            class="badge-project-status border-0 project-count-trigger"
+                                            data-projects="{{ $projectsJson }}"
+                                            aria-label="عرض المشاريع">
+                                        {{ $projCount }} <i class="fa-solid fa-chevron-down ms-1"></i>
+                                    </button>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
@@ -123,9 +134,21 @@
                             data-manager-phone="{{ $manager->phone }}">
                             <td class="text-end"><span class="user-name">{{ $manager->username }}</span></td>
                             <td class="text-end"><span class="text-muted">{{ $manager->email }}</span></td>
-                            <td class="text-center">
-                                @if(($manager->managed_projects_count ?? 0) > 0)
-                                    <span class="badge-project-status">{{ $manager->managed_projects_count }}</span>
+                                                        <td class="text-center">
+                                @php
+                                    $managedCount = $manager->managedProjects->count();
+                                    $managedJson = $manager->managedProjects->map(fn($p) => [
+                                        'id'   => $p->project_id,
+                                        'name' => $p->project_name,
+                                    ])->values()->toJson(JSON_UNESCAPED_UNICODE);
+                                @endphp
+                                @if($managedCount > 0)
+                                    <button type="button"
+                                            class="badge-project-status border-0 project-count-trigger"
+                                            data-projects="{{ $managedJson }}"
+                                            aria-label="عرض المشاريع المُدارة">
+                                        {{ $managedCount }} <i class="fa-solid fa-chevron-down ms-1"></i>
+                                    </button>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
@@ -193,6 +216,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.getElementById('teamSearchInput')?.addEventListener('input', filterTeam);
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof initProjectListPopovers === 'function') {
+        initProjectListPopovers();
+    }
 });
 </script>
 @endsection
