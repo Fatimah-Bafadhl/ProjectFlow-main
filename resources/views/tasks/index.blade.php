@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'المهام')
-@section('content-class', 'p-4 flex-grow-1 d-flex flex-column overflow-hidden')
+@section('content-class', 'p-4 flex-grow-1')
 
 @php
     $user = auth()->user();
@@ -26,116 +26,217 @@
     </div>
 @endif
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="task-page-title m-0">المهام</h2>
-              @if($isAdmin || $isManager)
-    <button class="btn btn-add-task d-flex align-items-center gap-2" data-bs-target="#taskPanel" data-bs-toggle="offcanvas" onclick="prepareAddModal()">
-        <span>إضافة مهمة +</span>
-    </button>
+{{-- Header --}}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="task-page-title m-0">المهام <span class="tab-count-badge">{{ $tasks->count() }}</span></h2>
+    @if($isAdmin || $isManager)
+        <button class="btn btn-add-task d-flex align-items-center gap-2"
+                data-bs-target="#taskPanel"
+                data-bs-toggle="offcanvas"
+                onclick="prepareAddModal(this)">
+            <span>إضافة مهمة +</span>
+        </button>
     @endif
 </div>
 
-<div class="d-flex flex-row flex-nowrap gap-3 overflow-x-auto pb-3 Task-Style flex-grow-1 align-items-start">
-  @php
-    $statuses = [
-        'قيد التنفيذ'  => ['icon' => 'fa-regular fa-id-badge', 'class' => ''],
-        'قيد المراجعة' => ['icon' => 'fa-regular fa-clipboard', 'class' => ''],
-        'مكتملة'       => ['icon' => 'fa-regular fa-circle-check', 'class' => 'text-success'],
-        'متوقف مؤقتاً' => ['icon' => 'fa-regular fa-circle-stop', 'class' => ''], 
-        'قيد الانتظار' => ['icon' => 'fa-solid fa-list-check', 'class' => '']
-    ];
-  @endphp
+{{-- Filter bar --}}
+<div class="search-filter-bar d-flex flex-wrap align-items-center gap-2 mb-3">
+    <input type="text" id="taskSearchInput"
+           class="form-control custom-input text-end"
+           style="max-width: 260px;"
+           placeholder="بحث باسم المهمة أو المشروع...">
 
-    @foreach($statuses as $statusName => $statusMeta)
-        <div class="status-card-column p-3 rounded-3 bg-light" style="min-width: 300px; max-width: 320px;">
-            <div class="status-header d-flex align-items-center justify-content-start gap-2 mb-3">
-                <span class="status-title">{{ $statusName }}</span>
-                <i class="{{ $statusMeta['icon'] }} status-icon status-success-icon {{ $statusMeta['class'] }} ms-auto"></i>
-            </div>
-            
-            <div class="task-list d-flex flex-column gap-2 overflow-y-auto px-1" style="max-height: 70vh;">
-                @php
-                    $filteredTasks = $tasks->where('status', $statusName);
-                @endphp
+    <select id="taskProjectFilter" class="form-select custom-input text-center" style="max-width: 220px;">
+        <option value="">كل المشاريع</option>
+        @foreach($projects as $project)
+            <option value="{{ $project->project_id }}">{{ $project->project_name }}</option>
+        @endforeach
+    </select>
 
-                @forelse($filteredTasks as $task)
-                                             @php
-                            $attachmentsJson = $task->attachments->map(function ($a) {
-                                return [
-                                    'id'    => $a->task_attachment_id,
-                                    'title' => $a->title,
-                                    'type'  => $a->type,
-                                    'url'   => $a->type === 'link' ? $a->url : asset('storage/' . $a->file_path),
-                                ];
-                            })->values()->all();
-                        @endphp
-                        <div class="task-card p-3 rounded-3 bg-white border" 
-                         data-task-id="{{ $task->task_id }}" 
-                         data-task-title="{{ $task->task_title }}"
-                         data-project-id="{{ $task->project_id }}"
-                         data-stage-id="{{ $task->stage_id }}"
-                         data-company="{{ optional($task->project)->company_name }}"
-                         data-assigned-to="{{ $task->assigned_to }}"
-                         data-description="{{ $task->task_description }}"
-                         data-start-date="{{ $task->start_task }}"
-                         data-end-date="{{ $task->end_task }}"
-                                                  data-status="{{ $task->status }}"
-                         data-priority="{{ $task->priority ?? 'متوسط' }}"
-                         data-attachments="{{ json_encode($attachmentsJson, JSON_UNESCAPED_UNICODE) }}">
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <h4 class="task-name m-0" style="font-size: 14px; font-weight: 600;">
-                                <a class="text-decoration-none text-dark" href="{{ route('tasks.show', $task->task_id) }}">
-                                    {{ $task->task_title }}
-                                </a>
-                            </h4>
-                            
-                            @if(!$isClient)
-                            <div class="task-actions d-flex align-items-center gap-2">
-                                                                @if($isAdmin || $isManager)
-                                                                       <button class="btn-icon text-muted border-0 bg-transparent p-0" onclick="openEditModal(this)"><i class="fa-regular fa-pen-to-square"></i></button>
-                                    <button class="btn-icon text-muted border-0 bg-transparent p-0" onclick="openDeleteModal(this)"><i class="fa-regular fa-trash-can"></i></button>
-                                @elseif($isEmployee)
-                                    <button class="btn-icon text-muted border-0 bg-transparent p-0" title="تعديل الحالة" onclick="openEmployeeTaskStatusModal('{{ $task->task_id }}', '{{ $task->status }}', '{{ route('tasks.update', $task->task_id) }}')">
-                                        <i class="fa-regular fa-pen-to-square"></i>
-                                    </button>
-                                @endif
-                            </div>
-                            @endif
-                        </div>
+    <select id="taskStatusFilter" class="form-select custom-input text-center" style="max-width: 180px;">
+        <option value="">كل الحالات</option>
+        <option value="قيد الانتظار">قيد الانتظار</option>
+        <option value="قيد التنفيذ">قيد التنفيذ</option>
+        <option value="قيد المراجعة">قيد المراجعة</option>
+        <option value="مكتملة">مكتملة</option>
+        <option value="متوقف مؤقتاً">متوقف مؤقتاً</option>
+    </select>
 
-                        <p class="project-name mb-1 text-muted" style="font-size: 12px;">
-                            اسم المشروع : {{ $task->project ? $task->project->project_name : 'غير محدد' }}
-                        </p>
-
-                                                <div class="d-flex justify-content-between align-items-center" style="font-size: 11px;">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="end-date text-muted">
-                                    تاريخ الانتهاء : {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->format('Y/m/d') : 'غير محدد' }}
-                                </span>
-                                <span class="badge-task-priority {{ $task->priority_class }}">{{ $task->priority_label }}</span>
-                            </div>
-                            <div class="comments-count d-flex align-items-center gap-1 text-muted">
-                                <i class="fa-regular fa-comment comment-icon"></i>
-                                <span class="comment-num">{{ $task->comments_count ?? ($task->comments ? $task->comments->count() : 0) }}</span>
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center text-muted py-3 extra-small" style="font-size: 12px;">
-                        لا توجد مهام {{ $statusName }}
-                    </div>
-                @endforelse
-            </div>
-        </div>
-    @endforeach
+    <select id="taskPriorityFilter" class="form-select custom-input text-center" style="max-width: 180px;">
+        <option value="">كل الأولويات</option>
+        <option value="منخفض">منخفض</option>
+        <option value="متوسط">متوسط</option>
+        <option value="عالي">عالي</option>
+    </select>
 </div>
+
+{{-- Tasks table --}}
+<div class="table-responsive">
+    <table class="table align-middle users-table">
+        <thead>
+            <tr>
+                <th class="text-end">المهمة</th>
+                <th class="text-end">المشروع</th>
+                <th class="text-end">المسند إلى</th>
+                <th class="text-center">الأولوية</th>
+                <th class="text-center">الحالة</th>
+                <th class="text-end">تاريخ الانتهاء</th>
+                <th class="text-center">إجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="tasksTableBody">
+            @forelse($tasks as $task)
+                @php
+                    $attachmentsJson = $task->attachments->map(function ($a) {
+                        return [
+                            'id'    => $a->task_attachment_id,
+                            'title' => $a->title,
+                            'type'  => $a->type,
+                            'url'   => $a->type === 'link' ? $a->url : asset('storage/' . $a->file_path),
+                        ];
+                    })->values()->all();
+
+                    $statusClass = match($task->status) {
+                        'قيد الانتظار' => 'badge-status-waiting',
+                        'قيد التنفيذ' => 'badge-status-progress',
+                        'قيد المراجعة' => 'badge-status-review',
+                        'مكتملة' => 'badge-status-done',
+                        'متوقف مؤقتاً' => 'badge-status-paused',
+                        default => 'badge-status-default',
+                    };
+
+                             $projectName  = optional($task->project)->project_name;
+                    $assigneeName = optional($task->assignedUser)->name;
+                    $searchText   = strtolower(trim($task->task_title . ' ' . ($projectName ?? '') . ' ' . ($assigneeName ?? '')));
+                @endphp
+                <tr class="paginate-item"
+                    data-filter-match="1"
+                    data-search-text="{{ $searchText }}"
+                    data-task-id="{{ $task->task_id }}"
+                    data-task-title="{{ $task->task_title }}"
+                    data-project-id="{{ $task->project_id }}"
+                    data-stage-id="{{ $task->stage_id }}"
+                    data-assigned-to="{{ $task->assigned_to }}"
+                    data-description="{{ $task->task_description }}"
+                    data-start-date="{{ $task->start_task }}"
+                    data-end-date="{{ $task->end_task }}"
+                    data-status="{{ $task->status }}"
+                    data-priority="{{ $task->priority ?? 'متوسط' }}"
+                    data-attachments="{{ json_encode($attachmentsJson, JSON_UNESCAPED_UNICODE) }}">
+
+                                        <td class="text-end">
+                        <a class="user-name text-decoration-none" href="{{ route('tasks.show', $task->task_id) }}">
+                            {{ $task->task_title }}
+                        </a>
+                    </td>
+
+                    <td class="text-end">
+                        @if($task->project)
+                            <a href="{{ route('projects.show', $task->project->project_id) }}"
+                               class="text-decoration-none text-muted"
+                               style="font-size: 13px;">
+                                {{ $projectName }}
+                            </a>
+                        @else
+                            <span class="text-muted">غير محدد</span>
+                        @endif
+                    </td>
+
+                    <td class="text-end">
+                        <span class="text-muted">{{ $assigneeName ?? 'غير مسند' }}</span>
+                    </td>
+
+                    <td class="text-center">
+                        <span class="badge-task-priority {{ $task->priority_class }}">{{ $task->priority_label }}</span>
+                    </td>
+
+                    <td class="text-center">
+                        <span class="badge-task-status {{ $statusClass }}">{{ $task->status }}</span>
+                    </td>
+
+                    <td class="text-end">
+                        <span class="text-muted" dir="ltr">
+                            {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->format('Y-m-d') : '-' }}
+                        </span>
+                    </td>
+
+                    <td class="text-center">
+                        @if($isAdmin || $isManager)
+                            <div class="d-inline-flex align-items-center gap-2">
+                                <button type="button" class="btn-icon border-0 bg-transparent p-0" title="تعديل" onclick="openEditModal(this)">
+                                    <i class="fa-regular fa-pen-to-square"></i>
+                                </button>
+                                <button type="button" class="btn-icon border-0 bg-transparent p-0" title="حذف" onclick="openDeleteModal(this)">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        @elseif($isEmployee)
+                            <button type="button" class="btn-icon border-0 bg-transparent p-0" title="تعديل الحالة"
+                                    onclick="openEmployeeTaskStatusModal('{{ $task->task_id }}', '{{ $task->status }}', '{{ route('tasks.update', $task->task_id) }}')">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </button>
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">لا توجد مهام حالياً</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+<div id="tasksPagination" class="pagination-controls"></div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tasksPaginator = createListPaginator({
+        gridSelector: '#tasksTableBody',
+        itemSelector: 'tr.paginate-item',
+        controlsId:   'tasksPagination',
+        perPage:      8,
+    });
+    tasksPaginator.render();
+
+    function filterTasks() {
+        const term     = (document.getElementById('taskSearchInput')?.value || '').trim().toLowerCase();
+        const project  = document.getElementById('taskProjectFilter')?.value || '';
+        const status   = document.getElementById('taskStatusFilter')?.value || '';
+        const priority = document.getElementById('taskPriorityFilter')?.value || '';
+
+        document.querySelectorAll('#tasksTableBody tr.paginate-item').forEach(row => {
+            const haystack = row.getAttribute('data-search-text') || '';
+            const rowProj  = row.getAttribute('data-project-id') || '';
+            const rowStat  = row.getAttribute('data-status') || '';
+            const rowPrio  = row.getAttribute('data-priority') || '';
+
+            const matchesSearch   = !term     || haystack.includes(term);
+            const matchesProject  = !project  || rowProj === project;
+            const matchesStatus   = !status   || rowStat === status;
+            const matchesPriority = !priority || rowPrio === priority;
+
+            const shouldShow = matchesSearch && matchesProject && matchesStatus && matchesPriority;
+            row.setAttribute('data-filter-match', shouldShow ? '1' : '0');
+        });
+
+        tasksPaginator.reset();
+    }
+
+    document.getElementById('taskSearchInput')?.addEventListener('input', filterTasks);
+    document.getElementById('taskProjectFilter')?.addEventListener('change', filterTasks);
+    document.getElementById('taskStatusFilter')?.addEventListener('change', filterTasks);
+    document.getElementById('taskPriorityFilter')?.addEventListener('change', filterTasks);
+});
+</script>
+@endpush
 @endsection
 
 @push('modals')
 @if(!$isClient)
 
-    {{-- لوحة إضافة/تعديل المهمة (Offcanvas) --}}
+    {{-- لوحة إضافة/تعديل المهمة (Offcanvas) — مشتركة --}}
     @include('partials.task-panel')
 
     @if($isAdmin)
