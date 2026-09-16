@@ -15,7 +15,7 @@ use App\Models\ProjectDocument;
 
 class DashboardController extends Controller
 {
-   public function index()
+   public function index(Request $request)
 {
     $user = Auth::user();
 
@@ -42,9 +42,19 @@ class DashboardController extends Controller
         $managersCount = \App\Models\User::where('role', \App\Enums\Role::Manager)->count();
         $totalStaffCount = $nonManagerEmployeesCount + $managersCount;
 
-                // Pipeline distribution (Admin only)
-        $pipelineStagesRaw = \App\Models\ProjectStage::whereHas('project', function($q) {
+                    // Pipeline distribution (Admin only)
+        $pipelineRange = $request->query('pipeline_range', '30d');
+        [$pipelineStart, $pipelineEnd] = $this->resolveRange(
+            $pipelineRange,
+            $request->query('pipeline_from'),
+            $request->query('pipeline_to')
+        );
+
+        $pipelineStagesRaw = \App\Models\ProjectStage::whereHas('project', function($q) use ($pipelineStart, $pipelineEnd) {
             $q->where('status', '!=', 'مكتملة');
+            if ($pipelineStart && $pipelineEnd) {
+                $q->whereBetween('created_at', [$pipelineStart, $pipelineEnd]);
+            }
         })
         ->select('stage_key', 'status', \DB::raw('count(*) as total'))
         ->groupBy('stage_key', 'status')
@@ -105,12 +115,21 @@ class DashboardController extends Controller
             ];
         });
 
-        // Activity feed (Admin only) — latest handled tickets, comments, documents.
+                // Activity feed (Admin only) — latest handled tickets, comments, documents.
+        $activityRange = $request->query('activity_range', '30d');
+        [$activityStart, $activityEnd] = $this->resolveRange(
+            $activityRange,
+            $request->query('activity_from'),
+            $request->query('activity_to')
+        );
+
         $activityTickets = Ticket::where('status', 'handled')
             ->with('project')
+            ->when($activityStart && $activityEnd, fn($q) => $q->whereBetween('created_at', [$activityStart, $activityEnd]))
             ->latest()
             ->take(4)
             ->get()
+
             ->map(function ($ticket) {
                 return [
                     'type'       => 'ticket',
@@ -122,7 +141,8 @@ class DashboardController extends Controller
                 ];
             });
 
-        $activityComments = Comment::with(['task', 'project'])
+                $activityComments = Comment::with(['task', 'project'])
+            ->when($activityStart && $activityEnd, fn($q) => $q->whereBetween('created_at', [$activityStart, $activityEnd]))
             ->latest()
             ->take(4)
             ->get()
@@ -143,7 +163,8 @@ class DashboardController extends Controller
                 ];
             });
 
-        $activityDocuments = ProjectDocument::latest()
+              $activityDocuments = ProjectDocument::when($activityStart && $activityEnd, fn($q) => $q->whereBetween('created_at', [$activityStart, $activityEnd]))
+            ->latest()
             ->take(4)
             ->get()
             ->map(function ($doc) {
@@ -217,4 +238,143 @@ class DashboardController extends Controller
         'nonManagerEmployeesCount', 'managersCount', 'totalStaffCount'
     ));
 }
+/**
+ * Resolve a preset + optional custom range into a [Carbon, Carbon] tuple.
+ * Returns [null, null] for the "all" preset (no filter).
+ */
+private function resolveRange(?string $preset, ?string $from, ?string $to): array
+{
+    $now = now();
+    switch ($preset) {
+        case 'today':
+            return [$now->copy()->startOfDay(), $now->copy()->endOfDay()];
+        case '7d':
+            return [$now->copy()->subDays(6)->startOfDay(), $now->copy()->endOfDay()];
+        case '30d':
+            return [$now->copy()->subDays(29)->startOfDay(), $now->copy()->endOfDay()];
+        case 'custom':
+            $start = $from ? \Carbon\Carbon::parse($from)->startOfDay() : $now->copy()->subDays(29)->startOfDay();
+            $end   = $to   ? \Carbon\Carbon::parse($to)->endOfDay()     : $now->copy()->endOfDay();
+            return [$start, $end];
+        case 'all':
+        default:
+            return [null, null];
+    }
+}
+/**
+ * AJAX — Pipeline distribution data for the current filter.
+ */
+public function pipelineData(Request $request)
+{
+    [$start, $end] = $this->resolveRange(
+        $request->query('range', '30d'),
+        $request->query('from'),
+        $request->query('to')
+    );
+
+    $stagesRaw = \App\Models\ProjectStage::whereHas('project', function ($q) use ($start, $end) {
+        $q->where('status', '!=', 'مكتملة');
+        if ($start && $end) {
+            $q->whereBetween('created_at', [$start, $end]);
+        }
+    })
+    ->select('stage_key', 'status', \DB::raw('count(*) as total'))
+    ->groupBy('stage_key', 'status')
+    ->get();
+
+    $distribution = [];
+    foreach (\App\Enums\ProjectStageName::cases() as $stage) {
+        $distribution[$stage->value] = [
+            'label' => $stage->label(),
+            'color' => $stage->color(),
+            'count' => 0,
+        ];
+    }
+
+    foreach ($stagesRaw as $row) {
+        $statusValue   = $row->status instanceof \App\Enums\ProjectStageStatus ? $row->status->value : $row->status;
+        $stageKeyValue = $row->stage_key instanceof \App\Enums\ProjectStageName ? $row->stage_key->value : $row->stage_key;
+
+        if ($statusValue === \App\Enums\ProjectStageStatus::InProgress->value && isset($distribution[$stageKeyValue])) {
+            $distribution[$stageKeyValue]['count'] += (int) $row->total;
+        }
+    }
+
+    return response()->json([
+        'labels' => array_values(array_column($distribution, 'label')),
+        'counts' => array_values(array_column($distribution, 'count')),
+        'colors' => array_values(array_column($distribution, 'color')),
+        'total'  => array_sum(array_column($distribution, 'count')),
+    ]);
+}
+
+/**
+ * AJAX — Activity feed HTML for the current filter.
+ */
+public function activityFeedData(Request $request)
+{
+    [$start, $end] = $this->resolveRange(
+        $request->query('range', '30d'),
+        $request->query('from'),
+        $request->query('to')
+    );
+
+    $activityTickets = Ticket::where('status', 'handled')
+        ->with('project')
+        ->when($start && $end, fn ($q) => $q->whereBetween('created_at', [$start, $end]))
+        ->latest()->take(4)->get()
+        ->map(function ($ticket) {
+            return [
+                'type'       => 'ticket',
+                'title'      => 'تذكرة تمت معالجتها',
+                'text'       => \Illuminate\Support\Str::limit($ticket->message, 60),
+                'author'     => $ticket->client_name,
+                'created_at' => $ticket->created_at,
+                'url'        => $ticket->project ? route('projects.show', $ticket->project_id) : '#',
+            ];
+        });
+
+    $activityComments = Comment::with(['task', 'project'])
+        ->when($start && $end, fn ($q) => $q->whereBetween('created_at', [$start, $end]))
+        ->latest()->take(4)->get()
+        ->map(function ($comment) {
+            $url = '#';
+            if ($comment->task_id) {
+                $url = route('tasks.show', $comment->task_id);
+            } elseif ($comment->project_id) {
+                $url = route('projects.show', $comment->project_id);
+            }
+            return [
+                'type'       => 'comment',
+                'title'      => 'تعليق جديد',
+                'text'       => \Illuminate\Support\Str::limit($comment->comment_text, 60),
+                'author'     => $comment->author_name ?? 'مستخدم',
+                'created_at' => $comment->created_at,
+                'url'        => $url,
+            ];
+        });
+
+    $activityDocuments = ProjectDocument::when($start && $end, fn ($q) => $q->whereBetween('created_at', [$start, $end]))
+        ->latest()->take(4)->get()
+        ->map(function ($doc) {
+            return [
+                'type'       => 'document',
+                'title'      => 'مستند جديد: ' . $doc->title,
+                'text'       => $doc->type === 'link' ? 'رابط' : ($doc->original_filename ?? 'ملف'),
+                'author'     => $doc->added_by_name ?? 'مستخدم',
+                'created_at' => $doc->created_at,
+                'url'        => route('projects.show', $doc->project_id),
+            ];
+        });
+
+    $activityFeed = $activityTickets
+        ->concat($activityComments)
+        ->concat($activityDocuments)
+        ->sortByDesc('created_at')
+        ->take(8)
+        ->values();
+
+    return view('dashboard.partials.activity-feed', ['activityFeed' => $activityFeed]);
+}
+
 }

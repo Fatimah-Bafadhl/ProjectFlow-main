@@ -100,15 +100,33 @@
 @endphp
 <div class="row g-4 mb-4" dir="rtl">
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100" id="pipelineChartCard">
+            <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-3">
                 <div>
                     <h5 class="section-title mb-1">توزيع المشاريع على مراحل التنفيذ</h5>
                     <p class="chart-subtitle mb-0">حالة سير العمل عبر 7 مراحل تشغيلية</p>
                 </div>
-                <span class="chart-total-badge">إجمالي {{ $totalPipelineProjects }} مشروعاً مسجلاً</span>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <form method="GET" class="section-filter-bar" id="pipelineFilterForm">
+                        <select name="range" id="pipelineRangeSelect" class="filter-select">
+                            <option value="today" @selected(request('pipeline_range') === 'today')>اليوم</option>
+                            <option value="7d" @selected(request('pipeline_range') === '7d')>آخر 7 أيام</option>
+                            <option value="30d" @selected(request('pipeline_range', '30d') === '30d')>آخر 30 يوم</option>
+                            <option value="all" @selected(request('pipeline_range') === 'all')>كل الفترات</option>
+                            <option value="custom" @selected(request('pipeline_range') === 'custom')>مخصص</option>
+                        </select>
+
+                        <div id="pipelineCustomRange" class="d-flex align-items-center gap-2 flex-wrap {{ request('pipeline_range') === 'custom' ? '' : 'd-none' }}">
+                            <input type="date" name="from" class="filter-date" value="{{ request('pipeline_from') }}">
+                            <span class="filter-date-sep">—</span>
+                            <input type="date" name="to" class="filter-date" value="{{ request('pipeline_to') }}">
+                            <button type="submit" class="filter-apply-btn">تطبيق</button>
+                        </div>
+                    </form>
+                    <span class="chart-total-badge" id="pipelineTotalBadge">إجمالي {{ $totalPipelineProjects }} مشروعاً</span>
+                </div>
             </div>
-            <div class="chart-wrapper">
+                               <div class="chart-wrapper">
                 <canvas id="pipelineChart"></canvas>
             </div>
         </div>
@@ -318,24 +336,28 @@
 
 @if(auth()->user()->isAdmin())
 <!-- Activity Feed (Admin only) -->
-<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" dir="rtl">
-    <h5 class="section-title mb-3">آخر الأنشطة</h5>
-    <div class="activity-timeline">
-        @forelse($activityFeed as $item)
-            <a href="{{ $item['url'] }}" class="activity-tl-item text-decoration-none">
-                <span class="activity-tl-dot dot-{{ $item['type'] }}"></span>
-                <div class="activity-tl-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="activity-tl-title">{{ $item['title'] }}</div>
-                        <div class="activity-tl-time">{{ $item['created_at']->locale('ar')->diffForHumans() }}</div>
-                    </div>
-                    <div class="activity-tl-text">{{ $item['text'] }}</div>
-                    <div class="activity-tl-author">{{ $item['author'] }}</div>
-                </div>
-            </a>
-        @empty
-            <p class="text-muted small mb-0">لا يوجد نشاط حديث.</p>
-        @endforelse
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" dir="rtl" id="activityFeedCard">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+        <h5 class="section-title mb-0">آخر الأنشطة</h5>
+        <form method="GET" class="section-filter-bar" id="activityFilterForm">
+            <select name="range" id="activityRangeSelect" class="filter-select">
+                <option value="today" @selected(request('activity_range') === 'today')>اليوم</option>
+                <option value="7d" @selected(request('activity_range') === '7d')>آخر 7 أيام</option>
+                <option value="30d" @selected(request('activity_range', '30d') === '30d')>آخر 30 يوم</option>
+                <option value="all" @selected(request('activity_range') === 'all')>كل الفترات</option>
+                <option value="custom" @selected(request('activity_range') === 'custom')>مخصص</option>
+            </select>
+
+            <div id="activityCustomRange" class="d-flex align-items-center gap-2 flex-wrap {{ request('activity_range') === 'custom' ? '' : 'd-none' }}">
+                <input type="date" name="from" class="filter-date" value="{{ request('activity_from') }}">
+                <span class="filter-date-sep">—</span>
+                <input type="date" name="to" class="filter-date" value="{{ request('activity_to') }}">
+                <button type="submit" class="filter-apply-btn">تطبيق</button>
+            </div>
+        </form>
+    </div>
+    <div class="activity-timeline" id="activityTimeline">
+        @include('dashboard.partials.activity-feed')
     </div>
 </div>
 @endif

@@ -61,7 +61,8 @@ Route::middleware(['auth'])->group(function () {
     // تسجيل الخروج ولوحة التحكم
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
+    Route::get('/dashboard/pipeline-data', [DashboardController::class, 'pipelineData'])->name('dashboard.pipelineData');
+    Route::get('/dashboard/activity-feed', [DashboardController::class, 'activityFeedData'])->name('dashboard.activityFeedData');
     // الملف الشخصي والإعدادات
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');

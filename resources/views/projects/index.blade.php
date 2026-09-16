@@ -160,15 +160,13 @@ $isAdmin = $user && $user->isAdmin();
 @push('modals')
 @if(!$isClient)
     @if(!$isEmployee)
-    <div aria-hidden="true" class="modal fade" id="projectModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content custom-modal p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="modal-title m-0" id="projectModalTitle" style="font-size: 18px; font-weight: 700;">إضافة مشروع جديد</h3>
-                    <button aria-label="Close" class="btn-close m-0" data-bs-dismiss="modal" type="button"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <form id="projectForm" action="{{ route('projects.store') }}" method="POST">
+       <div class="offcanvas offcanvas-end project-panel" tabindex="-1" id="projectPanel" aria-labelledby="projectPanelTitle">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title project-panel-title" id="projectPanelTitle">تعديل المشروع</h5>
+            <button type="button" class="btn-close m-0" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <form id="projectForm" action="{{ route('projects.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="_method" id="projectFormMethod" value="POST">
                         
@@ -209,12 +207,14 @@ $isAdmin = $user && $user->isAdmin();
                             </select>
                         </div>
 
-                                                                              @if($isAdmin)
+                                                                             
+@if($isAdmin)
 <div class="mb-3 text-end">
     <label class="custom-label mb-1">المدراء المسؤولون</label>
-    <div class="border rounded-3 p-2" style="max-height: 150px; overflow-y: auto;">
+    <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن مدير..." data-target="editManagersList">
+    <div class="assignment-list" id="editManagersList">
         @foreach($managers as $manager)
-            <div class="form-check text-end">
+            <div class="form-check form-check-reverse text-start">
                 <input class="form-check-input project-manager-checkbox" type="checkbox" name="manager_ids[]" value="{{ $manager->user_id }}" id="manager_{{ $manager->user_id }}">
                 <label class="form-check-label" for="manager_{{ $manager->user_id }}">{{ $manager->username }}</label>
             </div>
@@ -225,9 +225,10 @@ $isAdmin = $user && $user->isAdmin();
 
 <div class="mb-4 text-end">
     <label class="custom-label mb-1">فريق العمل (الموظفون)</label>
-    <div class="border rounded-3 p-2" style="max-height: 150px; overflow-y: auto;">
+    <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن موظف..." data-target="editEmployeesList">
+    <div class="assignment-list" id="editEmployeesList">
         @foreach($employees as $employee)
-            <div class="form-check text-end">
+            <div class="form-check form-check-reverse text-start">
                 <input class="form-check-input project-employee-checkbox" type="checkbox" name="employee_ids[]" value="{{ $employee->employee_id }}" id="employee_{{ $employee->employee_id }}">
                 <label class="form-check-label" for="employee_{{ $employee->employee_id }}">{{ $employee->name }}</label>
             </div>
@@ -237,9 +238,10 @@ $isAdmin = $user && $user->isAdmin();
 
 <div class="mb-4 text-end">
     <label class="custom-label mb-1">العميل</label>
-    <div class="border rounded-3 p-2" style="max-height: 150px; overflow-y: auto;">
+    <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن عميل..." data-target="editClientsList">
+    <div class="assignment-list" id="editClientsList">
         @forelse($clients as $client)
-            <div class="form-check text-end">
+            <div class="form-check form-check-reverse text-start">
                 <input class="form-check-input project-client-checkbox" type="checkbox" name="client_ids[]" value="{{ $client->client_id }}" id="modal_client_{{ $client->client_id }}">
                 <label class="form-check-label" for="modal_client_{{ $client->client_id }}">{{ $client->name }} ({{ $client->company_name }})</label>
             </div>
@@ -248,12 +250,11 @@ $isAdmin = $user && $user->isAdmin();
         @endforelse
     </div>
 </div>
-                        <div class="text-center pt-2">
+                        
+                        <div class="text-center pt-3 border-top">
                             <button class="btn btn-save" type="submit">حفظ المشروع</button>
                         </div>
                     </form>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -281,10 +282,9 @@ $isAdmin = $user && $user->isAdmin();
 
 @push('scripts')
 <script>
-            function prepareAddProjectModal(actionUrl) {
+               function prepareAddProjectModal(actionUrl) {
         document.getElementById('projectForm').action = actionUrl;
         document.getElementById('projectFormMethod').value = 'POST';
-        document.getElementById('projectModalTitle').innerText = 'إضافة مشروع جديد';
         document.getElementById('projectNameInput').value = '';
         document.getElementById('projectCompanyNameInput').value = '';
         document.getElementById('projectDescInput').value = '';
@@ -299,10 +299,11 @@ $isAdmin = $user && $user->isAdmin();
         endDateInput.min = today;
         endDateInput.value = '';
 
-      //  document.getElementById('projectStatusSelect').value = 'قيد التنفيذ';
-
-        var myModal = new bootstrap.Modal(document.getElementById('projectModal'));
-        myModal.show();
+                document.getElementById('projectPanelTitle').innerText = 'إضافة مشروع جديد';
+        var panelEl = document.getElementById('projectPanel');
+        let panelInstance = bootstrap.Offcanvas.getInstance(panelEl);
+        if (!panelInstance) panelInstance = new bootstrap.Offcanvas(panelEl);
+        panelInstance.show();
     }
 
         function openEditProjectModal(button, actionUrl) {
@@ -310,7 +311,7 @@ $isAdmin = $user && $user->isAdmin();
         const form = document.getElementById('projectForm');
         form.action = actionUrl;
         document.getElementById('projectFormMethod').value = 'PUT';
-        document.getElementById('projectModalTitle').innerText = 'تعديل المشروع';
+        document.getElementById('projectPanelTitle').innerText = 'تعديل المشروع';
 
 
         const startDate = card.getAttribute('data-start-date');
@@ -330,10 +331,7 @@ $isAdmin = $user && $user->isAdmin();
         endDateInput.min = startDate;
         endDateInput.value = endDate;
 
-       // document.getElementById('projectStatusSelect').value = card.getAttribute('data-status');
-
-        var myModal = new bootstrap.Modal(document.getElementById('projectModal'));
-        const managerIds = (card.getAttribute('data-manager-ids') || '').split(',').filter(Boolean);
+              const managerIds = (card.getAttribute('data-manager-ids') || '').split(',').filter(Boolean);
 document.querySelectorAll('.project-manager-checkbox').forEach(cb => {
     cb.checked = managerIds.includes(cb.value);
 });
@@ -347,7 +345,11 @@ const clientIds = (card.getAttribute('data-client-ids') || '').split(',').filter
 document.querySelectorAll('.project-client-checkbox').forEach(cb => {
     cb.checked = clientIds.includes(cb.value);
 });
-        myModal.show();
+
+        var panelEl = document.getElementById('projectPanel');
+        let panelInstance = bootstrap.Offcanvas.getInstance(panelEl);
+        if (!panelInstance) panelInstance = new bootstrap.Offcanvas(panelEl);
+        panelInstance.show();
     }
 
         function openDeleteProjectModal(button, actionUrl) {

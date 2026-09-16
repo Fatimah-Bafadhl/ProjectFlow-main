@@ -70,11 +70,11 @@ document.addEventListener("DOMContentLoaded", () => {
    2. إدارة عمليات المشاريع (Projects Operations)[cite: 1]
 ========================================== */
 function prepareAddProjectModal(storeUrl) {
-    const modalTitle = document.getElementById('projectModalTitle');
+        const panelTitle = document.getElementById('projectPanelTitle');
     const projectForm = document.getElementById('projectForm');
     const methodInput = document.getElementById('projectFormMethod');
 
-    if (modalTitle) modalTitle.innerText = "إضافة مشروع جديد";
+    if (panelTitle) panelTitle.innerText = "إضافة مشروع جديد";
     if (projectForm) {
         projectForm.reset();
         if (storeUrl) projectForm.action = storeUrl;
@@ -84,20 +84,21 @@ function prepareAddProjectModal(storeUrl) {
     const companyInput = document.getElementById('projectCompanyNameInput');
     if (companyInput) companyInput.value = '';
 
-    const modalEl = document.getElementById('projectModal');
-    if (modalEl) {
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
+        const panelEl = document.getElementById('projectPanel');
+    if (panelEl) {
+        let instance = bootstrap.Offcanvas.getInstance(panelEl);
+        if (!instance) instance = new bootstrap.Offcanvas(panelEl);
+        instance.show();
     }
 }
 
 function openEditProjectModal(button, updateUrl) {
     const projectCard = button.closest('.project-card-wrapper');
-    const modalTitle = document.getElementById('projectModalTitle');
+        const panelTitle = document.getElementById('projectPanelTitle');
     const projectForm = document.getElementById('projectForm');
     const methodInput = document.getElementById('projectFormMethod');
 
-    if (modalTitle) modalTitle.innerText = "تعديل المشروع";
+    if (panelTitle) panelTitle.innerText = "تعديل المشروع";
     if (projectForm && updateUrl) projectForm.action = updateUrl;
     if (methodInput) methodInput.value = "PUT";
 
@@ -117,10 +118,11 @@ function openEditProjectModal(button, updateUrl) {
         if (statusSelect) statusSelect.value = projectCard.getAttribute('data-status') || 'قيد التنفيذ';
     }
 
-    const modalEl = document.getElementById('projectModal');
-    if (modalEl) {
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
+        const panelEl = document.getElementById('projectPanel');
+    if (panelEl) {
+        let instance = bootstrap.Offcanvas.getInstance(panelEl);
+        if (!instance) instance = new bootstrap.Offcanvas(panelEl);
+        instance.show();
     }
 }
 
@@ -1707,3 +1709,133 @@ function initProjectListPopovers() {
         });
     });
 }
+
+/* ==========================================
+   Admin Dashboard — AJAX Section Filters
+========================================== */
+(function () {
+    function currentParams(sectionKey, rangeKey, fromKey, toKey) {
+        // Merge the other section's URL params with this section's new ones
+        const url = new URL(window.location.href);
+        const params = new URLSearchParams();
+        // Keep whatever exists in the URL for the OTHER section
+        ['pipeline_range','pipeline_from','pipeline_to','activity_range','activity_from','activity_to'].forEach(k => {
+            if (url.searchParams.has(k) && !k.startsWith(sectionKey)) {
+                params.set(k, url.searchParams.get(k));
+            }
+        });
+        params.set(rangeKey, document.getElementById(rangeKey === 'pipeline_range' ? 'pipelineRangeSelect' : 'activityRangeSelect').value);
+        const custom = document.getElementById(rangeKey === 'pipeline_range' ? 'pipelineCustomRange' : 'activityCustomRange');
+        if (!custom.classList.contains('d-none')) {
+            const fromEl = custom.querySelector('input[name="from"]');
+            const toEl   = custom.querySelector('input[name="to"]');
+            if (fromEl && fromEl.value) params.set(fromKey, fromEl.value);
+            if (toEl   && toEl.value)   params.set(toKey, toEl.value);
+        }
+        return params;
+    }
+
+    function syncUrl(params) {
+        const url = new URL(window.location.href);
+        // Replace all filter-related params
+        ['pipeline_range','pipeline_from','pipeline_to','activity_range','activity_from','activity_to'].forEach(k => {
+            url.searchParams.delete(k);
+        });
+        for (const [k, v] of params.entries()) url.searchParams.set(k, v);
+        window.history.replaceState({}, '', url);
+    }
+
+    // --- Pipeline ---
+    const pipelineForm   = document.getElementById('pipelineFilterForm');
+    const pipelineSelect = document.getElementById('pipelineRangeSelect');
+    const pipelineCustom = document.getElementById('pipelineCustomRange');
+
+    async function loadPipeline() {
+        if (!pipelineForm) return;
+        const params = currentParams('pipeline', 'pipeline_range', 'pipeline_from', 'pipeline_to');
+        const card = document.getElementById('pipelineChartCard');
+        card.classList.add('is-loading');
+
+        try {
+            const res = await fetch(`/dashboard/pipeline-data?${params.toString()}`, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await res.json();
+
+            const chart = Chart.getChart('pipelineChart');
+            if (chart) {
+                chart.data.labels = data.labels;
+                chart.data.datasets[0].data = data.counts;
+                chart.data.datasets[0].backgroundColor = data.colors;
+                chart.data.datasets[0].borderColor = data.colors;
+                chart.update();
+            }
+            const badge = document.getElementById('pipelineTotalBadge');
+            if (badge) badge.textContent = `إجمالي ${data.total} مشروعاً`;
+            syncUrl(params);
+        } catch (e) {
+            console.error('Pipeline fetch failed:', e);
+        } finally {
+            card.classList.remove('is-loading');
+        }
+    }
+
+    if (pipelineSelect) {
+        pipelineSelect.addEventListener('change', function () {
+            if (this.value === 'custom') {
+                pipelineCustom.classList.remove('d-none');
+            } else {
+                pipelineCustom.classList.add('d-none');
+                loadPipeline();
+            }
+        });
+    }
+    if (pipelineForm) {
+        pipelineForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            loadPipeline();
+        });
+    }
+
+    // --- Activity ---
+    const activityForm   = document.getElementById('activityFilterForm');
+    const activitySelect = document.getElementById('activityRangeSelect');
+    const activityCustom = document.getElementById('activityCustomRange');
+    const activityTimeline = document.getElementById('activityTimeline');
+
+    async function loadActivity() {
+        if (!activityForm) return;
+        const params = currentParams('activity', 'activity_range', 'activity_from', 'activity_to');
+        const card = document.getElementById('activityFeedCard');
+        card.classList.add('is-loading');
+
+        try {
+            const res = await fetch(`/dashboard/activity-feed?${params.toString()}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            activityTimeline.innerHTML = await res.text();
+            syncUrl(params);
+        } catch (e) {
+            console.error('Activity fetch failed:', e);
+        } finally {
+            card.classList.remove('is-loading');
+        }
+    }
+
+    if (activitySelect) {
+        activitySelect.addEventListener('change', function () {
+            if (this.value === 'custom') {
+                activityCustom.classList.remove('d-none');
+            } else {
+                activityCustom.classList.add('d-none');
+                loadActivity();
+            }
+        });
+    }
+    if (activityForm) {
+        activityForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            loadActivity();
+        });
+    }
+})();
