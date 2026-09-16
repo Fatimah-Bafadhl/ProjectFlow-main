@@ -8,6 +8,10 @@ use App\Models\Task;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Employee;
+use App\Models\Ticket;
+use App\Models\Client;
+use App\Models\Comment;
+use App\Models\ProjectDocument;
 
 class DashboardController extends Controller
 {
@@ -17,9 +21,148 @@ class DashboardController extends Controller
 
     // 1. تحديد نطاق المشاريع والمهام المرئية حسب الدور
      $employeeId = null;
-    if ($user->isAdmin()) {
+       if ($user->isAdmin()) {
         $projectBase = Project::query();
         $taskBase = Task::query();
+
+        // Alerts strip queries (Admin only)
+        $overdueProjectsCount = (clone $projectBase)->where('end_project', '<', now())->where('status', '!=', 'مكتملة')->count();
+        $overdueTasksCount = (clone $taskBase)->where('end_task', '<', now())->where('status', '!=', 'مكتملة')->count();
+               $openTicketsCount = Ticket::where('status', 'open')->count();
+        $unassignedTasksCount = (clone $taskBase)->whereNull('assigned_to')->count();
+
+              // KPI row queries (Admin only)
+        $activeProjectsCount = (clone $projectBase)->where('status', '!=', 'مكتملة')->count();
+        $activeTasksCount = (clone $taskBase)->where('status', '!=', 'مكتملة')->count();
+        $totalClientsCount = Client::count();
+
+                // Team composition (Admin only) — Employee rows only exist for role=Employee
+        // (Managers are promoted-out and soft-deleted from `employees`, per your role-switch logic)
+        $nonManagerEmployeesCount = Employee::count();
+        $managersCount = \App\Models\User::where('role', \App\Enums\Role::Manager)->count();
+        $totalStaffCount = $nonManagerEmployeesCount + $managersCount;
+
+                // Pipeline distribution (Admin only)
+        $pipelineStagesRaw = \App\Models\ProjectStage::whereHas('project', function($q) {
+            $q->where('status', '!=', 'مكتملة');
+        })
+        ->select('stage_key', 'status', \DB::raw('count(*) as total'))
+        ->groupBy('stage_key', 'status')
+        ->get();
+
+        $pipelineDistribution = [];
+        foreach (\App\Enums\ProjectStageName::cases() as $stage) {
+            $pipelineDistribution[$stage->value] = [
+                'label' => $stage->label(),
+                'color' => $stage->color(),
+                'count' => 0
+            ];
+        }
+
+               foreach ($pipelineStagesRaw as $row) {
+            // Casts on ProjectStage return enum objects — extract the raw string values.
+            $statusValue   = $row->status instanceof \App\Enums\ProjectStageStatus
+                                ? $row->status->value
+                                : $row->status;
+            $stageKeyValue = $row->stage_key instanceof \App\Enums\ProjectStageName
+                                ? $row->stage_key->value
+                                : $row->stage_key;
+
+            if ($statusValue === \App\Enums\ProjectStageStatus::InProgress->value
+                && isset($pipelineDistribution[$stageKeyValue])) {
+                $pipelineDistribution[$stageKeyValue]['count'] += (int) $row->total;
+            }
+        }
+
+        // Deadlines this week (Admin only) — next 14 days, future only, excluding completed.
+        $deadlinesThisWeek = (clone $projectBase)
+            ->whereBetween('end_project', [now(), now()->addDays(14)])
+            ->where('status', '!=', 'مكتملة')
+            ->orderBy('end_project')
+            ->take(6)
+            ->get(['project_id', 'project_name', 'company_name', 'end_project']);
+
+        // Team load (Admin only) — active tasks grouped by assignee, top 5.
+        $teamLoadRaw = (clone $taskBase)
+            ->whereNotNull('assigned_to')
+            ->where('status', '!=', 'مكتملة')
+            ->select('assigned_to', \DB::raw('count(*) as total'))
+            ->groupBy('assigned_to')
+            ->orderByDesc('total')
+            ->take(5)
+            ->get();
+
+        $employeeIds = $teamLoadRaw->pluck('assigned_to')->filter()->unique()->values()->all();
+        $employeesMap = \App\Models\Employee::whereIn('employee_id', $employeeIds)
+            ->get(['employee_id', 'name'])
+            ->keyBy('employee_id');
+
+                $teamLoad = $teamLoadRaw->map(function ($row) use ($employeesMap) {
+            $emp = $employeesMap->get($row->assigned_to);
+            return [
+                'name'  => $emp ? $emp->name : 'غير معروف',
+                'count' => (int) $row->total,
+            ];
+        });
+
+        // Activity feed (Admin only) — latest handled tickets, comments, documents.
+        $activityTickets = Ticket::where('status', 'handled')
+            ->with('project')
+            ->latest()
+            ->take(4)
+            ->get()
+            ->map(function ($ticket) {
+                return [
+                    'type'       => 'ticket',
+                    'title'      => 'تذكرة تمت معالجتها',
+                    'text'       => \Illuminate\Support\Str::limit($ticket->message, 60),
+                    'author'     => $ticket->client_name,
+                    'created_at' => $ticket->created_at,
+                    'url'        => $ticket->project ? route('projects.show', $ticket->project_id) : '#',
+                ];
+            });
+
+        $activityComments = Comment::with(['task', 'project'])
+            ->latest()
+            ->take(4)
+            ->get()
+            ->map(function ($comment) {
+                $url = '#';
+                if ($comment->task_id) {
+                    $url = route('tasks.show', $comment->task_id);
+                } elseif ($comment->project_id) {
+                    $url = route('projects.show', $comment->project_id);
+                }
+                return [
+                    'type'       => 'comment',
+                    'title'      => 'تعليق جديد',
+                    'text'       => \Illuminate\Support\Str::limit($comment->comment_text, 60),
+                    'author'     => $comment->author_name ?? 'مستخدم',
+                    'created_at' => $comment->created_at,
+                    'url'        => $url,
+                ];
+            });
+
+        $activityDocuments = ProjectDocument::latest()
+            ->take(4)
+            ->get()
+            ->map(function ($doc) {
+                return [
+                    'type'       => 'document',
+                    'title'      => 'مستند جديد: ' . $doc->title,
+                    'text'       => $doc->type === 'link' ? 'رابط' : ($doc->original_filename ?? 'ملف'),
+                    'author'     => $doc->added_by_name ?? 'مستخدم',
+                    'created_at' => $doc->created_at,
+                    'url'        => route('projects.show', $doc->project_id),
+                ];
+            });
+
+        $activityFeed = $activityTickets
+            ->concat($activityComments)
+            ->concat($activityDocuments)
+            ->sortByDesc('created_at')
+            ->take(8)
+            ->values();
 
     } elseif ($user->isManager()) {
         $projectIds = $user->managedProjects()->pluck('projects.project_id');
@@ -60,12 +203,6 @@ class DashboardController extends Controller
     $projectPausedCount = (clone $projectBase)->where('status', 'متوقف مؤقتاً')->count();
     $taskPausedCount = $taskBase ? (clone $taskBase)->where('status', 'متوقف مؤقتاً')->count() : 0;
 
-    // 4. المشاريع الأخيرة ضمن النطاق المسموح فقط
-     $recentProjects = (clone $projectBase)->with(['tasks' => function ($query) use ($user, $employeeId) {
-        if ($user->isEmployee()) {
-            $query->where('assigned_to', $employeeId ?? 0);
-        }
-    }])->latest()->take(5)->get();
     return view('dashboard.index', compact(
         'totalProjects', 'totalTasks',
         'projectCompletedCount', 'taskCompletedCount',
@@ -73,7 +210,11 @@ class DashboardController extends Controller
         'projectInProgressCount', 'taskInProgressCount',
         'projectPendingCount', 'taskPendingCount',
         'projectPausedCount', 'taskPausedCount',
-        'recentProjects'
+        
+        'overdueProjectsCount', 'overdueTasksCount', 'openTicketsCount', 'unassignedTasksCount',
+        'activeProjectsCount', 'activeTasksCount', 'totalClientsCount', 'pipelineDistribution',
+         'deadlinesThisWeek', 'teamLoad','activityFeed', 
+        'nonManagerEmployeesCount', 'managersCount', 'totalStaffCount'
     ));
 }
 }

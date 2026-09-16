@@ -35,12 +35,35 @@ document.addEventListener("DOMContentLoaded", () => {
         endDateInput.addEventListener('change', validateDates);
     }
 
-    const projectStartDateInput = document.getElementById('projectStartDateInput');
+       const projectStartDateInput = document.getElementById('projectStartDateInput');
     const projectEndDateInput = document.getElementById('projectEndDateInput');
     if (projectStartDateInput && projectEndDateInput) {
         projectStartDateInput.addEventListener('change', validateDates);
         projectEndDateInput.addEventListener('change', validateDates);
     }
+
+    // Live search filter for assignment checkbox lists (Create Project page)
+    const searchInputs = document.querySelectorAll('.assignment-search');
+    searchInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const targetId = this.getAttribute('data-target');
+            const listContainer = document.getElementById(targetId);
+            if (!listContainer) return;
+
+            const query = this.value.trim().toLowerCase();
+            const items = listContainer.querySelectorAll('.form-check');
+
+            items.forEach(item => {
+                const label = item.querySelector('.form-check-label');
+                const text = label ? label.textContent.toLowerCase() : '';
+                if (text.includes(query)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
 });
 
 /* ==========================================

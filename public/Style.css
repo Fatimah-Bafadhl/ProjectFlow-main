@@ -1547,3 +1547,535 @@ main.flex-grow-1 {
     background-color: #F0EDF5;
     color: #8A84AD;
 }
+
+/* ==========================================
+   Create Project Page — Professional Form Layout
+========================================== */
+.custom-breadcrumb {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 14px;
+}
+.custom-breadcrumb .breadcrumb-item a {
+    color: #8A84AD;
+    text-decoration: none;
+    font-weight: 500;
+}
+.custom-breadcrumb .breadcrumb-item a:hover {
+    color: #6B5E96;
+    text-decoration: underline;
+}
+.custom-breadcrumb .breadcrumb-item.active {
+    color: #1A1A3A; /* Dark, nearly black */
+    font-weight: 500;
+}
+/* RTL Breadcrumb Separator fix */
+.custom-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    content: "/";
+    color: #B0B0B0;
+    float: right;
+    padding-left: 8px;
+    padding-right: 0;
+}
+
+.form-card-wide {
+    border: 1px solid #EFEEF3 !important;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.section-title {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A1A3A;
+    border-bottom: 2px solid #F0EEF6;
+    padding-bottom: 10px;
+    margin-top: 5px;
+}
+
+.assignment-search {
+    border-radius: 10px;
+    font-size: 13px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background-color: #FFFFFF;
+}
+
+.assignment-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 10px 14px;
+    background-color: #FAF9FB;
+}
+.assignment-list::-webkit-scrollbar {
+    width: 6px;
+}
+.assignment-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.assignment-list::-webkit-scrollbar-thumb {
+    background-color: #D1D5DB;
+    border-radius: 10px;
+}
+.assignment-list::-webkit-scrollbar-thumb:hover {
+    background-color: #8A84AD;
+}
+.assignment-list .form-check {
+    margin-bottom: 6px;
+}
+.assignment-list .form-check:last-child {
+    margin-bottom: 0;
+}
+.assignment-list .form-check-label {
+    font-size: 13.5px;
+    color: #2B2B2B;
+    cursor: pointer;
+}
+.assignment-search.form-control-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+.custom-label.mb-0 {
+    margin-bottom: 0 !important;
+}
+
+/* ==========================================
+   Admin Dashboard — Alerts Strip
+========================================== */
+.alert-strip-item {
+    display: block;
+    background-color: #FFFFFF;
+    border: 1px solid #EFEEF3;
+    border-radius: 14px;
+    padding: 14px 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.alert-strip-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+.alert-strip-number {
+    font-family: 'Lama Sans', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: #1A1A3A;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.alert-strip-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6C757D;
+}
+.alert-strip-icon {
+    font-size: 20px;
+}
+/* Severity Colors */
+.severity-overdue .alert-strip-icon { color: #D9534F; }
+.severity-overdue .alert-strip-number { color: #D9534F; }
+.severity-warning .alert-strip-icon { color: #F59E0B; }
+.severity-warning .alert-strip-number { color: #F59E0B; }
+.severity-unassigned .alert-strip-icon { color: #8A84AD; }
+.severity-unassigned .alert-strip-number { color: #8A84AD; }
+
+/* ==========================================
+   Admin Dashboard — Pipeline Chart
+========================================== */
+.chart-wrapper {
+    position: relative;
+    height: 320px;
+    width: 100%;
+}
+
+/* ==========================================
+   Admin Dashboard — Deadlines / Team Load
+========================================== */
+.deadline-list-item {
+    display: block;
+    padding: 10px 0;
+    border-bottom: 1px solid #F0F0F0;
+    transition: background-color 0.15s ease;
+}
+.deadline-list-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.deadline-list-item:hover .deadline-name {
+    color: #8A84AD;
+}
+.deadline-name {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1A1A3A;
+    transition: color 0.15s ease;
+}
+.deadline-company {
+    font-size: 11.5px;
+    color: #8A84AD;
+}
+.deadline-date {
+    font-size: 12px;
+    font-weight: 500;
+    color: #D9534F;
+    background-color: #FDECEC;
+    padding: 3px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.team-load-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #F0F0F0;
+}
+.team-load-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.team-load-name {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #1A1A3A;
+}
+.team-load-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8A84AD;
+    background-color: #F0EEF6;
+    padding: 3px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+/* ==========================================
+   Admin Dashboard — KPI Cards
+========================================== */
+.kpi-card {
+    background-color: #FFFFFF;
+    border: 1px solid #EFEEF3;
+    border-radius: 18px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 20px -2px rgba(26, 26, 58, 0.04), 0 1px 3px 0 rgba(26, 26, 58, 0.02);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -4px rgba(107, 94, 150, 0.12);
+}
+.kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    flex-shrink: 0;
+}
+.kpi-icon.violet { background-color: #F0EEF6; color: #6B5E96; }
+.kpi-icon.amber  { background-color: #FFF4D6; color: #F59E0B; }
+.kpi-icon.red    { background-color: #FDECEC; color: #D9534F; }
+.kpi-icon.green  { background-color: #E8F5E9; color: #198754; }
+.kpi-num {
+    font-family: 'Lama Sans', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    color: #1A1A3A;
+    line-height: 1;
+}
+.kpi-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #6C757D;
+    margin-top: 4px;
+}
+
+/* ==========================================
+   Admin Dashboard — Alerts Strip
+========================================== */
+.alert-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-radius: 16px;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.alert-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.alert-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background-color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.alert-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.alert-title { font-size: 13px; font-weight: 600; }
+.alert-num   { font-size: 20px; font-weight: 800; }
+
+.alert-card.tone-red    { background-color: #FDECEC; }
+.alert-card.tone-red    .alert-icon, .alert-card.tone-red    .alert-title, .alert-card.tone-red    .alert-num { color: #D9534F; }
+.alert-card.tone-amber  { background-color: #FFF4D6; }
+.alert-card.tone-amber  .alert-icon, .alert-card.tone-amber  .alert-title, .alert-card.tone-amber  .alert-num { color: #B8860B; }
+.alert-card.tone-violet { background-color: #F0EEF6; }
+.alert-card.tone-violet .alert-icon, .alert-card.tone-violet .alert-title, .alert-card.tone-violet .alert-num { color: #6B5E96; }
+
+/* ==========================================
+   Admin Dashboard — Pipeline Chart
+========================================== */
+.chart-wrapper {
+    position: relative;
+    height: 320px;
+    width: 100%;
+}
+.chart-subtitle {
+    font-size: 12px;
+    color: #6C757D;
+}
+.chart-total-badge {
+    font-size: 12px;
+    font-weight: 600;
+    background-color: #F0EEF6;
+    color: #6B5E96;
+    padding: 5px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+/* ==========================================
+   Admin Dashboard — Deadlines
+========================================== */
+.deadline-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 6px;
+    border-radius: 12px;
+    transition: background-color 0.15s ease;
+}
+.deadline-row:hover { background-color: #FAF9FB; }
+.deadline-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.deadline-icon.tone-urgent { background-color: #FDECEC; color: #D9534F; }
+.deadline-icon.tone-soon   { background-color: #FFF4D6; color: #F59E0B; }
+.deadline-icon.tone-normal { background-color: #F0EEF6; color: #6B5E96; }
+.deadline-info { flex: 1; min-width: 0; }
+.deadline-name {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1A1A3A;
+}
+.deadline-company { font-size: 11.5px; color: #8A84AD; }
+.deadline-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.deadline-chip .chip-main { font-size: 11px; }
+.deadline-chip .chip-sub { font-size: 9.5px; font-weight: 500; opacity: 0.75; }
+.deadline-chip.tone-urgent { background-color: #FDECEC; color: #D9534F; }
+.deadline-chip.tone-soon   { background-color: #FFF4D6; color: #B8860B; }
+.deadline-chip.tone-normal { background-color: #F0EEF6; color: #6B5E96; }
+
+/* ==========================================
+   Admin Dashboard — Team Workload
+========================================== */
+.team-load-scroll {
+    max-height: 340px;
+    overflow-y: auto;
+    padding-inline-end: 6px;
+}
+.team-load-scroll::-webkit-scrollbar { width: 6px; }
+.team-load-scroll::-webkit-scrollbar-track { background: transparent; }
+.team-load-scroll::-webkit-scrollbar-thumb { background-color: #D1D5DB; border-radius: 10px; }
+.team-load-scroll::-webkit-scrollbar-thumb:hover { background-color: #8A84AD; }
+
+.team-load-row {
+    padding: 10px 2px;
+    border-bottom: 1px solid #F0F0F0;
+}
+.team-load-row:last-child { border-bottom: none; padding-bottom: 0; }
+.team-load-name {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1A1A3A;
+}
+
+.load-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8A84AD, #6B5E96);
+    color: #FFFFFF;
+    font-size: 10.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.team-load-count { font-size: 11.5px; font-weight: 700; color: #8A84AD; }
+.team-load-track {
+    height: 6px;
+    border-radius: 6px;
+    background-color: #F0EEF6;
+    overflow: hidden;
+}
+.team-load-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #8A84AD, #6B5E96);
+}
+
+/* ==========================================
+   Admin Dashboard — Activity Feed (Timeline)
+========================================== */
+.activity-timeline { position: relative; padding-inline-start: 2px; }
+.activity-tl-item {
+    position: relative;
+    display: flex;
+    gap: 14px;
+    padding: 12px 8px;
+    border-radius: 12px;
+    transition: background-color 0.15s ease;
+}
+.activity-tl-item:hover { background-color: #FAF9FB; }
+.activity-tl-item::before {
+    content: '';
+    position: absolute;
+    top: 26px;
+    bottom: -4px;
+    inset-inline-start: 15px;
+    width: 2px;
+    background-color: #EFEEF3;
+}
+.activity-tl-item:last-child::before { display: none; }
+.activity-tl-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 0 0 1px #EFEEF3;
+    z-index: 1;
+}
+.dot-ticket   { background-color: #F59E0B; }
+.dot-comment  { background-color: #8A84AD; }
+.dot-document { background-color: #2E6FDB; }
+.activity-tl-body { flex: 1; min-width: 0; }
+.activity-tl-title {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1A1A3A;
+}
+.activity-tl-time {
+    font-size: 11.5px;
+    color: #6C757D;
+    white-space: nowrap;
+    margin-inline-start: 8px;
+}
+.activity-tl-text {
+    font-size: 12.5px;
+    color: #6C757D;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.activity-tl-author {
+    font-size: 11.5px;
+    color: #8A84AD;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* ==========================================
+   Admin Dashboard — Team Composition Donut
+========================================== */
+.team-donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+.team-donut-holder {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    flex-shrink: 0;
+}
+.team-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.team-donut-center .num {
+    font-family: 'Lama Sans', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: #1A1A3A;
+    line-height: 1;
+}
+.team-donut-center .lbl {
+    font-size: 10px;
+    color: #6C757D;
+    margin-top: 2px;
+}
+.team-donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-width: 120px;
+}
+.legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-label { color: #1A1A3A; font-weight: 500; }
+.legend-val { margin-inline-start: auto; font-weight: 700; color: #6B5E96; }
