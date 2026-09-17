@@ -29,8 +29,7 @@ class DashboardController extends Controller
         $overdueProjectsCount = (clone $projectBase)->where('end_project', '<', now())->where('status', '!=', 'مكتملة')->count();
         $overdueTasksCount = (clone $taskBase)->where('end_task', '<', now())->where('status', '!=', 'مكتملة')->count();
                $openTicketsCount = Ticket::where('status', 'open')->count();
-        $unassignedTasksCount = (clone $taskBase)->whereNull('assigned_to')->count();
-
+        $unassignedTasksCount = (clone $taskBase)->whereDoesntHave('assignedEmployees')->count();
               // KPI row queries (Admin only)
         $activeProjectsCount = (clone $projectBase)->where('status', '!=', 'مكتملة')->count();
         $activeTasksCount = (clone $taskBase)->where('status', '!=', 'مكتملة')->count();
@@ -93,22 +92,23 @@ class DashboardController extends Controller
             ->get(['project_id', 'project_name', 'company_name', 'end_project']);
 
         // Team load (Admin only) — active tasks grouped by assignee, top 5.
-        $teamLoadRaw = (clone $taskBase)
-            ->whereNotNull('assigned_to')
-            ->where('status', '!=', 'مكتملة')
-            ->select('assigned_to', \DB::raw('count(*) as total'))
-            ->groupBy('assigned_to')
+               $activeTaskIds = (clone $taskBase)->where('status', '!=', 'مكتملة')->pluck('task_id');
+
+        $teamLoadRaw = \DB::table('task_employee')
+            ->whereIn('task_id', $activeTaskIds)
+            ->select('employee_id', \DB::raw('count(*) as total'))
+            ->groupBy('employee_id')
             ->orderByDesc('total')
             ->take(5)
             ->get();
 
-        $employeeIds = $teamLoadRaw->pluck('assigned_to')->filter()->unique()->values()->all();
+        $employeeIds = $teamLoadRaw->pluck('employee_id')->filter()->unique()->values()->all();
         $employeesMap = \App\Models\Employee::whereIn('employee_id', $employeeIds)
             ->get(['employee_id', 'name'])
             ->keyBy('employee_id');
 
-                $teamLoad = $teamLoadRaw->map(function ($row) use ($employeesMap) {
-            $emp = $employeesMap->get($row->assigned_to);
+        $teamLoad = $teamLoadRaw->map(function ($row) use ($employeesMap) {
+            $emp = $employeesMap->get($row->employee_id);
             return [
                 'name'  => $emp ? $emp->name : 'غير معروف',
                 'count' => (int) $row->total,
@@ -190,14 +190,13 @@ class DashboardController extends Controller
         $projectBase = Project::whereIn('project_id', $projectIds);
         $taskBase = Task::whereIn('project_id', $projectIds);
 
-    } elseif ($user->isEmployee()) {
-        $employee = Employee::where('user_id', $user->user_id)->first();
-        $employeeId = $employee->employee_id ?? 0;
-        $taskBase = Task::where('assigned_to', $employeeId);
-        $projectIds = (clone $taskBase)->pluck('project_id')->unique();
-        $projectBase = Project::whereIn('project_id', $projectIds);
-
-    } else { // Client
+            } elseif ($user->isEmployee()) {
+            $employee = Employee::where('user_id', $user->user_id)->first();
+            $employeeId = $employee->employee_id ?? 0;
+            $taskBase = Task::whereHas('assignedEmployees', fn ($q) => $q->where('employees.employee_id', $employeeId));
+            $projectIds = (clone $taskBase)->pluck('project_id')->unique();
+            $projectBase = Project::whereIn('project_id', $projectIds);
+        }else { // Client
         $client = $user->client;
         $projectIds = $client ? $client->projects()->pluck('projects.project_id') : collect();
         $projectBase = Project::whereIn('project_id', $projectIds);

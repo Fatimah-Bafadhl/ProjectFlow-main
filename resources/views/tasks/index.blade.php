@@ -105,9 +105,9 @@
                         default => 'badge-status-default',
                     };
 
-                             $projectName  = optional($task->project)->project_name;
-                    $assigneeName = optional($task->assignedUser)->name;
-                    $searchText   = strtolower(trim($task->task_title . ' ' . ($projectName ?? '') . ' ' . ($assigneeName ?? '')));
+                                                         $projectName  = optional($task->project)->project_name;
+                    $assigneeName = $task->assignedEmployees->pluck('name')->implode('، ');
+                    $searchText   = strtolower(trim($task->task_title . ' ' . ($projectName ?? '') . ' ' . $assigneeName));
                 @endphp
                 <tr class="paginate-item"
                     data-filter-match="1"
@@ -116,7 +116,7 @@
                     data-task-title="{{ $task->task_title }}"
                     data-project-id="{{ $task->project_id }}"
                     data-stage-id="{{ $task->stage_id }}"
-                    data-assigned-to="{{ $task->assigned_to }}"
+                    data-assigned-to="{{ $task->assignedEmployees->pluck('employee_id') }}"
                     data-description="{{ $task->task_description }}"
                     data-start-date="{{ $task->start_task }}"
                     data-end-date="{{ $task->end_task }}"
@@ -143,8 +143,9 @@
                     </td>
 
                     <td class="text-end">
-                        <span class="text-muted">{{ $assigneeName ?? 'غير مسند' }}</span>
-                    </td>
+                        <span class="text-muted">{{ $assigneeName !== '' ? $assigneeName : 'غير مسند' }}</span>
+
+                </td>
 
                     <td class="text-center">
                         <span class="badge-task-priority {{ $task->priority_class }}">{{ $task->priority_label }}</span>

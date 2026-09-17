@@ -21,12 +21,14 @@ class TaskController extends Controller
         $managedProjectIds = $user->managedProjects()->pluck('projects.project_id');
         $tasks = Task::whereIn('project_id', $managedProjectIds)->with(['project', 'attachments'])->get();
         $projects = $user->managedProjects()->with('stages')->get();
-    } elseif ($user->isEmployee()) {
-        $employee = Employee::where('user_id', $user->user_id)->first();
-        $employeeId = $employee->employee_id ?? 0;
-        $tasks = Task::where('assigned_to', $employeeId)->with(['project', 'attachments'])->get();
-        $projectIds = $tasks->pluck('project_id')->unique();
-        $projects = Project::whereIn('project_id', $projectIds)->with('stages')->get();
+           } elseif ($user->isEmployee()) {
+            $employee = Employee::where('user_id', $user->user_id)->first();
+            $employeeId = $employee->employee_id ?? 0;
+            $tasks = Task::whereHas('assignedEmployees', fn ($q) => $q->where('employees.employee_id', $employeeId))
+                ->with(['project', 'attachments'])
+                ->get();
+            $projectIds = $tasks->pluck('project_id')->unique();
+            $projects = Project::whereIn('project_id', $projectIds)->with('stages')->get();
     } else {
         $tasks = Task::with(['project', 'attachments'])->get();
         $projects = Project::with('stages')->get();
@@ -65,7 +67,8 @@ class TaskController extends Controller
             'status'           => 'required|string',
             'start_task'       => 'required|date',
             'end_task'         => 'required|date|after_or_equal:start_task',
-            'assigned_to'      => 'required',
+                      'assigned_to'      => 'required|array|min:1',
+            'assigned_to.*'    => 'exists:employees,employee_id',
             'stage_id'         => [
                 'required',
                 \Illuminate\Validation\Rule::exists('project_stages', 'project_stage_id')
@@ -80,14 +83,15 @@ class TaskController extends Controller
     abort(403, 'عذراً، لا تمتلك صلاحية إضافة مهام لهذا المشروع.');
 }
               // $task = Task::create($request->all());
-                $task = new Task($request->only([
-            'task_title', 'task_description', 'status', 'priority', 'start_task', 'end_task', 'assigned_to', 'company_name',
+                       $task = new Task($request->only([
+            'task_title', 'task_description', 'status', 'priority', 'start_task', 'end_task', 'company_name',
         ]));
         $task->project_id = $request->project_id;
         $task->stage_id = $request->stage_id;
         $task->save();
 
-        // معالجة مرفقات المهمة المُرسلة مع نموذج الإضافة (ملفات فقط)
+        $task->assignedEmployees()->sync($request->assigned_to);
+
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {
                 if (!$file->isValid()) {
@@ -135,10 +139,10 @@ $client = auth()->user()->client;
             abort(403, 'عذراً، ليس لديك صلاحية استعراض هذه المهمة.');
         }
 
-    } elseif (auth()->user()->isEmployee()) {
+           } elseif (auth()->user()->isEmployee()) {
             $employee = Employee::where('user_id', auth()->user()->user_id)->first();
             $employeeId = $employee->employee_id ?? 0;
-            if ($task->assigned_to != $employeeId) {
+            if (! $task->assignedEmployees()->where('employees.employee_id', $employeeId)->exists()) {
                 abort(403, 'عذراً، ليس لديك صلاحية استعراض هذه المهمة.');
             }
         }
@@ -166,20 +170,20 @@ $client = auth()->user()->client;
         abort(403, 'عذراً، لا تمتلك صلاحية تعديل هذه المهمة.');
     }
 
-    if (auth()->user()->isEmployee()) {
-        $employee = Employee::where('user_id', auth()->user()->user_id)->first();
-        $employeeId = $employee->employee_id ?? 0;
-        if ($task->assigned_to != $employeeId) {
-            abort(403, 'عذراً، لا تمتلك صلاحية تعديل هذه المهمة.');
+           if (auth()->user()->isEmployee()) {
+            $employee = Employee::where('user_id', auth()->user()->user_id)->first();
+            $employeeId = $employee->employee_id ?? 0;
+            if (! $task->assignedEmployees()->where('employees.employee_id', $employeeId)->exists()) {
+                abort(403, 'عذراً، لا تمتلك صلاحية تعديل هذه المهمة.');
+            }
         }
-    }
 
-    $projects = auth()->user()->isManager()
-        ? auth()->user()->managedProjects
-        : Project::all();
+        $projects = auth()->user()->isManager()
+            ? auth()->user()->managedProjects
+            : Project::all();
 
-    $employees = Employee::all();
-    return view('tasks.edit', compact('task', 'projects', 'employees'));
+        $employees = Employee::all();
+        return view('tasks.edit', compact('task', 'projects', 'employees'));
 }
 
     public function update(Request $request, $id)
@@ -195,14 +199,14 @@ $client = auth()->user()->client;
     abort(403, 'عذراً، لا تمتلك صلاحية تعديل هذه المهمة.');
 }
 
-           if (auth()->user()->isEmployee()) {
-        $employee = Employee::where('user_id', auth()->user()->user_id)->first();
-        $employeeId = $employee->employee_id ?? 0;
-        if ($task->assigned_to != $employeeId) {
-            abort(403, 'عذراً، لا تمتلك صلاحية تعديل هذه المهمة.');
-        }
+               if (auth()->user()->isEmployee()) {
+            $employee = Employee::where('user_id', auth()->user()->user_id)->first();
+            $employeeId = $employee->employee_id ?? 0;
+            if (! $task->assignedEmployees()->where('employees.employee_id', $employeeId)->exists()) {
+                abort(403, 'عذراً، لا تمتلك صلاحية تعديل هذه المهمة.');
+            }
 
-        $request->validate(['status' => 'required|string']);
+            $request->validate(['status' => 'required|string']);
         $task->update(['status' => $request->status]);
             
             // تحديث حالة المشروع بناءً على المهام بعد تعديل الموظف للحالة
@@ -213,30 +217,32 @@ $client = auth()->user()->client;
             return redirect()->back()->with('success', 'تم تحديث حالة المهمة وتحديث المشروع بنجاح');
         }
 
-                                $request->validate([
+                                       $request->validate([
             'task_title'       => 'required|string|max:255',
             'task_description' => 'required|string',
             'priority'         => 'required|in:منخفض,متوسط,عالي',
             'status'           => 'required|string',
             'start_task'       => 'required|date',
             'end_task'         => 'required|date|after_or_equal:start_task',
-            'assigned_to'      => 'required',
+            'assigned_to'      => 'required|array|min:1',
+            'assigned_to.*'    => 'exists:employees,employee_id',
             'stage_id'         => [
                 'nullable',
                 \Illuminate\Validation\Rule::exists('project_stages', 'project_stage_id')
                     ->where('project_id', $task->project_id),
             ],
-                'attachments'      => 'nullable|array',
+            'attachments'      => 'nullable|array',
             'attachments.*'    => 'file|max:20480',
         ]);
 
-                $task->update($request->only([
-            'task_title', 'task_description', 'status', 'priority', 'start_task', 'end_task', 'assigned_to', 'company_name',
+        $task->update($request->only([
+            'task_title', 'task_description', 'status', 'priority', 'start_task', 'end_task', 'company_name',
         ]));
         $task->stage_id = $request->stage_id;
         $task->save();
 
-        // معالجة مرفقات المهمة المُرسلة مع نموذج التعديل (ملفات فقط)
+        $task->assignedEmployees()->sync($request->assigned_to);
+
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {
                 if (!$file->isValid()) {

@@ -170,15 +170,15 @@ class UserController extends Controller
             }
         }
 
-        if ($oldRole === 'employee' && $newRole === 'manager') {
-            $employee = Employee::where('user_id', $user->user_id)->first();
+       if ($oldRole === 'employee' && $newRole === 'manager') {
+    $employee = Employee::where('user_id', $user->user_id)->first();
 
-            if ($employee) {
-                Task::where('assigned_to', $employee->employee_id)->update(['assigned_to' => null]);
-                $employee->projects()->detach();
-                $employee->delete();
-            }
-        }
+    if ($employee) {
+        $employee->tasks()->detach();
+        $employee->projects()->detach();
+        $employee->delete();
+    }
+}
     }
 
     public function destroy(User $user)

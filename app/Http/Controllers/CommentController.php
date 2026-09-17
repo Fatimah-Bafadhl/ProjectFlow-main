@@ -26,14 +26,13 @@ class CommentController extends Controller
             if (!$user->managedProjects()->where('projects.project_id', $task->project_id)->exists()) {
                 abort(403, 'عذراً، لا تمتلك صلاحية إضافة تعليقات على هذه المهمة.');
             }
-        } elseif ($user->isEmployee()) {
+                } elseif ($user->isEmployee()) {
             $employee = Employee::where('user_id', $user->user_id)->first();
             $employeeId = $employee->employee_id ?? 0;
-            if ($task->assigned_to != $employeeId) {
+            if (! $task->assignedEmployees()->where('employees.employee_id', $employeeId)->exists()) {
                 abort(403, 'عذراً، لا تمتلك صلاحية إضافة تعليقات على هذه المهمة.');
             }
         }
-
         $request->validate([
             'comment_text' => 'nullable|string',
             'attachment'   => 'nullable|file|mimes:pdf,doc,docx,zip,fig|max:10240',

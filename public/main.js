@@ -246,7 +246,7 @@ function openEditModal(button) {
     const taskTitle    = taskRow.getAttribute('data-task-title') || '';
     const projectId    = taskRow.getAttribute('data-project-id') || '';
     const stageId      = taskRow.getAttribute('data-stage-id') || '';
-    const assignedTo   = taskRow.getAttribute('data-assigned-to') || '';
+    const assignedToRaw = taskRow.getAttribute('data-assigned-to') || '[]';
     const description  = taskRow.getAttribute('data-description') || '';
     const startDate    = taskRow.getAttribute('data-start-date') || '';
     const endDate      = taskRow.getAttribute('data-end-date') || '';
@@ -279,7 +279,12 @@ function openEditModal(button) {
     const stageSelect = document.getElementById('stageIdInput');
     if (stageSelect) stageSelect.value = stageId;
 
-    if (document.getElementById('assignedToInput')) document.getElementById('assignedToInput').value = assignedTo;
+               let assignedToIds = [];
+    try { assignedToIds = JSON.parse(assignedToRaw) || []; } catch (e) { assignedToIds = []; }
+    assignedToIds = assignedToIds.map(String);
+    document.querySelectorAll('.task-assignee-checkbox').forEach(cb => {
+        cb.checked = assignedToIds.includes(cb.value);
+    });
     if (document.getElementById('startDateInput')) document.getElementById('startDateInput').value = startDate ? startDate.split('T')[0] : '';
     if (document.getElementById('endDateInput')) document.getElementById('endDateInput').value = endDate ? endDate.split('T')[0] : '';
     if (document.getElementById('statusSelect')) document.getElementById('statusSelect').value = status;

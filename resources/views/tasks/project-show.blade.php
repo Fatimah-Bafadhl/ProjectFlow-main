@@ -78,7 +78,7 @@
                         data-task-title="{{ $task->task_title }}"
                         data-project-id="{{ $task->project_id }}"
                         data-stage-id="{{ $task->stage_id }}"
-                        data-assigned-to="{{ $task->assigned_to }}"
+data-assigned-to="{{ $task->assignedEmployees->pluck('employee_id') }}"
                         data-description="{{ $task->task_description }}"
                         data-start-date="{{ $task->start_task }}"
                         data-end-date="{{ $task->end_task }}"
@@ -102,7 +102,7 @@
 
             <div class="task-meta-item">
                 <span class="task-meta-label">المسند إلى</span>
-                <span class="task-meta-value">{{ optional($task->assignedUser)->name ?? 'غير مسند' }}</span>
+<span class="task-meta-value">{{ $task->assignedEmployees->pluck('name')->implode('، ') ?: 'غير مسند' }}</span>
             </div>
 
 

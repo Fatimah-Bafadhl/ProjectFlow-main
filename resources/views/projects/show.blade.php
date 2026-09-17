@@ -266,7 +266,7 @@
                                  data-task-title="{{ $task->task_title }}"
                                  data-project-id="{{ $task->project_id }}"
                                  data-stage-id="{{ $task->stage_id }}"
-                                 data-assigned-to="{{ $task->assigned_to }}"
+data-assigned-to="{{ $task->assignedEmployees->pluck('employee_id') }}"
                                  data-description="{{ $task->task_description }}"
                                  data-start-date="{{ $task->start_task }}"
                                  data-end-date="{{ $task->end_task }}"
@@ -276,8 +276,8 @@
                                 <a class="fw-bold task-name text-decoration-none text-dark" href="{{ route('tasks.show', $task->task_id) }}" style="font-size: 14px;">
                                     {{ $task->task_title }}
                                 </a>
-                                <div class="text-muted" style="font-size: 11px;">
-                                    {{ optional($task->assignedUser)->name ?? 'غير مسند' }}
+                                                                <div class="text-muted" style="font-size: 11px;">
+                                    {{ $task->assignedEmployees->pluck('name')->implode('، ') ?: 'غير مسند' }}
                                     · {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->translatedFormat('d F Y') : 'غير محدد' }}
                                 
                             </div>

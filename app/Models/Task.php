@@ -13,18 +13,16 @@ class Task extends Model
 
     protected $primaryKey = 'task_id'; 
 
-    protected $fillable = [
+     protected $fillable = [
         'task_title',
         'company_name',
-       // 'project_id',    
-        'assigned_to',
+       // 'project_id',
         'task_description',
         'start_task',
         'end_task',
         'status',
         'priority',
     ];
-
     // مراقبة المهام لتحديث المشروع تلقائياً عند أي تعديل أو حذف
     protected static function booted()
     {
@@ -91,9 +89,11 @@ class Task extends Model
         return $this->hasMany(TaskAttachment::class, 'task_id', 'task_id');
     }
 
-    public function assignedUser()
+
+
+     public function assignedEmployees()
     {
-        return $this->belongsTo(Employee::class, 'assigned_to', 'employee_id');
+        return $this->belongsToMany(Employee::class, 'task_employee', 'task_id', 'employee_id');
     }
 }
 

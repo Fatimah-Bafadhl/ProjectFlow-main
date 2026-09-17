@@ -22,7 +22,6 @@ class EmployeeController extends Controller
             abort(403, 'عذراً، لا تمتلك صلاحية استعراض هذه الصفحة.');
         }
 
-        $tasks = Task::with(['assignedUser'])->latest()->get();
         $projects = Project::all();
         $clients = Client::all();
                $employees = Employee::with(['projects', 'user'])->withCount('tasks')->get();
@@ -32,8 +31,7 @@ class EmployeeController extends Controller
                          ->latest()
                          ->get();
 
-        return view('employees.index', compact('employees', 'managers', 'tasks', 'projects', 'clients'));
-    }
+        return view('employees.index', compact('employees', 'managers', 'projects', 'clients'));    }
 
     public function store(Request $request)
     {

@@ -34,12 +34,14 @@ class ProjectController extends Controller
                 },
             ])
             ->get();
-    } elseif ($user->isEmployee()) {
-        $employee = Employee::where('user_id', $user->user_id)->first();
-        $employeeId = $employee->employee_id ?? 0;
-        $projectIds = Task::where('assigned_to', $employeeId)->pluck('project_id')->unique();
-        $projects = Project::whereIn('project_id', $projectIds)->with(['employee', 'tasks', 'managers', 'employees'])->get();
-    } else {
+           } elseif ($user->isEmployee()) {
+            $employee = Employee::where('user_id', $user->user_id)->first();
+            $employeeId = $employee->employee_id ?? 0;
+            $projectIds = Task::whereHas('assignedEmployees', fn ($q) => $q->where('employees.employee_id', $employeeId))
+                ->pluck('project_id')
+                ->unique();
+            $projects = Project::whereIn('project_id', $projectIds)->with(['employee', 'tasks', 'managers', 'employees'])->get();
+        } else {
         $projects = Project::with(['employee', 'tasks', 'managers', 'employees'])
             ->withCount([
                 'comments',
@@ -174,13 +176,16 @@ $project->clients()->sync($request->input('client_ids', []));
             abort(403, 'عذراً، ليس لديك صلاحية استعراض هذا المشروع.');
         }
         $isManagerOfThisProject = true;
-    } elseif (auth()->user()->isEmployee()) {
-        $employee = Employee::where('user_id', auth()->user()->user_id)->first();
-        $employeeId = $employee->employee_id ?? 0;
-        if (!Task::where('project_id', $project->project_id)->where('assigned_to', $employeeId)->exists()) {
-            abort(403, 'عذراً، ليس لديك صلاحية استعراض هذا المشروع.');
-        }
-    } elseif (auth()->user()->isAdmin()) {
+           } elseif (auth()->user()->isEmployee()) {
+            $employee = Employee::where('user_id', auth()->user()->user_id)->first();
+            $employeeId = $employee->employee_id ?? 0;
+            $hasTaskOnProject = Task::where('project_id', $project->project_id)
+                ->whereHas('assignedEmployees', fn ($q) => $q->where('employees.employee_id', $employeeId))
+                ->exists();
+            if (! $hasTaskOnProject) {
+                abort(403, 'عذراً، ليس لديك صلاحية استعراض هذا المشروع.');
+            }
+        } elseif (auth()->user()->isAdmin()) {
         $isManagerOfThisProject = true;
     }
 
@@ -270,17 +275,21 @@ $project->clients()->sync($request->input('client_ids', []));
     $project->managers()->sync($request->input('manager_ids', []));
 }
 
-$newEmployeeIds = $request->input('employee_ids', []);
-$currentEmployeeIds = $project->employees()->pluck('employees.employee_id')->toArray();
-$removedEmployeeIds = array_diff($currentEmployeeIds, $newEmployeeIds);
+        $newEmployeeIds = $request->input('employee_ids', []);
+        $currentEmployeeIds = $project->employees()->pluck('employees.employee_id')->toArray();
+        $removedEmployeeIds = array_diff($currentEmployeeIds, $newEmployeeIds);
 
-if (! empty($removedEmployeeIds)) {
-    Task::where('project_id', $project->project_id)
-        ->whereIn('assigned_to', $removedEmployeeIds)
-        ->update(['assigned_to' => null]);
-}
+        if (! empty($removedEmployeeIds)) {
+            $affectedTaskIds = Task::where('project_id', $project->project_id)
+                ->whereHas('assignedEmployees', fn ($q) => $q->whereIn('employees.employee_id', $removedEmployeeIds))
+                ->pluck('task_id');
 
-$project->employees()->sync($newEmployeeIds);
+            foreach ($affectedTaskIds as $taskId) {
+                Task::find($taskId)->assignedEmployees()->detach($removedEmployeeIds);
+            }
+        }
+
+        $project->employees()->sync($newEmployeeIds);
 $project->clients()->sync($request->input('client_ids', []));
 
         // تحديث حالة المشروع ونسبته بناءً على المهام بعد التعديل
@@ -340,11 +349,10 @@ $project->clients()->sync($request->input('client_ids', []));
         abort(403, 'عذراً، لا تمتلك صلاحية حذف هذا المشروع.');
     }
     // جمع معرفات حسابات المستخدمين للموظفين المسندة إليهم مهام في هذا المشروع، قبل الحذف
-    $assignedEmployeeIds = Task::where('project_id', $project->project_id)
-        ->whereNotNull('assigned_to')
-        ->pluck('assigned_to')
-        ->unique();
-
+           $assignedEmployeeIds = \DB::table('task_employee')
+            ->whereIn('task_id', Task::where('project_id', $project->project_id)->pluck('task_id'))
+            ->pluck('employee_id')
+            ->unique();
     $assignedUserIds = Employee::whereIn('employee_id', $assignedEmployeeIds)
         ->pluck('user_id')
         ->filter()

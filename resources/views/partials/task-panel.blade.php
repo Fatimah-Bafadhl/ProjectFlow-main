@@ -63,17 +63,20 @@
                 </select>
             </div>
 
-            <div class="mb-3 text-end">
-                <label class="custom-label mb-1">مسند إلى <span class="text-danger">*</span></label>
-                <select class="form-select custom-input text-center w-100" id="assignedToInput" name="assigned_to" required>
-                    <option value="">اختر الموظف</option>
-                    @foreach($employees as $employee)
-                        <option value="{{ $employee->employee_id ?? $employee->id }}">
-                            {{ $employee->name }} {{ isset($employee->department) ? '('.$employee->department.')' : '' }}
-                        </option>
-                    @endforeach
-                </select>
+          <div class="mb-3 text-end">
+    <label class="custom-label mb-2">مسند إلى <span class="text-danger">*</span></label>
+    <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن موظف..." data-target="taskAssignedToList">
+    <div class="assignment-list" id="taskAssignedToList">
+        @foreach($employees as $employee)
+            <div class="form-check form-check-reverse text-start">
+                <input class="form-check-input task-assignee-checkbox" type="checkbox" name="assigned_to[]" value="{{ $employee->employee_id ?? $employee->id }}" id="task_assignee_{{ $employee->employee_id ?? $employee->id }}">
+                <label class="form-check-label" for="task_assignee_{{ $employee->employee_id ?? $employee->id }}">
+                    {{ $employee->name }} {{ isset($employee->department) ? '('.$employee->department.')' : '' }}
+                </label>
             </div>
+        @endforeach
+    </div>
+</div>
 
             <div class="mb-3 text-end">
                 <label class="custom-label mb-1">الوصف <span class="text-danger">*</span></label>
