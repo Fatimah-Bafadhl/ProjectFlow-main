@@ -158,8 +158,127 @@
         </div>
     </div>
 </div>
+@elseif(auth()->user()->isClient())
+{{-- ============================================
+     Client Dashboard — Project-first layout
+============================================ --}}
+
+<div class="client-dash-hero mb-4">
+    <div>
+        <h4 class="client-dash-greeting">مرحباً {{ auth()->user()->username }}!</h4>
+        <p class="client-dash-subtitle mb-0">إليك آخر مستجدات مشاريعك</p>
+    </div>
+</div>
+
+@if($clientRecentProjects->isNotEmpty())
+    <h6 class="client-dash-section-title">مشاريعك</h6>
+
+    <div class="client-projects-grid mb-4">
+        @foreach($clientRecentProjects as $p)
+            @php
+                $stageKey   = $p->currentStageKey();
+                $stageLabel = $stageKey ? $stageKey->label() : 'مكتملة';
+                $stageColor = $p->stageColor();
+                $pm         = $p->managers->first();
+                $daysLeft   = null;
+                if ($p->end_project) {
+                    $daysLeft = \Carbon\Carbon::today()
+                        ->diffInDays(\Carbon\Carbon::parse($p->end_project)->startOfDay(), false);
+                }
+            @endphp
+            <a href="{{ route('projects.show', $p->project_id) }}" class="client-project-card">
+                <div class="client-project-card-head">
+                    <h5 class="client-project-card-title">{{ $p->project_name }}</h5>
+                    <span class="badge-stage-current"
+                          style="background-color: {{ $stageColor }}1A; color: {{ $stageColor }};">
+                        {{ $stageLabel }}
+                    </span>
+                </div>
+                <div class="client-project-card-company">{{ $p->company_name }}</div>
+
+                <div class="client-project-card-progress">
+                    <div class="client-project-card-progress-label">
+                        <span>الإنجاز</span>
+                        <span class="client-project-card-progress-value">{{ $p->progress ?? 0 }}%</span>
+                    </div>
+                    <div class="client-project-card-progress-track">
+                        <div class="client-project-card-progress-fill"
+                             style="width: {{ $p->progress ?? 0 }}%;"></div>
+                    </div>
+                </div>
+
+                @if($daysLeft !== null)
+                    <div class="client-project-card-meta">
+                        <span class="client-project-card-days
+                            @if($daysLeft < 0) is-late
+                            @elseif($daysLeft <= 7) is-soon
+                            @endif">
+                            <i class="fa-regular fa-hourglass-half me-1"></i>
+                            @if($daysLeft > 0)
+                                متبقي {{ $daysLeft }} يوم
+                            @elseif($daysLeft === 0)
+                                ينتهي اليوم
+                            @else
+                                متأخر {{ abs($daysLeft) }} يوم
+                            @endif
+                        </span>
+                    </div>
+                @endif
+
+                <div class="client-project-card-footer">
+                    @if($pm)
+                        <div class="client-project-card-pm">
+                            <span class="client-project-card-pm-avatar">{{ mb_substr($pm->username, 0, 1) }}</span>
+                            <span class="client-project-card-pm-name">{{ $pm->username }}</span>
+                        </div>
+                    @else
+                        <span></span>
+                    @endif
+                    <span class="client-project-card-cta">
+                        عرض التفاصيل
+                        <i class="fa-solid fa-arrow-left-long"></i>
+                    </span>
+                </div>
+            </a>
+        @endforeach
+    </div>
 @else
-<!-- شبكة الكروت الإحصائية (Original for Non-Admin) -->
+    <div class="client-empty-state mb-4">
+        <i class="fa-regular fa-folder-open"></i>
+        <p class="mb-0">لا توجد مشاريع بعد.</p>
+    </div>
+@endif
+
+@if($clientActivityFeed->isNotEmpty())
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" dir="rtl">
+        <h5 class="section-title mb-3">آخر التحديثات</h5>
+        <div class="activity-timeline">
+            @foreach($clientActivityFeed as $item)
+                @php
+                    $dotClass = $item['type'] === 'document'
+                        ? 'dot-document'
+                        : ($item['type'] === 'ticket' ? 'dot-ticket' : 'dot-comment');
+                @endphp
+                <a href="{{ $item['url'] }}" class="activity-tl-item text-decoration-none">
+                    <span class="activity-tl-dot {{ $dotClass }}"></span>
+                    <div class="activity-tl-body">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div class="activity-tl-title">{{ $item['title'] }}</div>
+                            <div class="activity-tl-time">
+                                {{ \Carbon\Carbon::parse($item['created_at'])->diffForHumans() }}
+                            </div>
+                        </div>
+                        <div class="activity-tl-text">{{ $item['text'] }}</div>
+                        <div class="activity-tl-author">{{ $item['author'] }}</div>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+    </div>
+@endif
+
+@else
+<!-- شبكة الكروت الإحصائية (Manager / Employee — unchanged) -->
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-5" dir="rtl">
     <!-- إجمالي المشاريع -->
     <div class="col">

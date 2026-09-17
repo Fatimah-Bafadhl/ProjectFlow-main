@@ -21,6 +21,7 @@ class ProjectDocument extends Model
         'original_filename',
         'added_by_user_id',
         'added_by_name',
+        'visible_to_client',
     ];
 
     public function project()
@@ -31,5 +32,17 @@ class ProjectDocument extends Model
     public function addedBy()
     {
         return $this->belongsTo(User::class, 'added_by_user_id');
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'visible_to_client' => 'boolean',
+        ];
+    }
+
+    public function scopeVisibleToClient($query)
+    {
+        return $query->where('visible_to_client', true);
     }
 }

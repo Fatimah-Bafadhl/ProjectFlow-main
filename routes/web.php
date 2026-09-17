@@ -16,6 +16,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TrashController;
 use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\TaskAttachmentController;
+use App\Http\Controllers\CommunicationController;
 
 
 
@@ -136,8 +137,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/projects/{project_id}/comments', [CommentController::class, 'storeForProject'])->name('comments.storeForProject');
     });
 
-        Route::middleware('role:client')->group(function () {
+                Route::middleware('role:client')->group(function () {
         Route::post('/projects/{project_id}/tickets', [TicketController::class, 'store'])->name('tickets.store');
+        Route::get('/communications', [CommunicationController::class, 'index'])->name('communications.index');
     });
 
     Route::middleware('role:admin,manager')->group(function () {

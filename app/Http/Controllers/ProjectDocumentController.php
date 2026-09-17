@@ -16,7 +16,7 @@ class ProjectDocumentController extends Controller
         return view('documents.project-index', compact('project', 'documents'));
     }
 
-    public function store(Request $request, $project_id)
+        public function store(Request $request, $project_id)
     {
         $project = Project::findOrFail($project_id);
 
@@ -27,12 +27,15 @@ class ProjectDocumentController extends Controller
             'file' => 'required_if:type,file|nullable|file|max:20480',
         ]);
 
+        $visibleToClient = $request->boolean('visible_to_client');
+
         $data = [
             'project_id' => $project->project_id,
             'type' => $validated['type'],
             'title' => $validated['title'],
             'added_by_user_id' => auth()->id(),
             'added_by_name' => auth()->user()->username,
+            'visible_to_client' => $visibleToClient,
         ];
 
         if ($validated['type'] === 'link') {
@@ -44,6 +47,18 @@ class ProjectDocumentController extends Controller
         }
 
         ProjectDocument::create($data);
+
+        // Auto-post into the client-facing communication thread when the doc is shared.
+        if ($visibleToClient) {
+            \App\Models\Comment::create([
+                'comment_text'      => 'تم رفع تسليم جديد: ' . $validated['title'],
+                'attachment'        => null,
+                'project_id'        => $project->project_id,
+                'user_id'           => auth()->user()->user_id,
+                'author_name'       => auth()->user()->username,
+                'visible_to_client' => true,
+            ]);
+        }
 
         return back()->with('success', 'تم إضافة المستند بنجاح');
     }

@@ -76,6 +76,8 @@
         $endCarbon = \Carbon\Carbon::parse($project->end_project)->startOfDay();
         $daysDiff = \Carbon\Carbon::today()->diffInDays($endCarbon, false);
     }
+    $completedStagesCount = $project->stages->where('status', \App\Enums\ProjectStageStatus::Done)->count();
+    $totalStagesCount = $project->stages->count();
 @endphp
 
 <div class="d-flex justify-content-end gap-2 mb-3">
@@ -145,32 +147,81 @@
                     <span class="badge-stage-current badge-stage-done">مكتملة</span>
                 </div>
             @endif
-            <div class="row g-2 text-center mb-3">
-                <div class="col-4">
-                    <div class="stat-card">
-                        <div class="stat-number">{{ $doneTasksCount }}/{{ $totalTasksCount }}</div>
-                        <div class="stat-label">مهام مكتملة</div>
+                      <div class="row g-2 text-center mb-3">
+                @if(!$isClient)
+                    <div class="col-4">
+                        <div class="stat-card">
+                            <div class="stat-number">{{ $doneTasksCount }}/{{ $totalTasksCount }}</div>
+                            <div class="stat-label">مهام مكتملة</div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-4">
-                    <div class="stat-card">
-                        <div class="stat-number {{ $openTicketsCount > 0 ? 'text-danger' : '' }}">{{ $openTicketsCount }}</div>
-                        <div class="stat-label">تذاكر مفتوحة</div>
+                    <div class="col-4">
+                        <div class="stat-card">
+                            <div class="stat-number {{ $openTicketsCount > 0 ? 'text-danger' : '' }}">{{ $openTicketsCount }}</div>
+                            <div class="stat-label">تذاكر مفتوحة</div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-4">
-                    <div class="stat-card">
-                        <div class="stat-number">{{ $progressPercentage }}%</div>
-                        <div class="stat-label">الإنجاز</div>
+                    <div class="col-4">
+                        <div class="stat-card">
+                            <div class="stat-number">{{ $progressPercentage }}%</div>
+                            <div class="stat-label">الإنجاز</div>
+                        </div>
                     </div>
-                </div>
+                @else
+                    <div class="col-4">
+                        <div class="stat-card">
+                            <div class="stat-number">{{ $completedStagesCount }}/{{ $totalStagesCount }}</div>
+                            <div class="stat-label">المراحل المكتملة</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-card">
+                            @if($daysDiff !== null && $daysDiff > 0)
+                                <div class="stat-number">{{ $daysDiff }}</div>
+                                <div class="stat-label">أيام متبقية</div>
+                            @elseif($daysDiff === 0)
+                                <div class="stat-number">اليوم</div>
+                                <div class="stat-label">موعد التسليم</div>
+                            @elseif($daysDiff !== null)
+                                <div class="stat-number text-danger">{{ abs($daysDiff) }}</div>
+                                <div class="stat-label">أيام تأخير</div>
+                            @else
+                                <div class="stat-number">—</div>
+                                <div class="stat-label">غير محدد</div>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-card">
+                            <div class="stat-number">{{ $progressPercentage }}%</div>
+                            <div class="stat-label">الإنجاز</div>
+                        </div>
+                    </div>
+                @endif
             </div>
             <div class="progress" style="height: 6px; background-color: #EFEEF3;">
                 <div class="progress-bar rounded-pill" role="progressbar" style="width: {{ $progressPercentage }}%; background-color: #8A84AD;"></div>
             </div>
-        </div>
+               </div>
     </div>
 </div>
+
+@if($isClient)
+    @php $pm = $project->managers->first(); @endphp
+    @if($pm)
+        <div class="client-pm-card mb-4">
+            <div class="client-pm-avatar">{{ mb_substr($pm->username, 0, 1) }}</div>
+            <div class="client-pm-info">
+                <div class="client-pm-label">مدير المشروع</div>
+                <div class="client-pm-name">{{ $pm->username }}</div>
+            </div>
+                        <a href="{{ route('communications.index', ['project' => $project->project_id]) }}" class="btn btn-add-task client-pm-btn">
+                <i class="fa-regular fa-comments me-1"></i>
+                التواصل مع فريق المشروع
+            </a>
+        </div>
+    @endif
+@endif
 
 <ul class="nav project-stage-tabs mb-3" id="projectStageTabs" role="tablist">
     @foreach($sortedStages as $stage)
@@ -181,17 +232,27 @@
                 {{ $stage->stage_key->label() }}
             </button>
         </li>
-    @endforeach
-    <li class="nav-item" role="presentation">
-        <button class="nav-link stage-tab-link" data-bs-toggle="tab" data-bs-target="#comm-pane" type="button" role="tab" style="--stage-color:#8A84AD;">
-            التذاكر والتواصل
-            @if($openTicketsCount > 0)<span class="badge bg-danger ms-1">{{ $openTicketsCount }}</span>@endif
-        </button>
-    </li>
+        @endforeach
+
+    @if(!$isClient)
+        <li class="nav-item" role="presentation">
+            <button class="nav-link stage-tab-link" data-bs-toggle="tab" data-bs-target="#comm-pane" type="button" role="tab" style="--stage-color:#8A84AD;">
+                التذاكر والتواصل
+                @if($openTicketsCount > 0)<span class="badge bg-danger ms-1">{{ $openTicketsCount }}</span>@endif
+            </button>
+        </li>
+    @else
+        <li class="nav-item" role="presentation">
+            <button class="nav-link stage-tab-link" data-bs-toggle="tab" data-bs-target="#deliverables-pane" type="button" role="tab" style="--stage-color:#8A84AD;">
+                التسليمات
+            </button>
+        </li>
+    @endif
 </ul>
 
 <div class="tab-content" id="projectStageTabsContent">
-    @foreach($sortedStages as $stage)
+   
+                 @foreach($sortedStages as $stage)
         @php
             $stagePercent = match($stage->status) {
                 \App\Enums\ProjectStageStatus::Done => 100,
@@ -201,55 +262,61 @@
         @endphp
         <div class="tab-pane fade {{ $stage->project_stage_id === $activeStageId ? 'show active' : '' }}" id="stage-pane-{{ $stage->project_stage_id }}" role="tabpanel">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="border: 1px solid #EFEEF3 !important;">
-                                                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-2">
                         <span class="text-muted" style="font-size: 12px;">{{ $stage->status->label() }} — {{ $stagePercent }}%</span>
                         <div class="progress" style="height: 6px; width: 140px; background-color: #EFEEF3;">
                             <div class="progress-bar rounded-pill" style="width: {{ $stagePercent }}%; background-color: {{ $stage->stage_key->color() }};"></div>
                         </div>
                     </div>
-                                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <select class="form-select form-select-sm stage-filter" data-filter-type="status" data-stage-target="stage-tasks-{{ $stage->project_stage_id }}">
-                            <option value="">كل الحالات</option>
-                            <option value="قيد الانتظار">قيد الانتظار</option>
-                            <option value="قيد التنفيذ">قيد التنفيذ</option>
-                            <option value="قيد المراجعة">قيد المراجعة</option>
-                            <option value="مكتملة">مكتملة</option>
-                            <option value="متوقف مؤقتاً">متوقف مؤقتاً</option>
-                        </select>
-                        <select class="form-select form-select-sm stage-filter" data-filter-type="priority" data-stage-target="stage-tasks-{{ $stage->project_stage_id }}">
-                            <option value="">كل الأولويات</option>
-                            <option value="منخفض">منخفض</option>
-                            <option value="متوسط">متوسط</option>
-                            <option value="عالي">عالي</option>
-                        </select>
-                        @if($isAdmin || $isAssignedManager)
-                            @if($stage->status !== \App\Enums\ProjectStageStatus::Done)
-                                <form action="{{ route('projects.stages.update', [$project->project_id, $stage->project_stage_id]) }}" method="POST" class="m-0">
-                                    @csrf @method('PUT')
-                                    <input type="hidden" name="status" value="done">
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary">تحديد كمكتمل</button>
-                                </form>
-                            @else
-                                <form action="{{ route('projects.stages.update', [$project->project_id, $stage->project_stage_id]) }}" method="POST" class="m-0">
-                                    @csrf @method('PUT')
-                                    <input type="hidden" name="status" value="in_progress">
-                                    <button type="submit" class="btn btn-sm btn-outline-warning">التراجع عن الإكتمال</button>
-                                </form>
+
+                    @if(!$isClient)
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <select class="form-select form-select-sm stage-filter" data-filter-type="status" data-stage-target="stage-tasks-{{ $stage->project_stage_id }}">
+                                <option value="">كل الحالات</option>
+                                <option value="قيد الانتظار">قيد الانتظار</option>
+                                <option value="قيد التنفيذ">قيد التنفيذ</option>
+                                <option value="قيد المراجعة">قيد المراجعة</option>
+                                <option value="مكتملة">مكتملة</option>
+                                <option value="متوقف مؤقتاً">متوقف مؤقتاً</option>
+                            </select>
+                            <select class="form-select form-select-sm stage-filter" data-filter-type="priority" data-stage-target="stage-tasks-{{ $stage->project_stage_id }}">
+                                <option value="">كل الأولويات</option>
+                                <option value="منخفض">منخفض</option>
+                                <option value="متوسط">متوسط</option>
+                                <option value="عالي">عالي</option>
+                            </select>
+                            @if($isAdmin || $isAssignedManager)
+                                @if($stage->status !== \App\Enums\ProjectStageStatus::Done)
+                                    <form action="{{ route('projects.stages.update', [$project->project_id, $stage->project_stage_id]) }}" method="POST" class="m-0">
+                                        @csrf @method('PUT')
+                                        <input type="hidden" name="status" value="done">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">تحديد كمكتمل</button>
+                                    </form>
+                                @else
+                                    <form action="{{ route('projects.stages.update', [$project->project_id, $stage->project_stage_id]) }}" method="POST" class="m-0">
+                                        @csrf @method('PUT')
+                                        <input type="hidden" name="status" value="in_progress">
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">التراجع عن الإكتمال</button>
+                                    </form>
+                                @endif
                             @endif
-                        @endif
-                    </div>
+                        </div>
+                    @else
+                                               <a href="{{ route('communications.index', ['project' => $project->project_id, 'stage' => $stage->project_stage_id]) }}" class="btn btn-doc-secondary">
+                            <i class="fa-regular fa-comments me-1"></i>
+                            التواصل بخصوص هذه المرحلة
+                        </a>
+                    @endif
                 </div>
-                            
-                
-                                <div class="d-flex flex-column gap-2" id="stage-tasks-{{ $stage->project_stage_id }}">
-                
 
-                    @forelse($stage->tasks as $task)
+                @if(!$isClient)
+                    <div class="d-flex flex-column gap-2" id="stage-tasks-{{ $stage->project_stage_id }}">
 
-                                            
-                    
-                                                                                @php
+                        @forelse($stage->tasks as $task)
+
+                            @php
                                 $attachmentsJson = $task->attachments->map(function ($a) {
                                     return [
                                         'id'    => $a->task_attachment_id,
@@ -266,52 +333,54 @@
                                  data-task-title="{{ $task->task_title }}"
                                  data-project-id="{{ $task->project_id }}"
                                  data-stage-id="{{ $task->stage_id }}"
-data-assigned-to="{{ $task->assignedEmployees->pluck('employee_id') }}"
+                                 data-assigned-to="{{ $task->assignedEmployees->pluck('employee_id') }}"
                                  data-description="{{ $task->task_description }}"
                                  data-start-date="{{ $task->start_task }}"
                                  data-end-date="{{ $task->end_task }}"
-                                                                 data-company="{{ $project->company_name }}"
+                                 data-company="{{ $project->company_name }}"
                                  data-priority="{{ $task->priority ?? 'متوسط' }}"
                                  data-attachments="{{ json_encode($attachmentsJson, JSON_UNESCAPED_UNICODE) }}">
                                 <a class="fw-bold task-name text-decoration-none text-dark" href="{{ route('tasks.show', $task->task_id) }}" style="font-size: 14px;">
                                     {{ $task->task_title }}
                                 </a>
-                                                                <div class="text-muted" style="font-size: 11px;">
+                                <div class="text-muted" style="font-size: 11px;">
                                     {{ $task->assignedEmployees->pluck('name')->implode('، ') ?: 'غير مسند' }}
                                     · {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->translatedFormat('d F Y') : 'غير محدد' }}
-                                
-                            </div>
-                            <div class="d-flex align-items-center gap-3" style="font-size: 13px;">
-                                                                @php
-                                    $statusClass = match($task->status) {
-                                        'قيد الانتظار' => 'badge-status-waiting',
-                                        'قيد التنفيذ' => 'badge-status-progress',
-                                        'قيد المراجعة' => 'badge-status-review',
-                                        'مكتملة' => 'badge-status-done',
-                                        'متوقف مؤقتاً' => 'badge-status-paused',
-                                        default => 'badge-status-default',
-                                    };
-                                @endphp
-                                <span class="badge-task-priority {{ $task->priority_class }}">{{ $task->priority_label }}</span>
-                                <span class="badge-task-status {{ $statusClass }}">{{ $task->status }}</span>
-                                <div class="d-flex align-items-center gap-1" style="color: #8A84AD;">
-                                    <i class="fa-regular fa-comment"></i>
-                                    <span style="font-size: 12px;">{{ $task->comments ? $task->comments->count() : 0 }}</span>
                                 </div>
-                                 @if($isAdmin || ($isManager && $isAssignedManager))
-                                    <button class="btn-icon border-0 bg-transparent p-0" onclick="openEditModal(this)" style="color: #8A84AD;"><i class="fa-regular fa-pen-to-square"></i></button>
-                                    <button class="btn-icon border-0 bg-transparent p-0" onclick="openDeleteModal(this)" style="color: #8A84AD;"><i class="fa-regular fa-trash-can"></i></button>
-                                @endif
+                                <div class="d-flex align-items-center gap-3" style="font-size: 13px;">
+                                    @php
+                                        $statusClass = match($task->status) {
+                                            'قيد الانتظار' => 'badge-status-waiting',
+                                            'قيد التنفيذ' => 'badge-status-progress',
+                                            'قيد المراجعة' => 'badge-status-review',
+                                            'مكتملة' => 'badge-status-done',
+                                            'متوقف مؤقتاً' => 'badge-status-paused',
+                                            default => 'badge-status-default',
+                                        };
+                                    @endphp
+                                    <span class="badge-task-priority {{ $task->priority_class }}">{{ $task->priority_label }}</span>
+                                    <span class="badge-task-status {{ $statusClass }}">{{ $task->status }}</span>
+                                    <div class="d-flex align-items-center gap-1" style="color: #8A84AD;">
+                                        <i class="fa-regular fa-comment"></i>
+                                        <span style="font-size: 12px;">{{ $task->comments ? $task->comments->count() : 0 }}</span>
+                                    </div>
+                                    @if($isAdmin || ($isManager && $isAssignedManager))
+                                        <button class="btn-icon border-0 bg-transparent p-0" onclick="openEditModal(this)" style="color: #8A84AD;"><i class="fa-regular fa-pen-to-square"></i></button>
+                                        <button class="btn-icon border-0 bg-transparent p-0" onclick="openDeleteModal(this)" style="color: #8A84AD;"><i class="fa-regular fa-trash-can"></i></button>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
-                    @empty
-                        <div class="text-center text-muted py-4 small">لا توجد مهام في هذه المرحلة</div>
-                    @endforelse
-                </div>
+                        @empty
+                            <div class="text-center text-muted py-4 small">لا توجد مهام في هذه المرحلة</div>
+                        @endforelse
+                    </div>
+                @endif
+
             </div>
         </div>
     @endforeach
 
+     @if(!$isClient)
       <div class="tab-pane fade" id="comm-pane" role="tabpanel">
         <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="border: 1px solid #EFEEF3 !important;">
 
@@ -428,10 +497,48 @@ data-assigned-to="{{ $task->assignedEmployees->pluck('employee_id') }}"
                             @endforelse
                         </div>
                     </div>
-                </div>
+                      </div>
             </div>
         </div>
     </div>
+    @endif
+
+    @if($isClient)
+        <div class="tab-pane fade" id="deliverables-pane" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="border: 1px solid #EFEEF3 !important;">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="fa-regular fa-folder-open" style="color: #8A84AD;"></i>
+                    <h5 class="task-page-title m-0">التسليمات</h5>
+                    <span class="badge rounded-circle text-dark bg-light border ms-1">{{ $project->documents->count() }}</span>
+                </div>
+
+                @if($project->documents->isEmpty())
+                    <div class="text-center py-5">
+                        <i class="fa-regular fa-folder-open mb-2" style="font-size: 32px; color: #D0CBE3;"></i>
+                        <p class="text-muted small mb-0">لا توجد تسليمات منشورة بعد.</p>
+                    </div>
+                @else
+                    <div class="d-flex flex-column gap-2">
+                        @foreach($project->documents as $doc)
+                            <div class="task-existing-attachment">
+                                <div class="file-info">
+                                    <i class="{{ $doc->type === 'link' ? 'fa-solid fa-link' : 'fa-solid fa-paperclip' }} file-icon"></i>
+                                    @if($doc->type === 'link')
+                                        <a class="file-name" href="{{ $doc->url }}" target="_blank" rel="noopener">{{ $doc->title }}</a>
+                                    @else
+                                        <a class="file-name" href="{{ Storage::url($doc->file_path) }}" target="_blank" rel="noopener">{{ $doc->title }}</a>
+                                    @endif
+                                    <span class="text-muted small ms-1" style="font-size: 11px;">
+                                        — {{ $doc->created_at->locale('ar')->translatedFormat('d F Y') }}
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
 
      </div>          
 @endsection

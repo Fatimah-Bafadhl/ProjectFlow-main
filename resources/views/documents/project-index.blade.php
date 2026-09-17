@@ -74,9 +74,17 @@
             <input type="url" name="url" id="url_input" class="form-control custom-input" placeholder="https://..." maxlength="2048" required>
         </div>
 
-        <div class="mb-2 d-none" id="file_field">
+               <div class="mb-2 d-none" id="file_field">
             <label class="custom-label mb-1">الملف <span class="text-danger">*</span></label>
             <input type="file" name="file" id="file_input" class="form-control custom-input">
+        </div>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="visible_to_client" id="visible_to_client" value="1">
+            <label class="form-check-label small text-muted" for="visible_to_client">
+                <i class="fa-regular fa-eye me-1" style="color:#8A84AD;"></i>
+                إظهار للعميل — سيظهر في صفحة "التسليمات" وفي التواصل
+            </label>
         </div>
 
         <div class="text-end">
@@ -116,9 +124,12 @@
                         <div class="task-existing-attachment doc-item"
                              data-type="file"
                              data-title="{{ $doc->title }}">
-                            <div class="file-info">
+                                                        <div class="file-info">
                                 <i class="fa-solid fa-paperclip file-icon"></i>
                                 <a class="file-name" href="{{ Storage::url($doc->file_path) }}" target="_blank" rel="noopener">{{ $doc->title }}</a>
+                                @if($doc->visible_to_client)
+                                    <span class="doc-visible-chip"><i class="fa-regular fa-eye me-1"></i>ظاهر للعميل</span>
+                                @endif
                                 <span class="text-muted small ms-1" style="font-size: 11px;">
                                     — {{ $doc->added_by_name ?? 'غير معروف' }} · {{ $doc->created_at->locale('ar')->translatedFormat('d F Y, h:i a') }}
                                 </span>
@@ -164,9 +175,12 @@
                         <div class="task-existing-attachment doc-item"
                              data-type="link"
                              data-title="{{ $doc->title }}">
-                            <div class="file-info">
+                                                        <div class="file-info">
                                 <i class="fa-solid fa-link file-icon"></i>
                                 <a class="file-name" href="{{ $doc->url }}" target="_blank" rel="noopener">{{ $doc->title }}</a>
+                                @if($doc->visible_to_client)
+                                    <span class="doc-visible-chip"><i class="fa-regular fa-eye me-1"></i>ظاهر للعميل</span>
+                                @endif
                                 <span class="text-muted small ms-1" style="font-size: 11px;">
                                     — {{ $doc->added_by_name ?? 'غير معروف' }} · {{ $doc->created_at->locale('ar')->translatedFormat('d F Y, h:i a') }}
                                 </span>

@@ -21,6 +21,23 @@ class DashboardController extends Controller
 
     // 1. تحديد نطاق المشاريع والمهام المرئية حسب الدور
      $employeeId = null;
+
+      // below never fails for non-Admin roles (they don't see these sections at all).
+    $overdueProjectsCount = 0;
+    $overdueTasksCount = 0;
+    $openTicketsCount = 0;
+    $unassignedTasksCount = 0;
+    $activeProjectsCount = 0;
+    $activeTasksCount = 0;
+    $totalClientsCount = 0;
+    $pipelineDistribution = [];
+    $deadlinesThisWeek = collect();
+    $teamLoad = collect();
+    $activityFeed = collect();
+    $nonManagerEmployeesCount = 0;
+    $managersCount = 0;
+    $totalStaffCount = 0;
+
        if ($user->isAdmin()) {
         $projectBase = Project::query();
         $taskBase = Task::query();
@@ -196,12 +213,74 @@ class DashboardController extends Controller
             $taskBase = Task::whereHas('assignedEmployees', fn ($q) => $q->where('employees.employee_id', $employeeId));
             $projectIds = (clone $taskBase)->pluck('project_id')->unique();
             $projectBase = Project::whereIn('project_id', $projectIds);
-        }else { // Client
+              }else { // Client
         $client = $user->client;
         $projectIds = $client ? $client->projects()->pluck('projects.project_id') : collect();
         $projectBase = Project::whereIn('project_id', $projectIds);
         $taskBase = null; // العملاء لا يرون المهام إطلاقاً
+
+        // Client dashboard — recent projects (with the data each card needs)
+        $clientRecentProjects = Project::whereIn('project_id', $projectIds)
+              ->with(['managers', 'stages'])
+            ->orderByDesc('updated_at')
+            ->take(6)
+            ->get();
+
+        // Client dashboard — activity feed (visible docs + client-facing comments + handled tickets)
+        $clientDocs = ProjectDocument::whereIn('project_id', $projectIds)
+            ->where('visible_to_client', true)
+            ->latest()
+            ->take(4)
+            ->get()
+            ->map(fn ($d) => [
+                'type'       => 'document',
+                'title'      => 'تسليم جديد: ' . $d->title,
+                'text'       => $d->type === 'link' ? 'رابط' : ($d->original_filename ?? 'ملف'),
+                'author'     => $d->added_by_name ?? 'فريق المشروع',
+                'created_at' => $d->created_at,
+                'url'        => route('projects.show', $d->project_id),
+            ]);
+
+        $clientComments = Comment::whereIn('project_id', $projectIds)
+            ->whereNull('task_id')
+            ->where('visible_to_client', true)
+            ->latest()
+            ->take(4)
+            ->get()
+            ->map(fn ($c) => [
+                'type'       => 'comment',
+                'title'      => 'تحديث من فريق المشروع',
+                'text'       => \Illuminate\Support\Str::limit($c->comment_text ?? '', 60),
+                'author'     => $c->author_name ?? 'فريق المشروع',
+                'created_at' => $c->created_at,
+                'url'        => route('projects.show', $c->project_id),
+            ]);
+
+        $clientTickets = Ticket::whereIn('project_id', $projectIds)
+            ->where('status', \App\Enums\TicketStatus::Handled->value)
+            ->latest()
+            ->take(4)
+            ->get()
+            ->map(fn ($t) => [
+                'type'       => 'ticket',
+                'title'      => 'تمت معالجة طلبك',
+                'text'       => \Illuminate\Support\Str::limit($t->message, 60),
+                'author'     => 'فريق المشروع',
+                'created_at' => $t->created_at,
+                'url'        => route('projects.show', $t->project_id),
+            ]);
+
+        $clientActivityFeed = $clientDocs
+            ->concat($clientComments)
+            ->concat($clientTickets)
+            ->sortByDesc('created_at')
+            ->take(8)
+            ->values();
     }
+
+    // Safe defaults so the Blade can reference these for any role.
+    $clientRecentProjects = $clientRecentProjects ?? collect();
+    $clientActivityFeed   = $clientActivityFeed   ?? collect();
 
     // 2. الإجماليات
     $totalProjects = (clone $projectBase)->count();
@@ -234,7 +313,7 @@ class DashboardController extends Controller
         'overdueProjectsCount', 'overdueTasksCount', 'openTicketsCount', 'unassignedTasksCount',
         'activeProjectsCount', 'activeTasksCount', 'totalClientsCount', 'pipelineDistribution',
          'deadlinesThisWeek', 'teamLoad','activityFeed', 
-        'nonManagerEmployeesCount', 'managersCount', 'totalStaffCount'
+        'nonManagerEmployeesCount', 'managersCount', 'totalStaffCount',  'clientRecentProjects', 'clientActivityFeed'
     ));
 }
 /**

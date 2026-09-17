@@ -9,10 +9,18 @@
                 <i class="fa-solid fa-house icon-style"></i>
                 <span>الصفحة الرئيسية</span>
             </a>
-            <a href="{{ route('projects.index') }}" class="nav-link {{ request()->routeIs('projects.*') ? 'active' : '' }} d-flex align-items-center justify-content-start gap-3">
+           
+                        <a href="{{ route('projects.index') }}" class="nav-link {{ request()->routeIs('projects.*') ? 'active' : '' }} d-flex align-items-center justify-content-start gap-3">
                 <i class="fa-solid fa-chart-line icon-style"></i>
                 <span>المشاريع</span>
             </a>
+
+            @if (auth()->check() && auth()->user()->isClient())
+            <a href="{{ route('communications.index') }}" class="nav-link {{ request()->routeIs('communications.*') ? 'active' : '' }} d-flex align-items-center justify-content-start gap-3">
+                <i class="fa-regular fa-comments icon-style"></i>
+                <span>التواصل</span>
+            </a>
+            @endif
 
             @if (auth()->check() && !auth()->user()->isClient())
             <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->routeIs('tasks.*') ? 'active' : '' }} d-flex align-items-center justify-content-start gap-3">

@@ -2192,3 +2192,445 @@ main.flex-grow-1 {
     color: #1A1A1A;
     margin: 0;
 }
+
+/* ==========================================
+   Client Portal — PM Card (projects/show)
+========================================== */
+.client-pm-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background-color: #FFFFFF;
+    border: 1px solid #EFEEF3;
+    border-radius: 16px;
+    padding: 14px 18px;
+    flex-wrap: wrap;
+}
+.client-pm-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8A84AD, #6B5E96);
+    color: #FFFFFF;
+    font-family: 'Lama Sans', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.client-pm-info { flex: 1; min-width: 0; }
+.client-pm-label { font-size: 11.5px; color: #6C757D; font-weight: 500; }
+.client-pm-name {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1A1A3A;
+}
+.client-pm-btn { flex-shrink: 0; }
+
+/* ==========================================
+   Documents — "Visible to Client" chip
+========================================== */
+.doc-visible-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10.5px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background-color: #E6F4EA;
+    color: #198754;
+    margin-inline-start: 6px;
+    white-space: nowrap;
+}
+
+/* ==========================================
+   Communications Page (Client)
+========================================== */
+.communications-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+@media (max-width: 991.98px) {
+    .communications-layout { grid-template-columns: 1fr; }
+}
+
+/* Right column — project list */
+.comm-thread-list {
+    background-color: #FFFFFF;
+    border: 1px solid #EFEEF3;
+    border-radius: 16px;
+    padding: 8px;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    position: sticky;
+    top: 20px;
+}
+.comm-thread-list::-webkit-scrollbar { width: 6px; }
+.comm-thread-list::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 10px; }
+
+.comm-thread-list-header {
+    display: flex;
+    align-items: center;
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1A1A3A;
+    padding: 12px 14px;
+    border-bottom: 1px solid #EFEEF3;
+    margin-bottom: 6px;
+}
+
+.comm-thread-item {
+    display: block;
+    padding: 12px 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.15s ease;
+}
+.comm-thread-item:hover { background-color: #FAF9FB; }
+.comm-thread-item.active { background-color: #F0EEF6; }
+
+.comm-thread-title {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1A1A3A;
+    margin-bottom: 2px;
+}
+.comm-thread-sub {
+    font-size: 11.5px;
+    color: #8A84AD;
+}
+
+/* Left column — thread view */
+.comm-thread-view {
+    background-color: #FFFFFF;
+    border: 1px solid #EFEEF3;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 480px;
+}
+
+.comm-thread-view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #EFEEF3;
+    flex-wrap: wrap;
+}
+.comm-thread-view-title {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A1A3A;
+}
+.comm-thread-pm {
+    font-size: 12px;
+    color: #6C757D;
+    background-color: #FAF9FB;
+    border: 1px solid #EFEEF3;
+    padding: 4px 12px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+.comm-thread-messages {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    max-height: 60vh;
+}
+.comm-thread-messages::-webkit-scrollbar { width: 6px; }
+.comm-thread-messages::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 10px; }
+
+.comm-message {
+    max-width: 78%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    position: relative;
+}
+.comm-message-client {
+    background-color: #F0EEF6;
+    align-self: flex-end;
+    border-bottom-left-radius: 4px;
+}
+.comm-message-manager {
+    background-color: #FAF9FB;
+    border: 1px solid #EFEEF3;
+    align-self: flex-start;
+    border-bottom-right-radius: 4px;
+}
+
+.comm-message-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+.comm-message-author {
+    font-family: 'Lama Sans', sans-serif;
+    font-weight: 700;
+    font-size: 12.5px;
+    color: #1A1A3A;
+}
+.comm-message-time {
+    font-size: 10.5px;
+    color: #8C8C8C;
+    white-space: nowrap;
+}
+.comm-message-body {
+    color: #2B2B2B;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+}
+.comm-message-attachment {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #8A84AD;
+    text-decoration: none;
+}
+.comm-message-attachment:hover { text-decoration: underline; }
+
+.comm-message-status {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 6px;
+}
+.comm-message-status.is-open    { background-color: #FFF4D6; color: #B8860B; }
+.comm-message-status.is-handled { background-color: #E6F4EA; color: #198754; }
+
+.comm-thread-reply {
+    padding: 16px 20px;
+    border-top: 1px solid #EFEEF3;
+    background-color: #FFFFFF;
+    border-radius: 0 0 16px 16px;
+}
+/* ==========================================
+   Client Dashboard — Project-first Layout
+========================================== */
+
+.client-dash-hero {
+    padding: 4px 0 8px;
+}
+.client-dash-greeting {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1A1A3A;
+    margin: 0 0 4px;
+}
+.client-dash-subtitle {
+    font-size: 13.5px;
+    color: #6C757D;
+}
+
+.client-dash-section-title {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1A1A3A;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #F0EEF6;
+}
+
+/* Card grid — auto-fills nicely for 1 to N projects */
+.client-projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+}
+@media (max-width: 576px) {
+    .client-projects-grid { grid-template-columns: 1fr; }
+}
+
+/* Project card */
+.client-project-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #FFFFFF;
+    border: 1px solid #EFEEF3;
+    border-radius: 20px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 4px 20px -6px rgba(26, 26, 58, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.client-project-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px -8px rgba(107, 94, 150, 0.18);
+    border-color: #DCD5EC;
+    color: inherit;
+}
+
+.client-project-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+.client-project-card-title {
+    font-family: 'Lama Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1A1A3A;
+    margin: 0;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+.client-project-card-company {
+    font-size: 12px;
+    color: #8A84AD;
+    font-weight: 500;
+    margin-top: -4px;
+}
+
+/* Progress */
+.client-project-card-progress {
+    margin-top: 6px;
+}
+.client-project-card-progress-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #6C757D;
+    margin-bottom: 6px;
+}
+.client-project-card-progress-value {
+    font-family: 'Lama Sans', sans-serif;
+    font-weight: 700;
+    color: #1A1A3A;
+    font-size: 13px;
+}
+.client-project-card-progress-track {
+    height: 8px;
+    background-color: #F0EEF6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.client-project-card-progress-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #8A84AD, #6B5E96);
+    transition: width 0.3s ease;
+}
+
+/* Days chip */
+.client-project-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.client-project-card-days {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 10px;
+    background-color: #F0EEF6;
+    color: #6B5E96;
+}
+.client-project-card-days.is-soon {
+    background-color: #FFF4D6;
+    color: #B8860B;
+}
+.client-project-card-days.is-late {
+    background-color: #FDECEC;
+    color: #D9534F;
+}
+
+/* Footer — PM + CTA */
+.client-project-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 6px;
+    padding-top: 12px;
+    border-top: 1px solid #F5F3FA;
+}
+.client-project-card-pm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+.client-project-card-pm-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8A84AD, #6B5E96);
+    color: #FFFFFF;
+    font-family: 'Lama Sans', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.client-project-card-pm-name {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #1A1A3A;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.client-project-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #8A84AD;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.client-project-card-cta i {
+    font-size: 11px;
+    transition: transform 0.2s ease;
+}
+.client-project-card:hover .client-project-card-cta i {
+    transform: translateX(-3px);
+}
+
+/* Empty state */
+.client-empty-state {
+    background-color: #FFFFFF;
+    border: 1px dashed #E5E0EE;
+    border-radius: 20px;
+    padding: 48px 20px;
+    text-align: center;
+    color: #8C8C8C;
+}
+.client-empty-state i {
+    font-size: 36px;
+    color: #D0CBE3;
+    margin-bottom: 12px;
+    display: block;
+}

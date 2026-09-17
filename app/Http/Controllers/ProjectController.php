@@ -149,11 +149,12 @@ $project->clients()->sync($request->input('client_ids', []));
 
         public function show($id)
 {
-    $project = Project::withArchived()
+        $project = Project::withArchived()
                 ->with([
             'user',
             'clients',
-            'stages.tasks.assignedUser',
+            'managers',
+            'stages.tasks.assignedEmployees',
             'stages.tasks.attachments',
             'comments' => function ($query) {
                 $query->whereNull('task_id')->with('user')->latest();
@@ -161,9 +162,11 @@ $project->clients()->sync($request->input('client_ids', []));
             'tickets' => function ($query) {
                 $query->with('client')->latest();
             },
+            'documents' => function ($query) {
+                $query->where('visible_to_client', true)->latest();
+            },
         ])
         ->findOrFail($id);
-
     $isManagerOfThisProject = false;
 
     if (auth()->user()->isClient()) {
