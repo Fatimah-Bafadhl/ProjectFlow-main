@@ -2165,7 +2165,8 @@ main.flex-grow-1 {
    Project Offcanvas Panel (Add / Edit)
    Mirrors .task-panel conventions
 ========================================== */
-.project-panel {
+.project-panel,
+.user-panel {
     width: 480px !important;
     max-width: 100vw;
     border: none;
@@ -2173,15 +2174,18 @@ main.flex-grow-1 {
 }
 
 @media (max-width: 576px) {
-    .project-panel { width: 100% !important; }
+    .project-panel,
+    .user-panel { width: 100% !important; }
 }
 
-.project-panel .offcanvas-header {
+.project-panel .offcanvas-header,
+.user-panel .offcanvas-header {
     padding: 20px 24px;
     border-color: #F0F0F0 !important;
 }
 
-.project-panel .offcanvas-body {
+.project-panel .offcanvas-body,
+.user-panel .offcanvas-body {
     padding: 20px 24px;
 }
 

@@ -19,7 +19,7 @@
 @endif
 <div class="d-flex align-items-center justify-content-between mb-4">
     <h2 class="task-page-title m-0">إدارة المستخدمين</h2>
-    <button type="button" class="btn btn-add-project px-4 py-2" data-bs-toggle="modal" data-bs-target="#addUserModal">
+        <button type="button" class="btn btn-add-project px-4 py-2" data-bs-toggle="offcanvas" data-bs-target="#addUserOffcanvas" aria-controls="addUserOffcanvas" onclick="prepareAddUserPanel()">
         مستخدم جديد +
     </button>
 </div>
@@ -71,9 +71,18 @@
                     </td>
                     <td class="text-center">
                         <div class="d-inline-flex align-items-center gap-2">
-                            <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0"
+                                                        <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0"
                                 title="تعديل"
-                                data-bs-toggle="modal" data-bs-target="#editUserModal{{ $user->user_id }}">
+                                data-user-id="{{ $user->user_id }}"
+                                data-username="{{ $user->username }}"
+                                data-email="{{ $user->email }}"
+                                data-phone="{{ $user->phone }}"
+                                data-company-name="{{ $user->company_name }}"
+                                data-role="{{ $user->role->value }}"
+                                data-department="{{ optional(\App\Models\Employee::withTrashed()->where('user_id', $user->user_id)->first())->department }}"
+                                data-project-ids="{{ implode(',', $clientProjectIds[$user->user_id] ?? []) }}"
+                                data-update-url="{{ route('users.update', $user) }}"
+                                onclick="openEditUserPanel(this)">
                                 <i class="fa-regular fa-pen-to-square"></i>
                             </button>
 
@@ -123,19 +132,13 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleAddUserFields();
     }
 
-    /* ---- Edit User modals: role-conditional dept field ---- */
-    document.querySelectorAll('.edit-role-select').forEach(function (select) {
-        select.addEventListener('change', function () {
-            const uid = this.getAttribute('data-user-id');
-            const deptField = document.getElementById('editEmployeeDeptField' + uid);
-            const deptInput = document.getElementById('editDepartmentInput' + uid);
-            if (!deptField || !deptInput) return;
-            const isEmployee = this.value === 'employee';
-
-            deptField.classList.toggle('d-none', !isEmployee);
-            deptInput.required = isEmployee;
+    /* ---- Edit User offcanvas: role-conditional fields (dept + projects) ---- */
+    const editRoleSelect = document.getElementById('editRoleSelect');
+    if (editRoleSelect) {
+        editRoleSelect.addEventListener('change', function () {
+            toggleEditUserFields(this.value);
         });
-    });
+    }
 
     /* ---- Search + role filter + paginator ---- */
     const paginator = createListPaginator({
@@ -171,152 +174,139 @@ document.addEventListener('DOMContentLoaded', function () {
 @endsection
 
 @push('modals')
-<!-- Add User Modal -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="modal-title m-0" style="font-size: 18px; font-weight: 700;">إضافة مستخدم جديد</h3>
-                <button aria-label="Close" class="btn-close m-0" data-bs-dismiss="modal" type="button"></button>
+<!-- Add User Offcanvas -->
+<div class="offcanvas offcanvas-end user-panel" tabindex="-1" id="addUserOffcanvas" aria-labelledby="addUserOffcanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="addUserOffcanvasLabel" style="font-size: 18px; font-weight: 700;">إضافة مستخدم جديد</h5>
+        <button type="button" class="btn-close m-0" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form action="{{ route('users.store') }}" method="POST" id="addUserForm">
+            @csrf
+
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">اسم المستخدم <span class="text-danger">*</span></label>
+                <input type="text" name="username" class="form-control custom-input text-end" required>
             </div>
-            <div class="modal-body p-0">
-                <form action="{{ route('users.store') }}" method="POST">
-                    @csrf
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
+                <input type="email" name="email" class="form-control custom-input text-end" required>
+            </div>
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">كلمة المرور <span class="text-danger">*</span></label>
+                <input type="password" name="password" class="form-control custom-input text-end" required>
+            </div>
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">الصلاحية <span class="text-danger">*</span></label>
+                <select name="role" id="addUserRole" class="form-select custom-input text-center" required>
+                    @foreach ($roles as $role)
+                        <option value="{{ $role->value }}">{{ $role->value }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">الهاتف</label>
+                <input type="text" name="phone" class="form-control custom-input text-end">
+            </div>
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">اسم الشركة</label>
+                <input type="text" name="company_name" class="form-control custom-input text-end">
+            </div>
 
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">اسم المستخدم <span class="text-danger">*</span></label>
-                        <input type="text" name="username" class="form-control custom-input text-end" required>
-                    </div>
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
-                        <input type="email" name="email" class="form-control custom-input text-end" required>
-                    </div>
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">كلمة المرور <span class="text-danger">*</span></label>
-                        <input type="password" name="password" class="form-control custom-input text-end" required>
-                    </div>
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">الصلاحية <span class="text-danger">*</span></label>
-                        <select name="role" id="addUserRole" class="form-select custom-input text-center" required>
-                            @foreach ($roles as $role)
-                                <option value="{{ $role->value }}">{{ $role->value }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">الهاتف</label>
-                        <input type="text" name="phone" class="form-control custom-input text-end">
-                    </div>
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">اسم الشركة</label>
-                        <input type="text" name="company_name" class="form-control custom-input text-end">
-                    </div>
+            <div class="mb-3 text-end d-none" id="addEmployeeDeptField">
+                <label class="custom-label mb-1">القسم</label>
+                <input type="text" name="department" id="addDepartmentInput" class="form-control custom-input text-end">
+            </div>
 
-                    <div class="mb-3 text-end d-none" id="addEmployeeDeptField">
-                        <label class="custom-label mb-1">القسم</label>
-                        <input type="text" name="department" id="addDepartmentInput" class="form-control custom-input text-end">
-                    </div>
-
-                    <div class="mb-3 text-end d-none" id="addClientProjectField">
-                        <label class="custom-label mb-1">المشاريع</label>
-                        <div class="border rounded p-2 text-end" style="max-height: 160px; overflow-y: auto;">
-                            @foreach ($projects as $project)
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="project_ids[]"
-                                           id="addProject{{ $project->project_id }}" value="{{ $project->project_id }}">
-                                    <label class="form-check-label" for="addProject{{ $project->project_id }}">
-                                        {{ $project->project_name }}
-                                    </label>
-                                </div>
-                            @endforeach
+                        <div class="mb-3 text-end d-none" id="addClientProjectField">
+                <label class="custom-label mb-1">المشاريع</label>
+                <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن مشروع..." data-target="addClientProjectsList">
+                <div class="assignment-list" id="addClientProjectsList">
+                    @foreach ($projects as $project)
+                        <div class="form-check form-check-reverse text-start">
+                            <input class="form-check-input" type="checkbox" name="project_ids[]"
+                                   id="addProject{{ $project->project_id }}" value="{{ $project->project_id }}">
+                            <label class="form-check-label" for="addProject{{ $project->project_id }}">
+                                {{ $project->project_name }}
+                            </label>
                         </div>
-                    </div>
-
-                    <div class="text-center pt-2">
-                        <button class="btn btn-save" type="submit">إضافة</button>
-                    </div>
-                </form>
+                    @endforeach
+                </div>
             </div>
-        </div>
+
+            <div class="text-center pt-2">
+                <button class="btn btn-save" type="submit">إضافة</button>
+            </div>
+        </form>
     </div>
 </div>
+<!-- Edit User Offcanvas (shared, populated via data-* attrs on the edit button) -->
+<div class="offcanvas offcanvas-end user-panel" tabindex="-1" id="editUserOffcanvas" aria-labelledby="editUserOffcanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="editUserOffcanvasLabel" style="font-size: 18px; font-weight: 700;">تعديل مستخدم</h5>
+        <button type="button" class="btn-close m-0" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form action="" method="POST" id="editUserForm">
+            @csrf
+            @method('PUT')
 
-@foreach ($users as $user)
-<div class="modal fade" id="editUserModal{{ $user->user_id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="modal-title m-0" style="font-size: 18px; font-weight: 700;">تعديل مستخدم</h3>
-                <button aria-label="Close" class="btn-close m-0" data-bs-dismiss="modal" type="button"></button>
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">اسم المستخدم <span class="text-danger">*</span></label>
+                <input type="text" name="username" id="editUsernameInput" class="form-control custom-input text-end" required>
             </div>
-            <div class="modal-body p-0">
-                <form action="{{ route('users.update', $user) }}" method="POST">
-                    @csrf
-                    @method('PUT')
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
+                <input type="email" name="email" id="editEmailInput" class="form-control custom-input text-end" required>
+            </div>
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">كلمة مرور جديدة (اتركه فارغاً لعدم التغيير)</label>
+                <input type="password" name="password" id="editPasswordInput" class="form-control custom-input text-end">
+            </div>
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">الصلاحية <span class="text-danger">*</span></label>
+                <select name="role" id="editRoleSelect" class="form-select custom-input text-center edit-role-select" required>
+                    @foreach ($roles as $role)
+                        <option value="{{ $role->value }}">{{ $role->value }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">الهاتف</label>
+                <input type="text" name="phone" id="editPhoneInput" class="form-control custom-input text-end">
+            </div>
+            <div class="mb-3 text-end">
+                <label class="custom-label mb-1">اسم الشركة</label>
+                <input type="text" name="company_name" id="editCompanyInput" class="form-control custom-input text-end">
+            </div>
 
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">اسم المستخدم <span class="text-danger">*</span></label>
-                        <input type="text" name="username" class="form-control custom-input text-end" value="{{ $user->username }}" required>
-                    </div>
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
-                        <input type="email" name="email" class="form-control custom-input text-end" value="{{ $user->email }}" required>
-                    </div>
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">كلمة مرور جديدة (اتركه فارغاً لعدم التغيير)</label>
-                        <input type="password" name="password" class="form-control custom-input text-end">
-                    </div>
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">الصلاحية <span class="text-danger">*</span></label>
-                        <select name="role" class="form-select custom-input text-center edit-role-select" data-user-id="{{ $user->user_id }}" required>
-                            @foreach ($roles as $role)
-                                <option value="{{ $role->value }}" {{ $user->role === $role ? 'selected' : '' }}>
-                                    {{ $role->value }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">الهاتف</label>
-                        <input type="text" name="phone" class="form-control custom-input text-end" value="{{ $user->phone }}">
-                    </div>
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">اسم الشركة</label>
-                        <input type="text" name="company_name" class="form-control custom-input text-end" value="{{ $user->company_name }}">
-                    </div>
-                    <div class="mb-3 text-end employee-dept-field {{ $user->role->value !== 'employee' ? 'd-none' : '' }}" id="editEmployeeDeptField{{ $user->user_id }}">
-                        <label class="custom-label mb-1">القسم</label>
-                        <input type="text" name="department" class="form-control custom-input text-end" id="editDepartmentInput{{ $user->user_id }}" value="{{ optional(\App\Models\Employee::withTrashed()->where('user_id', $user->user_id)->first())->department }}" {{ $user->role->value === 'employee' ? 'required' : '' }}>
-                    </div>
-                    @if ($user->role === \App\Enums\Role::Client)
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">المشاريع</label>
-                        <div class="border rounded p-2 text-end" style="max-height: 160px; overflow-y: auto;">
-                            @foreach ($projects as $project)
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="project_ids[]"
-                                           id="editProject{{ $user->user_id }}_{{ $project->project_id }}"
-                                           value="{{ $project->project_id }}"
-                                           {{ in_array($project->project_id, $clientProjectIds[$user->user_id] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="editProject{{ $user->user_id }}_{{ $project->project_id }}">
-                                        {{ $project->project_name }}
-                                    </label>
-                                </div>
-                            @endforeach
+            <div class="mb-3 text-end d-none" id="editEmployeeDeptField">
+                <label class="custom-label mb-1">القسم</label>
+                <input type="text" name="department" id="editDepartmentInput" class="form-control custom-input text-end">
+            </div>
+
+            <div class="mb-3 text-end d-none" id="editClientProjectField">
+                <label class="custom-label mb-1">المشاريع</label>
+                <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن مشروع..." data-target="editClientProjectsList">
+                <div class="assignment-list" id="editClientProjectsList">
+                    @foreach ($projects as $project)
+                        <div class="form-check form-check-reverse text-start">
+                            <input class="form-check-input" type="checkbox" name="project_ids[]"
+                                   id="editProjectCheckbox{{ $project->project_id }}" value="{{ $project->project_id }}">
+                            <label class="form-check-label" for="editProjectCheckbox{{ $project->project_id }}">
+                                {{ $project->project_name }}
+                            </label>
                         </div>
-                    </div>
-                    @endif
-
-                    <div class="text-center pt-2">
-                        <button class="btn btn-save" type="submit">حفظ التعديلات</button>
-                    </div>
-                </form>
+                    @endforeach
+                </div>
             </div>
-        </div>
+
+            <div class="text-center pt-2">
+                <button class="btn btn-save" type="submit">حفظ التعديلات</button>
+            </div>
+        </form>
     </div>
 </div>
-@endforeach
-
 <!-- Delete User Modal (shared) -->
 <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

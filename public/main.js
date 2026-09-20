@@ -496,7 +496,7 @@ function updateStageOptions() {
 
 /* tasks page*/
 function prepareAddClientModal(storeUrl) {
-    const modalTitle = document.getElementById('clientModalTitle');
+    const panelTitle = document.getElementById('clientPanelTitle');
     const clientForm = document.getElementById('clientForm');
     const methodInput = document.getElementById('clientFormMethod');
     const nameInput = document.getElementById('clientNameInput');
@@ -504,7 +504,7 @@ function prepareAddClientModal(storeUrl) {
     const passwordGroup = document.getElementById('clientPasswordGroup');
     const passwordInput = document.getElementById('clientPasswordInput');
 
-    if (modalTitle) modalTitle.innerText = "إضافة عميل جديد";
+    if (panelTitle) panelTitle.innerText = "إضافة عميل جديد";
     if (clientForm) {
         clientForm.reset();
         if (storeUrl) clientForm.action = storeUrl;
@@ -529,16 +529,17 @@ function prepareAddClientModal(storeUrl) {
         checkboxContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
     }
 
-    const modalEl = document.getElementById('clientModal');
-    if (modalEl) {
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
+    const panelEl = document.getElementById('clientPanel');
+    if (panelEl) {
+        let instance = bootstrap.Offcanvas.getInstance(panelEl);
+        if (!instance) instance = new bootstrap.Offcanvas(panelEl);
+        instance.show();
     }
 }
 
 function openEditClientModal(button, updateUrl) {
     const clientCard = button.closest('[data-client-id]');
-    const modalTitle = document.getElementById('clientModalTitle');
+    const panelTitle = document.getElementById('clientPanelTitle');
     const clientForm = document.getElementById('clientForm');
     const methodInput = document.getElementById('clientFormMethod');
     const nameInput = document.getElementById('clientNameInput');
@@ -546,7 +547,7 @@ function openEditClientModal(button, updateUrl) {
     const passwordGroup = document.getElementById('clientPasswordGroup');
     const passwordInput = document.getElementById('clientPasswordInput');
 
-    if (modalTitle) modalTitle.innerText = "تعديل بيانات العميل";
+    if (panelTitle) panelTitle.innerText = "تعديل بيانات العميل";
     if (clientForm && updateUrl) clientForm.action = updateUrl;
     if (methodInput) methodInput.value = "PUT";
 
@@ -580,10 +581,11 @@ function openEditClientModal(button, updateUrl) {
         }
     }
 
-    const modalEl = document.getElementById('clientModal');
-    if (modalEl) {
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
+        const panelEl = document.getElementById('clientPanel');
+    if (panelEl) {
+        let instance = bootstrap.Offcanvas.getInstance(panelEl);
+        if (!instance) instance = new bootstrap.Offcanvas(panelEl);
+        instance.show();
     }
 }
 
@@ -603,6 +605,88 @@ function openDeleteClientModal(button, deleteUrl) {
     if (modalEl) {
         const deleteModal = new bootstrap.Modal(modalEl);
         deleteModal.show();
+    }
+}
+
+/* Users page — prepare Add User Offcanvas */
+function prepareAddUserPanel() {
+    const form = document.getElementById('addUserForm');
+    if (form) form.reset();
+
+    // Reset the role dropdown to the first option
+    const roleSelect = document.getElementById('addUserRole');
+    if (roleSelect) roleSelect.selectedIndex = 0;
+
+    // Trigger the toggle function to hide/show correct fields
+    if (typeof toggleAddUserFields === 'function') {
+        toggleAddUserFields();
+    } else {
+        // Fallback if the inline function isn't accessible
+        const deptField = document.getElementById('addEmployeeDeptField');
+        const projectField = document.getElementById('addClientProjectField');
+        if (deptField) deptField.classList.add('d-none');
+        if (projectField) projectField.classList.add('d-none');
+    }
+}
+
+/* Users page — open shared Edit User offcanvas, populated from the button's data-* attrs */
+function openEditUserPanel(button) {
+    const form = document.getElementById('editUserForm');
+    if (form) form.action = button.getAttribute('data-update-url') || '';
+
+    const usernameInput = document.getElementById('editUsernameInput');
+    const emailInput    = document.getElementById('editEmailInput');
+    const passInput     = document.getElementById('editPasswordInput');
+    const phoneInput    = document.getElementById('editPhoneInput');
+    const companyInput  = document.getElementById('editCompanyInput');
+    const roleSelect    = document.getElementById('editRoleSelect');
+    const deptInput     = document.getElementById('editDepartmentInput');
+
+    if (usernameInput) usernameInput.value = button.getAttribute('data-username') || '';
+    if (emailInput)    emailInput.value    = button.getAttribute('data-email') || '';
+    if (passInput)     passInput.value     = '';
+    if (phoneInput)    phoneInput.value    = button.getAttribute('data-phone') || '';
+    if (companyInput)  companyInput.value  = button.getAttribute('data-company-name') || '';
+
+    const role = button.getAttribute('data-role') || '';
+    if (roleSelect) roleSelect.value = role;
+
+    if (deptInput) deptInput.value = button.getAttribute('data-department') || '';
+
+    // Projects checkboxes
+    const projectIds = (button.getAttribute('data-project-ids') || '').split(',').filter(Boolean);
+    document.querySelectorAll('#editClientProjectsList input[type="checkbox"]').forEach(cb => {
+        cb.checked = projectIds.includes(cb.value);
+    });
+
+    // Show / hide role-conditional fields AFTER values are in
+    toggleEditUserFields(role);
+
+    const panelEl = document.getElementById('editUserOffcanvas');
+    if (panelEl) {
+        let instance = bootstrap.Offcanvas.getInstance(panelEl);
+        if (!instance) instance = new bootstrap.Offcanvas(panelEl);
+        instance.show();
+    }
+}
+
+/* Toggle role-conditional fields inside the Edit User offcanvas */
+function toggleEditUserFields(role) {
+    const deptField = document.getElementById('editEmployeeDeptField');
+    const deptInput = document.getElementById('editDepartmentInput');
+    if (deptField && deptInput) {
+        const isEmployee = role === 'employee';
+        deptField.classList.toggle('d-none', !isEmployee);
+        deptInput.required = isEmployee;
+    }
+
+    const projectField = document.getElementById('editClientProjectField');
+    if (projectField) {
+        const isClient = role === 'client';
+        projectField.classList.toggle('d-none', !isClient);
+        if (!isClient) {
+            projectField.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        }
     }
 }
 

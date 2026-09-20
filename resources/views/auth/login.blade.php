@@ -11,7 +11,7 @@
     
     <!-- كارد صندوق تسجيل الدخول -->
     <div class="login-card bg-white mx-auto p-4 p-sm-5 rounded-4 shadow-sm">
-        <h1 class="login-title mb-2">تسجيل الدخول</h1>
+        <h1 class="login-title mb-2"> تسجيل الدخول</h1>
         <p class="login-subtitle mb-4">اهلا وسهلا بك في نظرة الحلول والمستقبل</p>
 
         <!-- Form تسجيل الدخول بعد التعديل -->

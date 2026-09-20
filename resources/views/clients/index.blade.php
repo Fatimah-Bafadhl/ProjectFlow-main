@@ -137,15 +137,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
 @push('modals')
 @if($canManage)
-<!-- 1. مودال إضافة وتعديل عميل -->
-<div aria-hidden="true" class="modal fade" id="clientModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="modal-title m-0" id="clientModalTitle" style="font-size: 18px; font-weight: 700;">إضافة عميل جديد</h3>
-                <button aria-label="Close" class="btn-close m-0" data-bs-dismiss="modal" type="button"></button>
-            </div>
-            <div class="modal-body p-0">
+<!-- 1. لوحة إضافة وتعديل عميل -->
+<div class="offcanvas offcanvas-end user-panel" tabindex="-1" id="clientPanel" aria-labelledby="clientPanelTitle">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="clientPanelTitle" style="font-size: 18px; font-weight: 700;">إضافة عميل جديد</h5>
+        <button type="button" class="btn-close m-0" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
                 <form id="clientForm" method="POST" action="{{ route('clients.store') }}">
     @csrf
     <input type="hidden" name="_method" id="clientFormMethod" value="POST">
@@ -176,11 +174,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         <input class="form-control custom-input text-end" id="clientPhoneInput" name="phone" pattern="^05[0-9]{8}$" required title="يرجى إدخال رقم هاتف سعودي صحيح يبدأ بـ 05 ومكون من 10 أرقام" type="tel"/>
                     </div>
                     
-                                        <div class="mb-3 text-end">
+                                                           <div class="mb-3 text-end">
                         <label class="custom-label mb-1">المشاريع <span class="text-danger">*</span></label>
-                        <div class="border rounded p-2 text-end" id="clientProjectsCheckboxes" style="max-height: 160px; overflow-y: auto;">
+                        <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن مشروع..." data-target="clientProjectsCheckboxes">
+                        <div class="assignment-list" id="clientProjectsCheckboxes">
                             @foreach($projects as $project)
-                                <div class="form-check">
+                                <div class="form-check form-check-reverse text-start">
                                     <input class="form-check-input" type="checkbox" name="project_ids[]"
                                            id="clientProject{{ $project->project_id }}" value="{{ $project->project_id }}">
                                     <label class="form-check-label" for="clientProject{{ $project->project_id }}">
@@ -191,12 +190,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
 
-                    <div class="text-center pt-2">
+                                        <div class="text-center pt-2">
                         <button class="btn btn-save" type="submit">حفظ العميل</button>
                     </div>
                 </form>
-            </div>
-        </div>
     </div>
 </div>
 
