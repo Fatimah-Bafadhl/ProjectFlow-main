@@ -31,9 +31,10 @@
     </div>
 
     <div class="offcanvas-body">
-        <form id="taskForm" action="{{ route('tasks.store') }}" method="POST" enctype="multipart/form-data">
+                <form id="taskForm" action="{{ route('tasks.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="_method" id="taskFormMethod" value="POST">
+            <input type="hidden" name="redirect_to" id="taskRedirectInput" value="">
 
             <div class="mb-3 text-end">
                 <label class="custom-label mb-1">اسم المهمة <span class="text-danger">*</span></label>

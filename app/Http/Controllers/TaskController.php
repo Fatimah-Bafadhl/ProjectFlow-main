@@ -122,7 +122,7 @@ class TaskController extends Controller
             ));
         }
 
-        return redirect()->route('tasks.index')->with('success', 'تم إضافة المهمة بنجاح وتحديث حالة المشروع');
+              return $this->redirectAfterTaskAction($request, 'تم إضافة المهمة بنجاح وتحديث حالة المشروع');
     }
 
 public function show($id)
@@ -265,7 +265,7 @@ $client = auth()->user()->client;
             $task->project->syncStatus();
         }
 
-        return redirect()->route('tasks.index')->with('success', 'تم تعديل المهمة وتحديث حالة المشروع بنجاح');
+               return $this->redirectAfterTaskAction($request, 'تم تعديل المهمة وتحديث حالة المشروع بنجاح');
     }
 
     public function destroy($id)
@@ -287,6 +287,27 @@ $client = auth()->user()->client;
             $project->syncStatus();
         }
 
-        return redirect()->route('tasks.index')->with('success', 'تم حذف المهمة وتحديث حالة المشروع بنجاح');
+               return redirect()->route('tasks.index')->with('success', 'تم حذف المهمة وتحديث حالة المشروع بنجاح');
+    }
+
+    /**
+     * Redirect back to a safe local URL if the request provides one
+     * (used by the task panel to return the user to e.g. /projects/12?tab=stage-pane-42).
+     * Only relative same-app paths are accepted; anything else falls back to tasks.index.
+     */
+    private function redirectAfterTaskAction(Request $request, string $message)
+    {
+        $redirectTo = $request->input('redirect_to');
+
+        // Accept only relative paths: must start with "/" and NOT "//" (protocol-relative)
+        if (
+            is_string($redirectTo)
+            && str_starts_with($redirectTo, '/')
+            && !str_starts_with($redirectTo, '//')
+        ) {
+            return redirect()->to($redirectTo)->with('success', $message);
+        }
+
+        return redirect()->route('tasks.index')->with('success', $message);
     }
 }

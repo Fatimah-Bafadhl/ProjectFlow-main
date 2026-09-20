@@ -31,12 +31,7 @@
     $isAssignedManager = $isManager && $project->managers()->where('users.user_id', $user->user_id)->exists();
 @endphp
 
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show text-start mb-3 rounded-3 shadow-sm py-2 px-3 small" role="alert">
-        <i class="fa-regular fa-circle-check me-2"></i> {{ session('success') }}
-        <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+
 
 @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show text-start mb-3 rounded-3 shadow-sm py-2 px-3 small" role="alert">
@@ -340,9 +335,21 @@
                                  data-company="{{ $project->company_name }}"
                                  data-priority="{{ $task->priority ?? 'متوسط' }}"
                                  data-attachments="{{ json_encode($attachmentsJson, JSON_UNESCAPED_UNICODE) }}">
-                                <a class="fw-bold task-name text-decoration-none text-dark" href="{{ route('tasks.show', $task->task_id) }}" style="font-size: 14px;">
-                                    {{ $task->task_title }}
-                                </a>
+                                                                @php
+                                    // Employees can only open tasks assigned to them; everyone else (admin/manager) can open any.
+                                    $canOpenTask = ! $isEmployee
+                                        || $task->assignedEmployees->contains('user_id', $user->user_id);
+                                @endphp
+                                @if($canOpenTask)
+                                    <a class="fw-bold task-name text-decoration-none text-dark" href="{{ route('tasks.show', $task->task_id) }}" style="font-size: 14px;">
+                                        {{ $task->task_title }}
+                                    </a>
+                                @else
+                                    <span class="fw-bold task-name text-dark" style="font-size: 14px; opacity: 0.6; cursor: default;"
+                                          title="هذه المهمة غير مسندة إليك">
+                                        {{ $task->task_title }}
+                                    </span>
+                                @endif
                                 <div class="text-muted" style="font-size: 11px;">
                                     {{ $task->assignedEmployees->pluck('name')->implode('، ') ?: 'غير مسند' }}
                                     · {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->translatedFormat('d F Y') : 'غير محدد' }}
@@ -568,4 +575,36 @@
     @endif
 
 @endif
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tabs = document.querySelectorAll('#projectStageTabs .stage-tab-link');
+    if (!tabs.length) return;
+
+    // 1) Restore the active tab from ?tab=<pane-id> on page load
+    const params = new URLSearchParams(window.location.search);
+    const targetPane = params.get('tab');
+    if (targetPane) {
+        const match = document.querySelector(
+            '#projectStageTabs .stage-tab-link[data-bs-target="#' + targetPane + '"]'
+        );
+        if (match) {
+            bootstrap.Tab.getOrCreateInstance(match).show();
+        }
+    }
+
+    // 2) Persist the active tab to the URL whenever it changes
+    tabs.forEach(function (tab) {
+        tab.addEventListener('shown.bs.tab', function () {
+            const pane = (this.getAttribute('data-bs-target') || '').replace('#', '');
+            if (!pane) return;
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', pane);
+            history.replaceState({}, '', url);
+        });
+    });
+});
+</script>
 @endpush

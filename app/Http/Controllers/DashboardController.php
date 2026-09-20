@@ -207,11 +207,21 @@ class DashboardController extends Controller
         $projectBase = Project::whereIn('project_id', $projectIds);
         $taskBase = Task::whereIn('project_id', $projectIds);
 
-            } elseif ($user->isEmployee()) {
+                        } elseif ($user->isEmployee()) {
             $employee = Employee::where('user_id', $user->user_id)->first();
             $employeeId = $employee->employee_id ?? 0;
+
+            // Tasks assigned to this employee (any project)
             $taskBase = Task::whereHas('assignedEmployees', fn ($q) => $q->where('employees.employee_id', $employeeId));
-            $projectIds = (clone $taskBase)->pluck('project_id')->unique();
+
+            // Visible projects = union of:
+            //   (a) project_employee pivot (what Admin picked on the project form)
+            //   (b) projects where the employee has an assigned task
+            $pivotProjectIds = $employee
+                ? $employee->projects()->pluck('projects.project_id')
+                : collect();
+            $taskProjectIds = (clone $taskBase)->pluck('project_id');
+            $projectIds = $pivotProjectIds->merge($taskProjectIds)->unique()->values();
             $projectBase = Project::whereIn('project_id', $projectIds);
               }else { // Client
         $client = $user->client;
@@ -345,9 +355,9 @@ private function resolveRange(?string $preset, ?string $from, ?string $to): arra
 public function pipelineData(Request $request)
 {
     [$start, $end] = $this->resolveRange(
-        $request->query('range', '30d'),
-        $request->query('from'),
-        $request->query('to')
+        $request->query('pipeline_range', '30d'),
+        $request->query('pipeline_from'),
+        $request->query('pipeline_to')
     );
 
     $stagesRaw = \App\Models\ProjectStage::whereHas('project', function ($q) use ($start, $end) {
@@ -392,9 +402,9 @@ public function pipelineData(Request $request)
 public function activityFeedData(Request $request)
 {
     [$start, $end] = $this->resolveRange(
-        $request->query('range', '30d'),
-        $request->query('from'),
-        $request->query('to')
+        $request->query('activity_range', '30d'),
+        $request->query('activity_from'),
+        $request->query('activity_to')
     );
 
     $activityTickets = Ticket::where('status', 'handled')

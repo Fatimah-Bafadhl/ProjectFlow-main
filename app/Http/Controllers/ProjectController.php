@@ -34,12 +34,18 @@ class ProjectController extends Controller
                 },
             ])
             ->get();
-           } elseif ($user->isEmployee()) {
+                      } elseif ($user->isEmployee()) {
             $employee = Employee::where('user_id', $user->user_id)->first();
             $employeeId = $employee->employee_id ?? 0;
-            $projectIds = Task::whereHas('assignedEmployees', fn ($q) => $q->where('employees.employee_id', $employeeId))
-                ->pluck('project_id')
-                ->unique();
+
+            // Visible projects = union of pivot membership + task-assignment scope
+            $pivotProjectIds = $employee
+                ? $employee->projects()->pluck('projects.project_id')
+                : collect();
+            $taskProjectIds = Task::whereHas('assignedEmployees', fn ($q) => $q->where('employees.employee_id', $employeeId))
+                ->pluck('project_id');
+            $projectIds = $pivotProjectIds->merge($taskProjectIds)->unique()->values();
+
             $projects = Project::whereIn('project_id', $projectIds)->with(['employee', 'tasks', 'managers', 'employees'])->get();
         } else {
         $projects = Project::with(['employee', 'tasks', 'managers', 'employees'])
@@ -179,13 +185,20 @@ $project->clients()->sync($request->input('client_ids', []));
             abort(403, 'عذراً، ليس لديك صلاحية استعراض هذا المشروع.');
         }
         $isManagerOfThisProject = true;
-           } elseif (auth()->user()->isEmployee()) {
+                      } elseif (auth()->user()->isEmployee()) {
             $employee = Employee::where('user_id', auth()->user()->user_id)->first();
             $employeeId = $employee->employee_id ?? 0;
+
+            // Employee can view the project if:
+            //   (a) they are a member of it (project_employee pivot), OR
+            //   (b) they have at least one task assigned to them on it.
+            $isMember = $employee
+                ? $employee->projects()->where('projects.project_id', $project->project_id)->exists()
+                : false;
             $hasTaskOnProject = Task::where('project_id', $project->project_id)
                 ->whereHas('assignedEmployees', fn ($q) => $q->where('employees.employee_id', $employeeId))
                 ->exists();
-            if (! $hasTaskOnProject) {
+            if (! $isMember && ! $hasTaskOnProject) {
                 abort(403, 'عذراً، ليس لديك صلاحية استعراض هذا المشروع.');
             }
         } elseif (auth()->user()->isAdmin()) {

@@ -194,6 +194,7 @@ function prepareAddModal(button) {
     const panelTitle = document.getElementById('taskPanelTitle');
     const taskForm = document.getElementById('taskForm');
     const methodInput = document.getElementById('taskFormMethod');
+    const redirectInput = document.getElementById('taskRedirectInput');
 
     if (panelTitle) panelTitle.innerText = "إضافة مهمة";
     if (taskForm) {
@@ -201,6 +202,7 @@ function prepareAddModal(button) {
         taskForm.action = "/tasks";
     }
     if (methodInput) methodInput.value = "POST";
+    if (redirectInput) redirectInput.value = window.location.pathname + window.location.search;
 
     // Add-mode never shows existing attachments
     const existingBlock = document.getElementById('existingAttachmentsBlock');
@@ -254,13 +256,15 @@ function openEditModal(button) {
     const priority     = taskRow.getAttribute('data-priority') || 'متوسط';
     const attachmentsRaw = taskRow.getAttribute('data-attachments') || '[]';
 
-    const panelTitle = document.getElementById('taskPanelTitle');
+        const panelTitle = document.getElementById('taskPanelTitle');
     const taskForm = document.getElementById('taskForm');
     const methodInput = document.getElementById('taskFormMethod');
+    const redirectInput = document.getElementById('taskRedirectInput');
 
     if (panelTitle) panelTitle.innerText = "تعديل المهمة";
     if (taskForm) taskForm.action = `/tasks/${taskId}`;
     if (methodInput) methodInput.value = "PUT";
+    if (redirectInput) redirectInput.value = window.location.pathname + window.location.search;
 
     // Text fields
     if (document.getElementById('taskNameInput')) document.getElementById('taskNameInput').value = taskTitle;
