@@ -74,7 +74,7 @@ class ClientController extends Controller
         return redirect()->back()->with('success', 'تم تعديل بيانات العميل بنجاح');
     }
 
-        public function destroy(Client $client)
+    public function destroy(Client $client, \App\Services\AccountLifecycle $accounts)
     {
 
      if (!auth()->user()->isAdmin()) {
@@ -83,13 +83,11 @@ class ClientController extends Controller
         $clientName = $client->name;
         $linkedUserId = $client->user_id;
 
-        DB::transaction(function () use ($client, $linkedUserId) {
-            $client->delete();
-
-            if ($linkedUserId) {
-                User::where('user_id', $linkedUserId)->delete();
-            }
-        });
+                try {
+            $accounts->delete($client, auth()->user());
+        } catch (\App\Services\AccountLifecycleException $e) {
+            return redirect()->back()->withErrors(['account' => $e->getMessage()]);
+        }
 
         if (auth()->check()) {
             auth()->user()->notify(new SystemActivityNotification(

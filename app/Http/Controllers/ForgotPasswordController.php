@@ -17,7 +17,7 @@ class ForgotPasswordController extends Controller
     public function processDirectReset(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email'
+                     'email' => ['required', 'email', \Illuminate\Validation\Rule::exists('users', 'email')->whereNull('deleted_at')],
         ], [
             'email.required' => 'يرجى إدخال البريد الإلكتروني',
             'email.email'    => 'صيغة البريد غير صحيحة',
@@ -34,7 +34,7 @@ class ForgotPasswordController extends Controller
    public function updatePassword(Request $request)
 {
     $request->validate([
-        'email' => 'required|email|exists:users,email',
+                'email' => ['required', 'email', \Illuminate\Validation\Rule::exists('users', 'email')->whereNull('deleted_at')],
         'password' => 'required|min:8|confirmed'
     ], [
         'email.required' => 'يرجى إدخال البريد الإلكتروني',

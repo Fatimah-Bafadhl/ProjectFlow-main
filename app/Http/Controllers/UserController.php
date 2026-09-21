@@ -181,14 +181,15 @@ class UserController extends Controller
 }
     }
 
-    public function destroy(User $user)
+        public function destroy(User $user, \App\Services\AccountLifecycle $accounts)
     {
-        if ($user->user_id === auth()->id()) {
-            abort(403, 'لا يمكنك حذف حسابك الخاص.');
-        }
-
         $username = $user->username;
-        $user->delete();
+
+        try {
+            $accounts->delete($user, auth()->user());
+        } catch (\App\Services\AccountLifecycleException $e) {
+            return redirect()->back()->withErrors(['account' => $e->getMessage()]);
+        }
 
         auth()->user()->notify(new SystemActivityNotification(
             'حذف مستخدم',

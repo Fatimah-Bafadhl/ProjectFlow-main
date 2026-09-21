@@ -9,8 +9,12 @@ use App\Enums\Role;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, \Illuminate\Database\Eloquent\SoftDeletes;
 
+    public function employee()
+    {
+        return $this->hasOne(Employee::class, 'user_id', 'user_id');
+    }
     // تحديد المفتاح الرئيسي المخصص لجدولك
     protected $primaryKey = 'user_id';
 

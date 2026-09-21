@@ -92,8 +92,7 @@ class EmployeeController extends Controller
         return redirect()->back()->with('success', 'تم تعديل بيانات الموظف بنجاح');
     }
 
-        public function destroy(Employee $employee)
-    {
+public function destroy(Employee $employee, \App\Services\AccountLifecycle $accounts)    {
            if (!Auth::user()->isAdmin()) {
             abort(403, 'عذراً، لا تمتلك صلاحية حذف موظف.');
            }
@@ -101,13 +100,11 @@ class EmployeeController extends Controller
         $employeeName = $employee->name;
         $linkedUserId = $employee->user_id;
 
-        DB::transaction(function () use ($employee, $linkedUserId) {
-            $employee->delete();
-
-            if ($linkedUserId) {
-                User::where('user_id', $linkedUserId)->delete();
-            }
-        });
+             try {
+            $accounts->delete($employee, auth()->user());
+        } catch (\App\Services\AccountLifecycleException $e) {
+            return redirect()->back()->withErrors(['account' => $e->getMessage()]);
+        }
 
         if (auth()->check()) {
             auth()->user()->notify(new SystemActivityNotification(
