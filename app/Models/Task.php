@@ -9,8 +9,12 @@ use App\Models\Employee;
 
 class Task extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, \App\Models\Concerns\CascadesSoftDeletes;
 
+    public function cascadeRelations(): array
+    {
+        return ['comments', 'attachments'];
+    }
     protected $primaryKey = 'task_id'; 
 
      protected $fillable = [

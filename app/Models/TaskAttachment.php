@@ -8,7 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TaskAttachment extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, \App\Models\Concerns\CascadesSoftDeletes;
+
+    public function purgeFileColumn(): ?string
+    {
+        return 'file_path';
+    }
 
     protected $primaryKey = 'task_attachment_id';
 

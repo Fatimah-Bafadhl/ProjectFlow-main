@@ -7,7 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Comment extends Model
 {
-     use HasFactory;
+    use HasFactory, \App\Models\Concerns\CascadesSoftDeletes;
+
+    public function purgeFileColumn(): ?string
+    {
+        return 'attachment';
+    }
 
          protected static function booted(): void
     {

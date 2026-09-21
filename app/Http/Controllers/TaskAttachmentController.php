@@ -45,11 +45,8 @@ class TaskAttachmentController extends Controller
     {
         $attachment = TaskAttachment::findOrFail($task_attachment_id);
 
-        if ($attachment->file_path) {
-            Storage::disk('public')->delete($attachment->file_path);
-        }
-
-        $attachment->delete();
+                // The file is removed automatically after the commit (see CascadesSoftDeletes).
+        $attachment->forceDelete();
 
         return back()->with('success', 'تم حذف المرفق');
     }

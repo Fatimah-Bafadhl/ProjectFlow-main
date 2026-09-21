@@ -8,7 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProjectDocument extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, \App\Models\Concerns\CascadesSoftDeletes;
+
+    public function purgeFileColumn(): ?string
+    {
+        return 'file_path';
+    }
 
     protected $primaryKey = 'project_document_id';
 

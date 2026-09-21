@@ -66,7 +66,15 @@ class TrashController extends Controller
         $record = $query->findOrFail($id);
         $label = $this->labelFor($record, $type);
 
-        $record->forceDelete();
+        try {
+            $record->forceDelete();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()->back()->withErrors([
+                'trash' => 'تعذر الحذف النهائي لـ "' . $label . '". لم يتم تغيير أي بيانات.',
+            ]);
+        }
 
         if (auth()->check()) {
             auth()->user()->notify(new SystemActivityNotification(

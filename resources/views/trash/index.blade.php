@@ -2,6 +2,21 @@
 @section('title', 'المحذوفات')
 
 @section('content')
+
+@if ($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show text-start mb-3 rounded-3 shadow-sm py-2 px-3 small" role="alert">
+        <div class="d-flex align-items-center mb-1">
+            <i class="fa-regular fa-circle-xmark me-2"></i>
+            <span class="fw-bold">تنبيه:</span>
+        </div>
+        <ul class="mb-0 ps-3">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="task-page-title m-0">المحذوفات</h2>
 </div>

@@ -67,11 +67,8 @@ class ProjectDocumentController extends Controller
     {
         $document = ProjectDocument::findOrFail($project_document_id);
 
-        if ($document->file_path) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($document->file_path);
-        }
-
-        $document->delete();
+               // The file is removed automatically after the commit (see CascadesSoftDeletes).
+        $document->forceDelete();
 
         return back()->with('success', 'تم حذف المستند');
     }

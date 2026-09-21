@@ -187,11 +187,8 @@ class CommentController extends Controller
             abort(403);
         }
 
-        if ($comment->attachment && Storage::disk('public')->exists($comment->attachment)) {
-            Storage::disk('public')->delete($comment->attachment);
-        }
-
-        $comment->delete();
+                // The file is removed automatically after the commit (see CascadesSoftDeletes).
+        $comment->forceDelete();
 
         return redirect()->back();
     }

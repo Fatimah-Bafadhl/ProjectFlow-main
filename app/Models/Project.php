@@ -10,7 +10,17 @@ use App\Enums\ProjectType;
 
 class Project extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, \App\Models\Concerns\CascadesSoftDeletes;
+
+    public function cascadeRelations(): array
+    {
+        return ['stages', 'tasks', 'documents', 'comments', 'tickets'];
+    }
+
+    protected function afterCascadeRestore(): void
+    {
+        $this->syncStatus();
+    }
 
     protected $primaryKey = 'project_id';
 
@@ -152,17 +162,7 @@ class Project extends Model
             $query->whereNull('archived_at');
         });
 
-                static::deleting(function (Project $project) {
-            if ($project->isForceDeleting()) {
-                $project->stages()->withTrashed()->each(fn ($stage) => $stage->forceDelete());
-            } else {
-                $project->stages()->each(fn ($stage) => $stage->delete());
-            }
-        });
-
-        static::restoring(function (Project $project) {
-            $project->stages()->onlyTrashed()->each(fn ($stage) => $stage->restore());
-        });
+               
     }
 
     public function scopeWithArchived($query)
