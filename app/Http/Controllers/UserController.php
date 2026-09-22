@@ -126,7 +126,8 @@ class UserController extends Controller
             $client = Client::where('user_id', $user->user_id)->first();
 
             if ($client) {
-                $client->projects()->sync($validated['project_ids']);
+                $trashedProjectIds = $client->projects()->onlyTrashed()->pluck('projects.project_id')->toArray();
+                $client->projects()->sync(array_unique(array_merge($validated['project_ids'], $trashedProjectIds)));
 
                 $firstProject = Project::find($validated['project_ids'][0] ?? null);
                 if ($firstProject) {

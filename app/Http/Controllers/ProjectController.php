@@ -155,8 +155,7 @@ $project->clients()->sync($request->input('client_ids', []));
 
         public function show($id)
 {
-        $project = Project::withArchived()
-                ->with([
+        $project = Project::with([
             'user',
             'clients',
             'managers',
@@ -288,7 +287,8 @@ $project->clients()->sync($request->input('client_ids', []));
         ]);
 
        if (auth()->user()->isAdmin()) {
-    $project->managers()->sync($request->input('manager_ids', []));
+    $trashedManagerIds = $project->managers()->onlyTrashed()->pluck('users.user_id')->toArray();
+    $project->managers()->sync(array_unique(array_merge($request->input('manager_ids', []), $trashedManagerIds)));
 }
 
         $newEmployeeIds = $request->input('employee_ids', []);
@@ -305,8 +305,11 @@ $project->clients()->sync($request->input('client_ids', []));
             }
         }
 
-        $project->employees()->sync($newEmployeeIds);
-$project->clients()->sync($request->input('client_ids', []));
+        $trashedEmployeeIds = $project->employees()->onlyTrashed()->pluck('employees.employee_id')->toArray();
+        $project->employees()->sync(array_unique(array_merge($newEmployeeIds, $trashedEmployeeIds)));
+
+$trashedClientIds = $project->clients()->onlyTrashed()->pluck('clients.client_id')->toArray();
+$project->clients()->sync(array_unique(array_merge($request->input('client_ids', []), $trashedClientIds)));
 
         // تحديث حالة المشروع ونسبته بناءً على المهام بعد التعديل
         // تحديث حالة المشروع ونسبته بناءً على المهام بعد التعديل

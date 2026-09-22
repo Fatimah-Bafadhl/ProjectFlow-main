@@ -179,12 +179,17 @@ class CommentController extends Controller
         return redirect()->back();
     }
 
-    public function destroy($id)
+     public function destroy($id)
     {
         $comment = Comment::findOrFail($id);
+        $user = auth()->user();
 
-        if ($comment->user_id !== auth()->id()) {
-            abort(403);
+        $project = $comment->task_id ? $comment->task->project : $comment->project;
+        $isProjectManager = $project && $user->isManager()
+            && $project->managers()->where('users.user_id', $user->user_id)->exists();
+
+        if ($comment->user_id !== $user->user_id && !$user->isAdmin() && !$isProjectManager) {
+            abort(403, 'عذراً، لا تمتلك صلاحية حذف هذا التعليق.');
         }
 
                 // The file is removed automatically after the commit (see CascadesSoftDeletes).

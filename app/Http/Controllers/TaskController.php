@@ -235,13 +235,14 @@ $client = auth()->user()->client;
             'attachments.*'    => 'file|max:20480',
         ]);
 
-        $task->update($request->only([
+       $task->update($request->only([
             'task_title', 'task_description', 'status', 'priority', 'start_task', 'end_task', 'company_name',
         ]));
         $task->stage_id = $request->stage_id;
         $task->save();
 
-        $task->assignedEmployees()->sync($request->assigned_to);
+        $trashedAssignedEmployeeIds = $task->assignedEmployees()->onlyTrashed()->pluck('employees.employee_id')->toArray();
+        $task->assignedEmployees()->sync(array_unique(array_merge($request->assigned_to, $trashedAssignedEmployeeIds)));
 
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {

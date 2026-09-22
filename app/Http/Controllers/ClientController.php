@@ -58,7 +58,8 @@ class ClientController extends Controller
         }
 
         $projectIds = $request->input('project_ids', []);
-        $client->projects()->sync($projectIds);
+        $trashedProjectIds = $client->projects()->onlyTrashed()->pluck('projects.project_id')->toArray();
+        $client->projects()->sync(array_unique(array_merge($projectIds, $trashedProjectIds)));
 
         $firstProject = !empty($projectIds) ? Project::find($projectIds[0]) : null;
         $client->update(['project_name' => $firstProject?->project_name]);

@@ -31,8 +31,7 @@ class TrashController extends Controller
 
         public function index()
     {
-        $projects = Project::withArchived()->onlyTrashed()->get();
-
+$projects = Project::onlyTrashed()->get();
         // Only top-level tasks. A task trashed together with its project comes back with the project.
         $tasks = Task::onlyTrashed()->whereHas('project')->with('project')->get();
 
@@ -54,15 +53,13 @@ class TrashController extends Controller
     {
         $modelClass = $this->resolveModel($type);
 
-        $query = $type === 'project'
-            ? $modelClass::withArchived()->onlyTrashed()
-            : $modelClass::onlyTrashed();
+           $query = $modelClass::onlyTrashed();
 
         $record = $query->findOrFail($id);
         $label = $this->labelFor($record, $type);
 
         if ($type === 'task') {
-            $projectTrashed = Project::withArchived()->onlyTrashed()
+            $projectTrashed = Project::onlyTrashed()
                 ->where('project_id', $record->project_id)->exists();
 
             if ($projectTrashed) {
@@ -97,11 +94,9 @@ class TrashController extends Controller
     {
         $modelClass = $this->resolveModel($type);
 
-        $query = $type === 'project'
-            ? $modelClass::withArchived()->onlyTrashed()
-            : $modelClass::onlyTrashed();
+          $query = $modelClass::onlyTrashed();
 
-               $record = $query->findOrFail($id);
+               $record = $query->findOrFail($id);;
         $label = $this->labelFor($record, $type);
 
         try {

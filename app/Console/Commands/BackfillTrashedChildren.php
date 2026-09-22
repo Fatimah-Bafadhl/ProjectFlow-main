@@ -33,7 +33,7 @@ class BackfillTrashedChildren extends Command
             }
 
             // 2. Trashed projects: stages, tasks (with their comments/attachments), documents, comments, tickets.
-            foreach (Project::withArchived()->onlyTrashed()->get() as $project) {
+foreach (Project::onlyTrashed()->get() as $project) {
                 $stamp = (string) $project->getRawOriginal('deleted_at');
 
                 // The old code trashed the stages a moment before the project. Give them the project's exact time.

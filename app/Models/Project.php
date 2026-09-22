@@ -139,42 +139,7 @@ class Project extends Model
 
     // خاصية محسوبة لضمان قراءة النسبة بشكل صحيح
 
-        public function archive()
-    {
-        $this->archived_at = now();
-        $this->save();
-    }
-
-    public function unarchive()
-    {
-        $this->archived_at = null;
-        $this->save();
-    }
-
-    public function isArchived(): bool
-    {
-        return !is_null($this->archived_at);
-    }
-
-               protected static function booted()
-    {
-        static::addGlobalScope('notArchived', function ($query) {
-            $query->whereNull('archived_at');
-        });
-
-               
-    }
-
-    public function scopeWithArchived($query)
-    {
-        return $query->withoutGlobalScope('notArchived');
-    }
-
-    public function scopeOnlyArchived($query)
-    {
-        return $query->withoutGlobalScope('notArchived')->whereNotNull('archived_at');
-    }
-
+      
     public function user()
     {
         return $this->belongsTo(User::class);

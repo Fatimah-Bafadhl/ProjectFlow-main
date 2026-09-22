@@ -20,6 +20,10 @@ class ProjectDocumentController extends Controller
     {
         $project = Project::findOrFail($project_id);
 
+        if (auth()->user()->isManager() && !$project->managers()->where('users.user_id', auth()->id())->exists()) {
+            abort(403, 'عذراً، لا تمتلك صلاحية إضافة مستندات لهذا المشروع.');
+        }
+
         $validated = $request->validate([
             'type' => 'required|in:link,file',
             'title' => 'required|string|max:255',
@@ -63,9 +67,18 @@ class ProjectDocumentController extends Controller
         return back()->with('success', 'تم إضافة المستند بنجاح');
     }
 
-    public function destroy($project_document_id)
+   public function destroy($project_document_id)
     {
         $document = ProjectDocument::findOrFail($project_document_id);
+        $user = auth()->user();
+        $project = $document->project;
+
+        $isProjectManager = $project && $user->isManager()
+            && $project->managers()->where('users.user_id', $user->user_id)->exists();
+
+        if ($document->added_by_user_id !== $user->user_id && !$user->isAdmin() && !$isProjectManager) {
+            abort(403, 'عذراً، لا تمتلك صلاحية حذف هذا المستند.');
+        }
 
                // The file is removed automatically after the commit (see CascadesSoftDeletes).
         $document->forceDelete();

@@ -120,7 +120,6 @@ Route::middleware(['auth'])->group(function () {
     });
 
         Route::middleware('role:admin')->group(function () {
-        Route::post('/projects/{project}/reassign-creator', [ProjectController::class, 'reassignCreator'])->name('projects.reassignCreator');
     });
 
         Route::middleware('role:admin')->group(function () {
