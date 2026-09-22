@@ -8,6 +8,8 @@ use App\Models\Client;
 use Illuminate\Http\Request;
 use App\Notifications\SystemActivityNotification;
 use App\Models\Project;
+use App\Http\Requests\UpdatePersonRequest;
+use App\Services\PersonProfileService;
 
 class ClientController extends Controller
 {
@@ -31,43 +33,22 @@ class ClientController extends Controller
     public function store(Request $request)
     {    abort(404, 'يتم إنشاء حسابات العملاء من صفحة إدارة المستخدمين فقط.');}
 
-    public function update(Request $request, Client $client)
+    public function update(UpdatePersonRequest $request, Client $client, PersonProfileService $accounts)
     {
-
-      if (!auth()->user()->isAdmin()) {
+        if (!auth()->user()->isAdmin()) {
             abort(403, 'عذراً، لا تمتلك صلاحية تعديل بيانات العميل.');
         }
-         $request->validate([
-            'name'          => 'required|string|max:255',
-            'company_name'  => 'required|string|max:255',
-            'email'         => 'required|email|max:255',
-            'phone'         => 'required|string|max:20',
-            'project_ids'   => 'nullable|array',
-            'project_ids.*' => 'exists:projects,project_id',
-        ]);
 
-               $client->update([
-            'name'         => $request->name,
-            'company_name' => $request->company_name,
-            'email'        => $request->email,
-            'phone'        => $request->phone,
-        ]);
-
-        if ($client->user_id) {
-            User::where('user_id', $client->user_id)->update(['username' => $client->name]);
+        if (!$client->user_id) {
+            return redirect()->back()->withErrors(['account' => 'لا يمكن تعديل عميل بلا حساب مستخدم.']);
         }
 
-        $projectIds = $request->input('project_ids', []);
-        $trashedProjectIds = $client->projects()->onlyTrashed()->pluck('projects.project_id')->toArray();
-        $client->projects()->sync(array_unique(array_merge($projectIds, $trashedProjectIds)));
-
-        $firstProject = !empty($projectIds) ? Project::find($projectIds[0]) : null;
-        $client->update(['project_name' => $firstProject?->project_name]);
+        $accounts->update($client->user, $request->validated());
 
         if (auth()->check()) {
             auth()->user()->notify(new SystemActivityNotification(
                 'تعديل عميل',
-                'تم تعديل بيانات العميل: ' . $client->name,
+                'تم تعديل بيانات العميل: ' . $client->refresh()->name,
                 route('clients.index')
             ));
         }

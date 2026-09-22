@@ -11,6 +11,9 @@ use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\SystemActivityNotification;
+use App\Http\Requests\UpdatePersonRequest;
+use App\Services\PersonProfileService;
+
 
 class EmployeeController extends Controller
 {
@@ -62,29 +65,22 @@ class EmployeeController extends Controller
         return redirect()->back()->with('success', 'تم إضافة الموظف بنجاح');
     }
 
-    public function update(Request $request, Employee $employee)
+    public function update(UpdatePersonRequest $request, Employee $employee, PersonProfileService $accounts)
     {
-             if (!Auth::user()->isAdmin()) {
+        if (!Auth::user()->isAdmin()) {
             abort(403, 'عذراً، لا تمتلك صلاحية تعديل بيانات موظف.');
-             }
-
-        $validated = $request->validate([
-            'name'       => 'required|string|max:255',
-            'department' => 'required|string|max:255',
-            'email'      => 'required|email|max:255|unique:employees,email,' . $employee->employee_id . ',employee_id',
-            'phone'      => 'required|string|max:20',
-        ]);
-
-                $employee->update($validated);
-
-        if ($employee->user_id) {
-            User::where('user_id', $employee->user_id)->update(['username' => $employee->name]);
         }
+
+        if (!$employee->user_id) {
+            return redirect()->back()->withErrors(['account' => 'لا يمكن تعديل موظف بلا حساب مستخدم.']);
+        }
+
+        $accounts->update($employee->user, $request->validated());
 
         if (auth()->check()) {
             auth()->user()->notify(new SystemActivityNotification(
                 'تعديل موظف',
-                'تم تعديل بيانات الموظف: ' . $employee->name,
+                'تم تعديل بيانات الموظف: ' . $employee->refresh()->name,
                 route('employees.index')
             ));
         }

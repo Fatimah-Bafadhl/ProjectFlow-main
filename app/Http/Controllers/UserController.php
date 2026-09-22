@@ -11,6 +11,9 @@ use App\Models\Employee;
 use App\Models\Client;
 use App\Models\Project;
 use App\Models\Task;
+use App\Http\Requests\StorePersonRequest;
+use App\Http\Requests\UpdatePersonRequest;
+use App\Services\PersonProfileService;
 
 class UserController extends Controller
 {
@@ -29,52 +32,9 @@ class UserController extends Controller
         return view('users.index', compact('users', 'roles', 'projects', 'clientProjectIds'));
     }
 
-    public function store(Request $request)
+    public function store(StorePersonRequest $request, PersonProfileService $accounts)
     {
-        
-        $validated = $request->validate([
-            'username'     => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email|unique:employees,email|unique:clients,email',
-            'password'     => 'required|string|min:8',
-            'role'         => 'required|in:admin,manager,employee,client',
-            'phone'        => 'nullable|string|max:20',
-            'department' => 'nullable|string|max:255',
-                        'project_ids'   => 'nullable|array',
-            'project_ids.*' => 'exists:projects,project_id',
-           // 'project_id' => 'nullable|exists:projects,project_id',
-           // 'department'   => 'required_if:role,employee|string|max:255',
-           // 'project_id'   => 'required_if:role,client|exists:projects,project_id',
-            'company_name' => 'required_if:role,client|nullable|string|max:255',
-        ]);
-
-        $validated['password'] = Hash::make($validated['password']);
-        $user = User::create($validated);
-
-        if ($validated['role'] === 'employee') {
-    Employee::create([
-        'user_id'    => $user->user_id,
-        'name'       => $user->username,
-        'department' => $validated['department'],
-        'email'      => $user->email,
-        'phone'      => $user->phone,
-    ]);
-} elseif ($validated['role'] === 'client') {
-    $projectIds = $validated['project_ids'] ?? [];
-    $firstProject = !empty($projectIds) ? Project::find($projectIds[0]) : null;
-
-    $client = Client::create([
-        'user_id'      => $user->user_id,
-        'name'         => $user->username,
-        'company_name' => $validated['company_name'],
-        'email'        => $user->email,
-        'phone'        => $user->phone,
-        'project_name' => $firstProject?->project_name,
-    ]);
-
-    if (!empty($projectIds)) {
-        $client->projects()->attach($projectIds);
-    }
-}
+        $user = $accounts->create($request->validated());
 
         auth()->user()->notify(new SystemActivityNotification(
             'إضافة مستخدم',
@@ -84,56 +44,19 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', 'تم إضافة المستخدم بنجاح');
     }
+        
 
-        public function update(Request $request, User $user)
+    public function update(UpdatePersonRequest $request, User $user)
     {
         $oldRole = $user->role->value;
 
-        $validated = $request->validate([
-            'username'     => 'required|string|max:255',
-            'email'        => 'required|email|max:255|unique:users,email,' . $user->user_id . ',user_id',
-            'password'     => 'nullable|string|min:8',
-            'role'         => 'required|in:admin,manager,employee,client',
-            'phone'        => 'nullable|string|max:20',
-            'company_name' => 'nullable|string|max:255',
-            'department'   => 'required_if:role,employee|string|max:255',
-            'project_ids'   => 'nullable|array',
-            'project_ids.*' => 'exists:projects,project_id',
-        ]);
-
-        if (empty($validated['password'])) {
-            unset($validated['password']);
-        } else {
-            $validated['password'] = Hash::make($validated['password']);
-        }
-
-                $user->update($validated);
-
-        if ($user->role === \App\Enums\Role::Employee) {
-            Employee::where('user_id', $user->user_id)->update(['name' => $user->username]);
-        } elseif ($user->role === \App\Enums\Role::Client) {
-            Client::where('user_id', $user->user_id)->update(['name' => $user->username]);
-        }
+        $accounts = app(PersonProfileService::class);
+        $user = $accounts->update($user, $request->validated());
 
         $newRole = $user->role->value;
 
         if ($oldRole !== $newRole) {
             $this->handleRoleChange($user, $oldRole, $newRole, $request);
-        }
-
-        
-        if ($user->role === \App\Enums\Role::Client && $request->has('project_ids')) {
-            $client = Client::where('user_id', $user->user_id)->first();
-
-            if ($client) {
-                $trashedProjectIds = $client->projects()->onlyTrashed()->pluck('projects.project_id')->toArray();
-                $client->projects()->sync(array_unique(array_merge($validated['project_ids'], $trashedProjectIds)));
-
-                $firstProject = Project::find($validated['project_ids'][0] ?? null);
-                if ($firstProject) {
-                    $client->update(['project_name' => $firstProject->project_name]);
-                }
-            }
         }
 
         auth()->user()->notify(new SystemActivityNotification(
