@@ -877,28 +877,6 @@ if (phoneField) {
     });
 }
 
-function openDeleteAccountModal() {
-    const nameInput = document.getElementById('profileNameInput');
-    const accountName = (nameInput && nameInput.value.trim() !== "") ? nameInput.value : "المستخدم"; 
-    
-    const deleteText = document.getElementById('deleteAccountModalText');
-    if (deleteText) deleteText.innerText = `هل تريد حذف حساب ${accountName} ؟`;
-    
-    const modalEl = document.getElementById('deleteAccountModal');
-    if (modalEl) {
-        const deleteModal = new bootstrap.Modal(modalEl);
-        deleteModal.show();
-    }
-}
-
-function confirmDeleteAccount() {
-    const deleteModalEl = document.getElementById('deleteAccountModal');
-    if (deleteModalEl) {
-        const deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
-        if (deleteModalInstance) deleteModalInstance.hide();
-    }
-    showStatusMessage("تم حذف الحساب بنجاح");
-}
 
 /* ==========================================
    7. الإعدادات، اللغة والترجمة، والإشعارات[cite: 1]

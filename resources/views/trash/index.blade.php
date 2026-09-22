@@ -31,8 +31,11 @@
     <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-employees" type="button">الموظفين ({{ $employees->count() }})</button>
     </li>
-    <li class="nav-item">
+        <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-clients" type="button">العملاء ({{ $clients->count() }})</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-users" type="button">المستخدمون ({{ $users->count() }})</button>
     </li>
 </ul>
 
@@ -113,13 +116,32 @@
                     <button type="button" class="btn btn-sm btn-danger" onclick="confirmForceDelete('{{ route('trash.forceDelete', ['type' => 'client', 'id' => $item->client_id]) }}', '{{ $item->name }}')">حذف نهائي</button>
                 </div>
             </div>
-        @empty
+               @empty
             <p class="text-muted">لا يوجد عملاء محذوفين</p>
         @endforelse
     </div>
 
-</div>
+    <div class="tab-pane fade" id="tab-users">
+        @forelse($users as $item)
+            <div class="d-flex justify-content-between align-items-center border rounded p-3 mb-2">
+                <div>
+                    <strong>{{ $item->username }}</strong> <span class="text-muted small">({{ $item->role->value }})</span>
+                    <div class="text-muted small">حُذف في: {{ $item->deleted_at }}</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <form method="POST" action="{{ route('trash.restore', ['type' => 'user', 'id' => $item->user_id]) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-success">استعادة</button>
+                    </form>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmForceDelete('{{ route('trash.forceDelete', ['type' => 'user', 'id' => $item->user_id]) }}', '{{ $item->username }}')">حذف نهائي</button>
+                </div>
+            </div>
+        @empty
+            <p class="text-muted">لا يوجد مستخدمون محذوفون</p>
+        @endforelse
+    </div>
 
+</div>
 <!-- Force delete confirmation modal -->
 <div class="modal fade" id="forceDeleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

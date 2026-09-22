@@ -67,7 +67,6 @@ Route::middleware(['auth'])->group(function () {
     // الملف الشخصي والإعدادات
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.notifications');

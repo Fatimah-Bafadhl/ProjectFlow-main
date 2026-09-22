@@ -41,18 +41,5 @@ public function update(Request $request)
     return redirect()->back()->with('success', 'تم حفظ التعديلات بنجاح');
 }
 
-public function destroy(Request $request)
-{
-    $user = auth()->user();
 
-    // تسجيل الخروج وحذف الحساب أو الـ Profile حسب رغبتك
-    auth()->logout();
-
-    $user->delete();
-
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return redirect()->route('login')->with('success', 'تم حذف الحساب بنجاح');
-}
 }

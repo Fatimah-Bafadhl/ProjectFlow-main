@@ -73,33 +73,9 @@
         </div>
 
         <!-- أزرار الحفظ والحذف -->
-        <div class="d-flex justify-content-between align-items-center mt-4 px-5">
-            <button class="btn text-danger p-0 border-0 bg-transparent fw-semibold" onclick="openDeleteAccountModal()" style="font-size: 14px;" type="button">
-                حذف الحساب
-            </button>
+              <div class="d-flex justify-content-end align-items-center mt-4 px-5">
             <button class="btn btn-save px-4 py-1" style="font-size: 14px;" type="submit">حفظ</button>
         </div>
     </form>
 </div>
 @endsection
-
-@push('modals')
-<!-- مودال تأكيد حذف الحساب -->
-<div aria-hidden="true" class="modal fade" id="deleteAccountModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal text-center p-4">
-            <div class="modal-body p-0">
-                <p class="delete-text mb-4">هل تريد حذف الحساب نهائياً؟</p>
-                <form action="{{ route('profile.destroy') }}" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <div class="d-flex justify-content-center gap-3">
-                        <button class="btn btn-delete-confirm" type="submit">حذف</button>
-                        <button class="btn btn-delete-cancel" data-bs-dismiss="modal" type="button">إلغاء</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-@endpush
