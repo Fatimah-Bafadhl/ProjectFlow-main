@@ -134,9 +134,12 @@
                                     — {{ $doc->added_by_name ?? 'غير معروف' }} · {{ $doc->created_at->locale('ar')->translatedFormat('d F Y, h:i a') }}
                                 </span>
                             </div>
-                            @if($canManage)
+                                                     @if($canManage)
                                 <button type="button" class="delete-btn" title="حذف الملف"
-                                        onclick="openDeleteDocumentConfirm('{{ route('documents.destroy', $doc->project_document_id) }}', @js($doc->title))">
+                                        data-delete-url="{{ route('documents.destroy', $doc->project_document_id) }}"
+                                        data-delete-name="{{ $doc->title }}"
+                                        data-delete-permanent="1"
+                                        onclick="openConfirmDeleteModal(this)">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             @endif
@@ -185,9 +188,12 @@
                                     — {{ $doc->added_by_name ?? 'غير معروف' }} · {{ $doc->created_at->locale('ar')->translatedFormat('d F Y, h:i a') }}
                                 </span>
                             </div>
-                            @if($canManage)
+                                                        @if($canManage)
                                 <button type="button" class="delete-btn" title="حذف الرابط"
-                                        onclick="openDeleteDocumentConfirm('{{ route('documents.destroy', $doc->project_document_id) }}', @js($doc->title))">
+                                        data-delete-url="{{ route('documents.destroy', $doc->project_document_id) }}"
+                                        data-delete-name="{{ $doc->title }}"
+                                        data-delete-permanent="1"
+                                        onclick="openConfirmDeleteModal(this)">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             @endif
@@ -200,24 +206,7 @@
     </div>
 </div>
 
-{{-- Delete confirm modal --}}
-<div class="modal fade" id="deleteDocumentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal">
-            <form id="deleteDocumentForm" method="POST" action="">
-                @csrf
-                @method('DELETE')
-                <div class="modal-body text-center">
-                    <p class="delete-text mb-4" id="deleteDocumentText">هل أنت متأكد من حذف هذا المستند؟</p>
-                    <div class="d-flex justify-content-center gap-3">
-                        <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-delete-confirm">حذف</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+@include('partials.confirm-delete-modal')
 
 <script>
     function toggleDocumentFields(type) {

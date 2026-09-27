@@ -82,7 +82,10 @@
                                 <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="تعديل" onclick="openEditClientModal(this, '{{ route('clients.update', $client) }}')">
                                     <i class="fa-regular fa-pen-to-square"></i>
                                 </button>
-                                <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف" onclick="openDeleteClientModal(this, '{{ route('clients.destroy', $client) }}')">
+                                                                <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف"
+                                    data-delete-url="{{ route('clients.destroy', $client) }}"
+                                    data-delete-name="{{ $client->name }}"
+                                    onclick="openConfirmDeleteModal(this)">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             </div>
@@ -198,23 +201,6 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 </div>
 
-<!-- 2. مودال تأكيد الحذف للعميل -->
-<div class="modal fade" id="deleteClientModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal p-4 text-center">
-            <div class="modal-body p-0">
-                <p class="delete-text mb-4" id="deleteClientModalText">هل تريد حذف هذا العميل؟</p>
-                <form id="deleteClientForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <div class="d-flex justify-content-center gap-3">
-                        <button type="submit" class="btn btn-delete-confirm">حذف</button>
-                        <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+@include('partials.confirm-delete-modal')
 @endif
 @endpush

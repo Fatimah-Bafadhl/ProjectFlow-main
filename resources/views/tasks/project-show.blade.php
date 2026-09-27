@@ -203,9 +203,12 @@ data-assigned-to="{{ $task->assignedEmployees->pluck('employee_id') }}"
                             — {{ $attachment->added_by_name ?? 'غير معروف' }}
                         </span>
                     </div>
-                    @if($canDeleteAttachment)
+                                       @if($canDeleteAttachment)
                         <button type="button" class="delete-btn" title="حذف المرفق"
-                                onclick="openDeleteAttachmentConfirm('{{ route('task_attachments.destroy', $attachment->task_attachment_id) }}', @js($attachment->title))">
+                                data-delete-url="{{ route('task_attachments.destroy', $attachment->task_attachment_id) }}"
+                                data-delete-name="{{ $attachment->title }}"
+                                data-delete-permanent="1"
+                                onclick="openConfirmDeleteModal(this)">
                             <i class="fa-regular fa-trash-can"></i>
                         </button>
                     @endif
@@ -284,7 +287,11 @@ data-assigned-to="{{ $task->assignedEmployees->pluck('employee_id') }}"
                                 <button type="button" class="btn btn-sm btn-link p-0 text-muted" style="color: #8A84AD !important;" onclick="openEditCommentModal(this, '{{ route('comments.update', $comment->id ?? $comment->comment_id) }}')" title="تعديل">
                                     <i class="fa-regular fa-pen-to-square"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-link p-0 text-muted" style="color: #8A84AD !important;" onclick="openDeleteCommentModal(this, '{{ route('comments.destroy', $comment->id ?? $comment->comment_id) }}')" title="حذف">
+                                                                <button type="button" class="btn btn-sm btn-link p-0 text-muted" style="color: #8A84AD !important;"
+                                    data-delete-url="{{ route('comments.destroy', $comment->id ?? $comment->comment_id) }}"
+                                    data-delete-name="هذا التعليق"
+                                    data-delete-permanent="1"
+                                    onclick="openConfirmDeleteModal(this)" title="حذف">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             </div>
@@ -340,7 +347,11 @@ data-assigned-to="{{ $task->assignedEmployees->pluck('employee_id') }}"
                                     <button type="button" class="btn btn-sm btn-link p-0 text-muted" style="color: #8A84AD !important;" onclick="openEditCommentModal(this, '{{ route('comments.update', $comment->id ?? $comment->comment_id) }}')" title="تعديل">
                                         <i class="fa-regular fa-pen-to-square"></i>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-link p-0 text-muted" style="color: #8A84AD !important;" onclick="openDeleteCommentModal(this, '{{ route('comments.destroy', $comment->id ?? $comment->comment_id) }}')" title="حذف">
+                                                                       <button type="button" class="btn btn-sm btn-link p-0 text-muted" style="color: #8A84AD !important;"
+                                        data-delete-url="{{ route('comments.destroy', $comment->id ?? $comment->comment_id) }}"
+                                        data-delete-name="هذا التعليق"
+                                        data-delete-permanent="1"
+                                        onclick="openConfirmDeleteModal(this)" title="حذف">
                                         <i class="fa-regular fa-trash-can"></i>
                                     </button>
                                 </div>
@@ -486,43 +497,7 @@ data-assigned-to="{{ $task->assignedEmployees->pluck('employee_id') }}"
     </div>
 </div>
 
-<!-- Modal تأكيد حذف التعليق -->
-<div class="modal fade" id="deleteCommentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal">
-            <form id="deleteCommentForm" method="POST">
-                @csrf
-                @method('DELETE')
-                <div class="modal-body text-center">
-                    <p class="delete-text mb-4">هل أنت متأكد من حذف هذا التعليق؟</p>
-                    <div class="d-flex justify-content-center gap-3">
-                        <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-delete-confirm">حذف</button>
-                    </div>
-                </div>
-                        </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal تأكيد حذف المرفق -->
-<div class="modal fade" id="deleteAttachmentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal">
-            <form id="deleteAttachmentForm" method="POST" action="">
-                @csrf
-                @method('DELETE')
-                <div class="modal-body text-center">
-                    <p class="delete-text mb-4" id="deleteAttachmentText">هل أنت متأكد من حذف هذا المرفق؟</p>
-                    <div class="d-flex justify-content-center gap-3">
-                        <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-delete-confirm">حذف</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+@include('partials.confirm-delete-modal')
 
 @push('scripts')
 <script>

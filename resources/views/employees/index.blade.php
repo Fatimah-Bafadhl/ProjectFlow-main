@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'الموظفين')
+@section('title', 'الفريق')
 @section('content-class', 'p-4 flex-grow-1')
 
 @section('content')
@@ -12,8 +12,10 @@
 <!-- هيدر قسم الفريق -->
 <div class="d-flex align-items-center justify-content-between mb-4">
     <h2 class="task-page-title m-0">الفريق</h2>
-    @if($canManage)
-        <button type="button" class="btn btn-add-project px-4 py-2" onclick="prepareAddEmployeeModal('{{ route('users.store') }}')">
+       @if($canManage)
+        <button type="button" class="btn btn-add-project px-4 py-2" id="teamAddButton"
+                data-store-url="{{ route('users.store') }}" data-active-tab="employees"
+                onclick="handleTeamAddButtonClick()">
             موظف جديد +
         </button>
     @endif
@@ -96,7 +98,10 @@
                                         <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="تعديل" onclick="openEditEmployeeModal(this, '{{ route('employees.update', $employee) }}')">
                                             <i class="fa-regular fa-pen-to-square"></i>
                                         </button>
-                                        <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف" onclick="openDeleteEmployeeModal(this, '{{ route('employees.destroy', $employee) }}')">
+                                                                                <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف"
+                                            data-delete-url="{{ route('employees.destroy', $employee) }}"
+                                            data-delete-name="{{ $employee->name }}"
+                                            onclick="openConfirmDeleteModal(this)">
                                             <i class="fa-regular fa-trash-can"></i>
                                         </button>
                                     </div>
@@ -162,7 +167,10 @@
                                         <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="تعديل" onclick="openEditManagerModal(this, '{{ route('users.update', $manager) }}')">
                                             <i class="fa-regular fa-pen-to-square"></i>
                                         </button>
-                                        <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف" onclick="openDeleteManagerModal(this, '{{ route('users.destroy', $manager) }}')">
+                                                                                <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف"
+                                            data-delete-url="{{ route('users.destroy', $manager) }}"
+                                            data-delete-name="{{ $manager->username }}"
+                                            onclick="openConfirmDeleteModal(this)">
                                             <i class="fa-regular fa-trash-can"></i>
                                         </button>
                                     </div>
@@ -183,6 +191,17 @@
 <div id="employeesPagination" class="pagination-controls"></div>
 
 <script>
+function handleTeamAddButtonClick() {
+    const btn = document.getElementById('teamAddButton');
+    const storeUrl = btn ? btn.getAttribute('data-store-url') : '';
+    const activeTab = btn ? btn.getAttribute('data-active-tab') : 'employees';
+    if (activeTab === 'managers') {
+        prepareAddManagerModal(storeUrl);
+    } else {
+        prepareAddEmployeeModal(storeUrl);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const employeesPaginator = createListPaginator({
         gridSelector: '#employeesTableBody',
@@ -192,13 +211,22 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     employeesPaginator.render();
 
-    const managersPaginator = createListPaginator({
+        const managersPaginator = createListPaginator({
         gridSelector: '#managersTableBody',
         itemSelector: 'tr.paginate-item',
         controlsId:   'managersPagination',
         perPage:      8,
     });
     managersPaginator.render();
+
+    document.getElementById('employees-tab')?.addEventListener('shown.bs.tab', function () {
+        const btn = document.getElementById('teamAddButton');
+        if (btn) { btn.innerText = 'موظف جديد +'; btn.setAttribute('data-active-tab', 'employees'); }
+    });
+    document.getElementById('managers-tab')?.addEventListener('shown.bs.tab', function () {
+        const btn = document.getElementById('teamAddButton');
+        if (btn) { btn.innerText = 'مدير جديد +'; btn.setAttribute('data-active-tab', 'managers'); }
+    });
 
     function filterTeam() {
         const term = (document.getElementById('teamSearchInput')?.value || '').trim().toLowerCase();
@@ -274,24 +302,6 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 </div>
 
-<!-- 2. مودال تأكيد الحذف للموظف -->
-<div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal p-4 text-center">
-            <div class="modal-body p-0">
-                <p class="delete-text mb-4" id="deleteEmployeeModalText">هل تريد حذف هذا الموظف؟</p>
-                <form id="deleteEmployeeForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <div class="d-flex justify-content-center gap-3">
-                        <button type="submit" class="btn btn-delete-confirm">حذف</button>
-                        <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
-                    </div>
-                </form>
-            </div>
-           </div>
-    </div>
-</div>
 
 <!-- Manager edit modal -->
 <div class="modal fade" id="managerModal" tabindex="-1" aria-hidden="true">
@@ -302,9 +312,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <button aria-label="Close" class="btn-close m-0" data-bs-dismiss="modal" type="button"></button>
             </div>
             <div class="modal-body p-0">
-                <form id="managerForm" method="POST" action="">
+                                <form id="managerForm" method="POST" action="">
                     @csrf
-                    @method('PUT')
+                    <input type="hidden" name="_method" id="managerFormMethod" value="PUT">
                     <input type="hidden" name="role" value="manager">
 
                     <div class="mb-3 text-end">
@@ -315,8 +325,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         <label class="custom-label mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
                         <input class="form-control custom-input text-end" id="managerEmailInput" name="email" required type="email"/>
                     </div>
-                    <div class="mb-3 text-end">
-                        <label class="custom-label mb-1">كلمة مرور جديدة (اتركه فارغاً لعدم التغيير)</label>
+                                        <div class="mb-3 text-end">
+                        <label class="custom-label mb-1" id="managerPasswordLabel">كلمة مرور جديدة (اتركه فارغاً لعدم التغيير)</label>
                         <input class="form-control custom-input text-end" id="managerPasswordInput" name="password" type="password" minlength="8"/>
                     </div>
                     <div class="mb-3 text-end">
@@ -333,23 +343,6 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 </div>
 
-<!-- Manager delete modal -->
-<div class="modal fade" id="deleteManagerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal p-4 text-center">
-            <div class="modal-body p-0">
-                <p class="delete-text mb-4" id="deleteManagerModalText">هل تريد حذف هذا المدير؟</p>
-                <form id="deleteManagerForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <div class="d-flex justify-content-center gap-3">
-                        <button type="submit" class="btn btn-delete-confirm">حذف</button>
-                        <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+@include('partials.confirm-delete-modal')
 @endif
 @endpush

@@ -28,10 +28,9 @@
     <input type="text" id="userSearchInput" class="form-control custom-input text-end" style="max-width: 260px;" placeholder="بحث بالاسم أو البريد الإلكتروني...">
     <select id="userRoleFilter" class="form-select custom-input text-center" style="max-width: 200px;">
         <option value="">كل الصلاحيات</option>
-        <option value="admin">admin</option>
-        <option value="manager">manager</option>
-        <option value="employee">employee</option>
-        <option value="client">client</option>
+        @foreach ($roles as $role)
+            <option value="{{ $role->value }}">{{ $role->label() }}</option>
+        @endforeach
     </select>
 </div>
 
@@ -61,7 +60,7 @@
                         <span class="text-muted">{{ $user->email }}</span>
                     </td>
                     <td class="text-center">
-                        <span class="role-badge role-badge-{{ $user->role->value }}">{{ $user->role->value }}</span>
+                        <span class="role-badge role-badge-{{ $user->role->value }}">{{ $user->role->label() }}</span>
                     </td>
                                         <td class="text-end">
                         <span dir="ltr">{{ $user->phone ?? '-' }}</span>
@@ -86,10 +85,12 @@
                                 <i class="fa-regular fa-pen-to-square"></i>
                             </button>
 
-                                                        @if ($user->user_id !== auth()->id())
+                                                                                  @if ($user->user_id !== auth()->id())
                                 <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0"
                                     title="حذف"
-                                    onclick="openDeleteUserModal('{{ route('users.destroy', $user) }}', '{{ $user->username }}')">
+                                    data-delete-url="{{ route('users.destroy', $user) }}"
+                                    data-delete-name="{{ $user->username }}"
+                                    onclick="openConfirmDeleteModal(this)">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             @endif
@@ -200,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <label class="custom-label mb-1">الصلاحية <span class="text-danger">*</span></label>
                 <select name="role" id="addUserRole" class="form-select custom-input text-center" required>
                     @foreach ($roles as $role)
-                        <option value="{{ $role->value }}">{{ $role->value }}</option>
+                        <option value="{{ $role->value }}">{{ $role->label() }}</option>
                     @endforeach
                 </select>
             </div>
@@ -267,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <label class="custom-label mb-1">الصلاحية <span class="text-danger">*</span></label>
                 <select name="role" id="editRoleSelect" class="form-select custom-input text-center edit-role-select" required>
                     @foreach ($roles as $role)
-                        <option value="{{ $role->value }}">{{ $role->value }}</option>
+                        <option value="{{ $role->value }}">{{ $role->label() }}</option>
                     @endforeach
                 </select>
             </div>
@@ -307,22 +308,5 @@ document.addEventListener('DOMContentLoaded', function () {
         </form>
     </div>
 </div>
-<!-- Delete User Modal (shared) -->
-<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal p-4 text-center">
-            <div class="modal-body p-0">
-                <p class="delete-text mb-4" id="deleteUserModalText">هل تريد حذف هذا المستخدم؟</p>
-                <form id="deleteUserForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <div class="d-flex justify-content-center gap-3">
-                        <button type="submit" class="btn btn-delete-confirm">حذف</button>
-                        <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+@include('partials.confirm-delete-modal')
 @endpush

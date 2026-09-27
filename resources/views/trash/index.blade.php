@@ -125,7 +125,7 @@
         @forelse($users as $item)
             <div class="d-flex justify-content-between align-items-center border rounded p-3 mb-2">
                 <div>
-                    <strong>{{ $item->username }}</strong> <span class="text-muted small">({{ $item->role->value }})</span>
+                    <strong>{{ $item->username }}</strong> <span class="text-muted small">({{ $item->role->label() }})</span>
                     <div class="text-muted small">حُذف في: {{ $item->deleted_at }}</div>
                 </div>
                 <div class="d-flex gap-2">

@@ -694,6 +694,7 @@ function toggleEditUserFields(role) {
     }
 }
 
+
 /* Users page — delete confirmation (shared modal) */
 function openDeleteUserModal(deleteUrl, username) {
     const textEl = document.getElementById('deleteUserModalText');
@@ -703,6 +704,41 @@ function openDeleteUserModal(deleteUrl, username) {
     if (form && deleteUrl) form.action = deleteUrl;
 
     const modalEl = document.getElementById('deleteUserModal');
+    if (modalEl) {
+        let instance = bootstrap.Modal.getInstance(modalEl);
+        if (!instance) instance = new bootstrap.Modal(modalEl);
+        instance.show();
+    }
+}
+
+/* ==========================================
+   M6 — Shared delete-confirm modal (soft delete)
+   Reads its data straight off the button that triggered it.
+   Meant to gradually replace the ~10 separate delete
+   modals/JS pairs across Users/Employees/Managers/Clients/
+   Projects/Tasks/Comments/Attachments/Documents.
+========================================== */
+function openConfirmDeleteModal(trigger) {
+    const deleteUrl = trigger.getAttribute('data-delete-url');
+    const itemName  = trigger.getAttribute('data-delete-name') || '';
+    const extra     = trigger.getAttribute('data-delete-extra') || '';
+
+       const isPermanent = trigger.getAttribute('data-delete-permanent') === '1';
+    const consequence = isPermanent
+        ? 'حذف نهائي — لا يمكن التراجع.'
+        : 'سيتم نقله إلى المحذوفات ويمكن استعادته.';
+
+    const baseText = itemName
+        ? `هل تريد حذف "${itemName}"؟ ${consequence}`
+        : consequence;
+
+    const textEl = document.getElementById('confirmDeleteModalText');
+    if (textEl) textEl.innerText = extra ? `${baseText} ${extra}` : baseText;
+
+    const form = document.getElementById('confirmDeleteForm');
+    if (form && deleteUrl) form.action = deleteUrl;
+
+    const modalEl = document.getElementById('confirmDeleteModal');
     if (modalEl) {
         let instance = bootstrap.Modal.getInstance(modalEl);
         if (!instance) instance = new bootstrap.Modal(modalEl);
@@ -1667,6 +1703,31 @@ function createListPaginator(config) {
     };
 }
 /* Manager Operations (Team page) */
+function prepareAddManagerModal(storeUrl) {
+    const modalTitle  = document.getElementById('managerModalTitle');
+    const form        = document.getElementById('managerForm');
+    const methodInput = document.getElementById('managerFormMethod');
+
+    if (modalTitle) modalTitle.innerText = 'إضافة مدير جديد';
+    if (form) {
+        form.reset();
+        if (storeUrl) form.action = storeUrl;
+    }
+    if (methodInput) methodInput.value = 'POST';
+
+    const passwordInput = document.getElementById('managerPasswordInput');
+    if (passwordInput) passwordInput.setAttribute('required', 'required');
+
+    const passwordLabel = document.getElementById('managerPasswordLabel');
+    if (passwordLabel) passwordLabel.innerText = 'كلمة المرور *';
+
+    const modalEl = document.getElementById('managerModal');
+    if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+}
+
 function openEditManagerModal(button, updateUrl) {
     const row = button.closest('[data-manager-id]');
     if (!row) return;
@@ -1679,10 +1740,20 @@ function openEditManagerModal(button, updateUrl) {
     const form = document.getElementById('managerForm');
     if (form) form.action = updateUrl;
 
+    const methodInput = document.getElementById('managerFormMethod');
+    if (methodInput) methodInput.value = 'PUT';
+
     if (document.getElementById('managerNameInput'))  document.getElementById('managerNameInput').value = username;
     if (document.getElementById('managerEmailInput')) document.getElementById('managerEmailInput').value = email;
     if (document.getElementById('managerPhoneInput')) document.getElementById('managerPhoneInput').value = phone;
-    if (document.getElementById('managerPasswordInput')) document.getElementById('managerPasswordInput').value = '';
+
+    const passwordInput = document.getElementById('managerPasswordInput');
+    if (passwordInput) {
+        passwordInput.value = '';
+        passwordInput.removeAttribute('required');
+    }
+    const passwordLabel = document.getElementById('managerPasswordLabel');
+    if (passwordLabel) passwordLabel.innerText = 'كلمة مرور جديدة (اتركه فارغاً لعدم التغيير)';
 
     const modalEl = document.getElementById('managerModal');
     if (modalEl) {

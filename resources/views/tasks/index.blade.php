@@ -167,7 +167,10 @@
                                 <button type="button" class="btn-icon border-0 bg-transparent p-0" title="تعديل" onclick="openEditModal(this)">
                                     <i class="fa-regular fa-pen-to-square"></i>
                                 </button>
-                                <button type="button" class="btn-icon border-0 bg-transparent p-0" title="حذف" onclick="openDeleteModal(this)">
+                                                                <button type="button" class="btn-icon border-0 bg-transparent p-0" title="حذف"
+                                    data-delete-url="{{ route('tasks.destroy', $task->task_id) }}"
+                                    data-delete-name="{{ $task->task_title }}"
+                                    onclick="openConfirmDeleteModal(this)">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             </div>
@@ -240,26 +243,9 @@ document.addEventListener('DOMContentLoaded', function () {
     {{-- لوحة إضافة/تعديل المهمة (Offcanvas) — مشتركة --}}
     @include('partials.task-panel')
 
-    @if($isAdmin)
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content custom-modal p-4 text-center">
-                <div class="modal-body p-0">
-                    <p class="delete-text mb-4" id="deleteModalText">هل تريد حذف المهمة؟</p>
-                    <form id="deleteTaskForm" method="POST" action="">
-                        @csrf
-                        @method('DELETE')
-                        <div class="d-flex justify-content-center gap-3">
-                            <button type="submit" class="btn btn-delete-confirm">حذف</button>
-                            <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+       @if($isAdmin || $isManager)
+    @include('partials.confirm-delete-modal')
     @endif
-
     @if($isEmployee)
     <div aria-hidden="true" class="modal fade" id="employeeTaskStatusModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">

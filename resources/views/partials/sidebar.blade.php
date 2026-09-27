@@ -40,7 +40,7 @@
 @if (auth()->check() && auth()->user()->isAdmin())
            <a href="{{ route('employees.index') }}" class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }} d-flex align-items-center justify-content-start gap-3">
     <i class="bi bi-person-workspace icon-style"></i>
-    <span>الموظفين</span>
+     <span>الفريق</span>
 </a>
 @endif
                         @if (auth()->check() && auth()->user()->isAdmin())

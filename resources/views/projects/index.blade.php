@@ -140,7 +140,11 @@ $isAdmin = $user && $user->isAdmin();
                     <button class="btn-icon text-muted border-0 bg-transparent p-0" title="تعديل" onclick="openEditProjectModal(this, '{{ route('projects.update', $project->project_id) }}')">
                         <i class="fa-regular fa-pen-to-square"></i>
                     </button>
-                    <button class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف" onclick="openDeleteProjectModal(this, '{{ route('projects.destroy', $project->project_id) }}')">
+                                        <button class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف"
+                        data-delete-url="{{ route('projects.destroy', $project->project_id) }}"
+                        data-delete-name="{{ $project->project_name }}"
+                        data-delete-extra="سيتم إخفاء {{ $totalTasks }} مهمة و {{ $project->comments_count ?? 0 }} تعليق من العرض (لن يتم حذفها نهائياً)، ويوجد {{ $openTickets }} تذكرة مفتوحة."
+                        onclick="openConfirmDeleteModal(this)">
                         <i class="fa-regular fa-trash-can"></i>
                     </button>
                 </div>
@@ -258,23 +262,7 @@ $isAdmin = $user && $user->isAdmin();
         </div>
     </div>
 
-    <div class="modal fade" id="deleteProjectModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content custom-modal p-4 text-center">
-                <div class="modal-body p-0">
-                    <p class="delete-text mb-4" id="deleteProjectModalText">هل تريد حذف هذا المشروع؟</p>
-                    <form id="deleteProjectForm" method="POST" action="">
-                        @csrf
-                        @method('DELETE')
-                        <div class="d-flex justify-content-center gap-3">
-                            <button type="submit" class="btn btn-delete-confirm">حذف</button>
-                            <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+       @include('partials.confirm-delete-modal')
     @endif
 @endif
  

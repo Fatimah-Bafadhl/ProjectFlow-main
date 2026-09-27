@@ -372,8 +372,11 @@
                                         <span style="font-size: 12px;">{{ $task->comments ? $task->comments->count() : 0 }}</span>
                                     </div>
                                     @if($isAdmin || ($isManager && $isAssignedManager))
-                                        <button class="btn-icon border-0 bg-transparent p-0" onclick="openEditModal(this)" style="color: #8A84AD;"><i class="fa-regular fa-pen-to-square"></i></button>
-                                        <button class="btn-icon border-0 bg-transparent p-0" onclick="openDeleteModal(this)" style="color: #8A84AD;"><i class="fa-regular fa-trash-can"></i></button>
+                                                                                <button class="btn-icon border-0 bg-transparent p-0" onclick="openEditModal(this)" style="color: #8A84AD;"><i class="fa-regular fa-pen-to-square"></i></button>
+                                        <button class="btn-icon border-0 bg-transparent p-0"
+                                            data-delete-url="{{ route('tasks.destroy', $task->task_id) }}"
+                                            data-delete-name="{{ $task->task_title }}"
+                                            onclick="openConfirmDeleteModal(this)" style="color: #8A84AD;"><i class="fa-regular fa-trash-can"></i></button>
                                     @endif
                                 </div>
                             </div>
@@ -556,22 +559,8 @@
     {{-- لوحة إضافة/تعديل المهمة (Offcanvas) — مشتركة مع صفحة المهام --}}
     @include('partials.task-panel')
 
-    @if($isAdmin)
-    <div aria-hidden="true" class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
-            <div class="modal-content custom-modal text-center p-4">
-                <h4 class="delete-text mb-4 fw-bold" id="deleteModalText">هل تريد حذف المهمة؟</h4>
-                <form id="deleteTaskForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <div class="d-flex justify-content-center gap-3">
-                        <button type="submit" class="btn btn-delete-confirm">حذف</button>
-                        <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+        @if($isAdmin)
+    @include('partials.confirm-delete-modal')
     @endif
 
 @endif
