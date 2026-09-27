@@ -7,6 +7,8 @@
     $canManage = auth()->user()->isAdmin();
 @endphp
 
+@include('partials.form-errors')
+
 <!-- هيدر قسم الفريق -->
 <div class="d-flex align-items-center justify-content-between mb-4">
     <h2 class="task-page-title m-0">الفريق</h2>

@@ -79,7 +79,7 @@
                                 data-phone="{{ $user->phone }}"
                                 data-company-name="{{ $user->company_name }}"
                                 data-role="{{ $user->role->value }}"
-                                data-department="{{ optional(\App\Models\Employee::withTrashed()->where('user_id', $user->user_id)->first())->department }}"
+                                data-department="{{ optional($user->employee)->department }}"
                                 data-project-ids="{{ implode(',', $clientProjectIds[$user->user_id] ?? []) }}"
                                 data-update-url="{{ route('users.update', $user) }}"
                                 onclick="openEditUserPanel(this)">

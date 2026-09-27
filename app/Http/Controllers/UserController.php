@@ -19,7 +19,7 @@ class UserController extends Controller
 {
        public function index()
     {
-        $users = User::latest()->get();
+        $users = User::with(['employee' => fn ($q) => $q->withTrashed()])->latest()->get();
         $roles = Role::cases();
         $projects = Project::all();
 

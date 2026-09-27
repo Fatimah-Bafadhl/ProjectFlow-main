@@ -10,6 +10,7 @@
     $isEmployee = $user->role === \App\Enums\Role::Employee;
     $canManage = $user->isAdmin();
 @endphp
+@include('partials.form-errors')
 <!-- هيدر قسم العملاء -->
 <div class="d-flex align-items-center justify-content-between mb-4">
     <h2 class="task-page-title m-0">العملاء <span class="tab-count-badge">{{ $clients->count() }}</span></h2>
