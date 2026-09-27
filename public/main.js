@@ -712,6 +712,105 @@ function openDeleteUserModal(deleteUrl, username) {
 }
 
 /* ==========================================
+   M6 — Reopen Employee/Manager panel with old input
+   after a validation failure (M5-deferred item).
+   Called once on page load from team.blade.php when
+   $errors->any() and a form_mode was submitted.
+========================================== */
+function reopenTeamPanelWithOldInput(data) {
+    if (!data || !data.mode) return;
+
+    if (data.mode === 'employee_add') {
+        prepareAddEmployeeModal(data.storeUrl);
+        if (document.getElementById('employeeNameInput'))  document.getElementById('employeeNameInput').value  = data.values.name || '';
+        if (document.getElementById('departmentInput'))    document.getElementById('departmentInput').value    = data.values.department || '';
+        if (document.getElementById('employeeEmailInput')) document.getElementById('employeeEmailInput').value = data.values.email || '';
+        if (document.getElementById('employeePhoneInput')) document.getElementById('employeePhoneInput').value = data.values.phone || '';
+
+    } else if (data.mode === 'employee_edit') {
+        const modalTitle    = document.getElementById('employeeModalTitle');
+        const form          = document.getElementById('employeeForm');
+        const methodInput   = document.getElementById('employeeFormMethod');
+        const nameInput     = document.getElementById('employeeNameInput');
+        const roleInput     = document.getElementById('employeeRoleInput');
+        const passwordGroup = document.getElementById('employeePasswordGroup');
+        const passwordInput = document.getElementById('employeePasswordInput');
+
+        if (modalTitle) modalTitle.innerText = 'تعديل بيانات الموظف';
+        if (form && data.updateUrl) form.action = data.updateUrl;
+        if (methodInput) methodInput.value = 'PUT';
+        if (nameInput) { nameInput.setAttribute('name', 'name'); nameInput.value = data.values.name || ''; }
+        if (roleInput) roleInput.setAttribute('disabled', 'disabled');
+        if (passwordGroup) passwordGroup.classList.add('d-none');
+        if (passwordInput) { passwordInput.setAttribute('disabled', 'disabled'); passwordInput.removeAttribute('required'); passwordInput.value = ''; }
+        if (document.getElementById('departmentInput'))    document.getElementById('departmentInput').value    = data.values.department || '';
+        if (document.getElementById('employeeEmailInput')) document.getElementById('employeeEmailInput').value = data.values.email || '';
+        if (document.getElementById('employeePhoneInput')) document.getElementById('employeePhoneInput').value = data.values.phone || '';
+
+        const modalEl = document.getElementById('employeeModal');
+        if (modalEl) new bootstrap.Modal(modalEl).show();
+
+    } else if (data.mode === 'manager_add') {
+        prepareAddManagerModal(data.storeUrl);
+        if (document.getElementById('managerNameInput'))  document.getElementById('managerNameInput').value  = data.values.name || '';
+        if (document.getElementById('managerEmailInput')) document.getElementById('managerEmailInput').value = data.values.email || '';
+        if (document.getElementById('managerPhoneInput')) document.getElementById('managerPhoneInput').value = data.values.phone || '';
+
+    } else if (data.mode === 'manager_edit') {
+        const modalTitle  = document.getElementById('managerModalTitle');
+        const form        = document.getElementById('managerForm');
+        const methodInput = document.getElementById('managerFormMethod');
+
+        if (modalTitle) modalTitle.innerText = 'تعديل بيانات المدير';
+        if (form && data.updateUrl) form.action = data.updateUrl;
+        if (methodInput) methodInput.value = 'PUT';
+        if (document.getElementById('managerNameInput'))  document.getElementById('managerNameInput').value  = data.values.name || '';
+        if (document.getElementById('managerEmailInput')) document.getElementById('managerEmailInput').value = data.values.email || '';
+        if (document.getElementById('managerPhoneInput')) document.getElementById('managerPhoneInput').value = data.values.phone || '';
+
+        const passwordInput = document.getElementById('managerPasswordInput');
+        if (passwordInput) { passwordInput.value = ''; passwordInput.removeAttribute('required'); }
+        const passwordLabel = document.getElementById('managerPasswordLabel');
+        if (passwordLabel) passwordLabel.innerText = 'كلمة مرور جديدة (اتركه فارغاً لعدم التغيير)';
+
+        const modalEl = document.getElementById('managerModal');
+        if (modalEl) new bootstrap.Modal(modalEl).show();
+    }
+
+    // Re-mark the mode/target hidden inputs so a resubmission still carries them.
+    const modeFieldId   = data.mode.startsWith('employee') ? 'employeeFormMode'     : 'managerFormMode';
+    const targetFieldId = data.mode.startsWith('employee') ? 'employeeFormTargetId' : 'managerFormTargetId';
+    if (document.getElementById(modeFieldId))   document.getElementById(modeFieldId).value = data.mode;
+    if (document.getElementById(targetFieldId)) document.getElementById(targetFieldId).value = data.targetId || '';
+}
+
+
+/* ==========================================
+   M6 - Shared restore-confirm modal (Trash page)
+   Reads its data straight off the button that triggered it,
+   mirroring openConfirmDeleteModal below.
+========================================== */
+function openConfirmRestoreModal(trigger) {
+    const restoreUrl = trigger.getAttribute('data-restore-url');
+    const itemName   = trigger.getAttribute('data-restore-name') || '';
+
+    const textEl = document.getElementById('confirmRestoreModalText');
+    if (textEl) textEl.innerText = itemName
+        ? `هل تريد استعادة "${itemName}"؟`
+        : 'هل تريد استعادة هذا العنصر؟';
+
+    const form = document.getElementById('confirmRestoreForm');
+    if (form && restoreUrl) form.action = restoreUrl;
+
+    const modalEl = document.getElementById('confirmRestoreModal');
+    if (modalEl) {
+        let instance = bootstrap.Modal.getInstance(modalEl);
+        if (!instance) instance = new bootstrap.Modal(modalEl);
+        instance.show();
+    }
+}
+
+/* ==========================================
    M6 — Shared delete-confirm modal (soft delete)
    Reads its data straight off the button that triggered it.
    Meant to gradually replace the ~10 separate delete
@@ -1441,9 +1540,12 @@ function prepareAddEmployeeModal(storeRoute) {
         passwordInput.setAttribute('required', 'required');
     }
 
-    if (document.getElementById('departmentInput'))     document.getElementById('departmentInput').value = '';
+       if (document.getElementById('departmentInput'))     document.getElementById('departmentInput').value = '';
     if (document.getElementById('employeeEmailInput'))  document.getElementById('employeeEmailInput').value = '';
     if (document.getElementById('employeePhoneInput'))  document.getElementById('employeePhoneInput').value = '';
+
+    if (document.getElementById('employeeFormMode'))     document.getElementById('employeeFormMode').value = 'employee_add';
+    if (document.getElementById('employeeFormTargetId')) document.getElementById('employeeFormTargetId').value = '';
 
     const modalEl = document.getElementById('employeeModal');
     if (modalEl) {
@@ -1478,9 +1580,12 @@ function openEditEmployeeModal(button, updateRoute) {
         passwordInput.removeAttribute('required');
         passwordInput.value = '';
     }
-    if (document.getElementById('departmentInput'))    document.getElementById('departmentInput').value = row.getAttribute('data-department') || '';
+      if (document.getElementById('departmentInput'))    document.getElementById('departmentInput').value = row.getAttribute('data-department') || '';
     if (document.getElementById('employeeEmailInput')) document.getElementById('employeeEmailInput').value = row.getAttribute('data-employee-email') || '';
     if (document.getElementById('employeePhoneInput')) document.getElementById('employeePhoneInput').value = row.getAttribute('data-employee-phone') || '';
+
+    if (document.getElementById('employeeFormMode'))     document.getElementById('employeeFormMode').value = 'employee_edit';
+    if (document.getElementById('employeeFormTargetId')) document.getElementById('employeeFormTargetId').value = row.getAttribute('data-employee-id') || '';
 
     const modalEl = document.getElementById('employeeModal');
     if (modalEl) {
@@ -1718,17 +1823,21 @@ function prepareAddManagerModal(storeUrl) {
     const passwordInput = document.getElementById('managerPasswordInput');
     if (passwordInput) passwordInput.setAttribute('required', 'required');
 
-    const passwordLabel = document.getElementById('managerPasswordLabel');
-    if (passwordLabel) passwordLabel.innerText = 'كلمة المرور *';
+      const passwordLabel = document.getElementById('managerPasswordLabel');
+    if (passwordLabel) passwordLabel.innerText = 'كلمة مرور جديدة (اتركه فارغاً لعدم التغيير)';
+
+    if (document.getElementById('managerFormMode'))     document.getElementById('managerFormMode').value = 'manager_edit';
+    if (document.getElementById('managerFormTargetId')) document.getElementById('managerFormTargetId').value = row.getAttribute('data-manager-id') || '';
 
     const modalEl = document.getElementById('managerModal');
     if (modalEl) {
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
+        let instance = bootstrap.Modal.getInstance(modalEl);
+        if (!instance) instance = new bootstrap.Modal(modalEl);
+        instance.show();
     }
 }
 
-function openEditManagerModal(button, updateUrl) {
+function openDeleteManagerModal(button, deleteUrl) {
     const row = button.closest('[data-manager-id]');
     if (!row) return;
 

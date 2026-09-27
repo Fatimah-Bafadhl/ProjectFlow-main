@@ -33,8 +33,8 @@ class TrashController extends Controller
     {
 $projects = Project::onlyTrashed()->get();
         // Only top-level tasks. A task trashed together with its project comes back with the project.
-        $tasks = Task::onlyTrashed()->whereHas('project')->with('project')->get();
 
+                $tasks = Task::onlyTrashed()->whereHas('project')->with(['project', 'stage'])->get();
         // Only rows whose user is also trashed (or missing, for legacy). This hides employee rows
         // left over from an employee -> manager role change, where the user stays active.
         $personVisible = fn ($q) => $q->whereNull('user_id')->orWhereHas('user', fn ($u) => $u->onlyTrashed());

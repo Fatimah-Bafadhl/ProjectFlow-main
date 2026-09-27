@@ -253,6 +253,41 @@ document.addEventListener('DOMContentLoaded', function () {
         initProjectListPopovers();
     }
 });
+
+@if($errors->any() && old('form_mode'))
+document.addEventListener('DOMContentLoaded', function () {
+    const mode = @json(old('form_mode'));
+    const targetId = @json(old('form_target_id'));
+
+    let storeUrl = null;
+    let updateUrl = null;
+
+    if (mode === 'employee_add') {
+        storeUrl = @json(route('employees.store'));
+    } else if (mode === 'employee_edit' && targetId) {
+        updateUrl = @json(route('employees.update', ['employee' => 'PLACEHOLDER']))
+            .replace('PLACEHOLDER', targetId);
+    } else if (mode === 'manager_add') {
+        storeUrl = @json(route('users.store'));
+    } else if (mode === 'manager_edit' && targetId) {
+        updateUrl = @json(route('users.update', ['user' => 'PLACEHOLDER']))
+            .replace('PLACEHOLDER', targetId);
+    }
+
+    reopenTeamPanelWithOldInput({
+        mode: mode,
+        targetId: targetId,
+        storeUrl: storeUrl,
+        updateUrl: updateUrl,
+        values: {
+            name: @json(old('name') ?? old('username')),
+            department: @json(old('department')),
+            email: @json(old('email')),
+            phone: @json(old('phone')),
+        },
+    });
+});
+@endif
 </script>
 @endsection
 
@@ -267,10 +302,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 <button aria-label="Close" class="btn-close m-0" data-bs-dismiss="modal" type="button"></button>
             </div>
             <div class="modal-body p-0">
-                <form id="employeeForm" method="POST" action="{{ route('employees.store') }}">
+           
+                            <form id="employeeForm" method="POST" action="{{ route('employees.store') }}">
     @csrf
     <input type="hidden" name="_method" id="employeeFormMethod" value="POST">
     <input type="hidden" name="role" id="employeeRoleInput" value="employee" disabled>
+    <input type="hidden" name="form_mode" id="employeeFormMode" value="employee_add">
+    <input type="hidden" name="form_target_id" id="employeeFormTargetId" value="">
 
     <div class="mb-3 text-end">
         <label class="custom-label mb-1">اسم الموظف <span class="text-danger">*</span></label>
@@ -312,10 +350,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 <button aria-label="Close" class="btn-close m-0" data-bs-dismiss="modal" type="button"></button>
             </div>
             <div class="modal-body p-0">
-                                <form id="managerForm" method="POST" action="">
+                                        <form id="managerForm" method="POST" action="">
                     @csrf
                     <input type="hidden" name="_method" id="managerFormMethod" value="PUT">
                     <input type="hidden" name="role" value="manager">
+                    <input type="hidden" name="form_mode" id="managerFormMode" value="manager_add">
+                    <input type="hidden" name="form_target_id" id="managerFormTargetId" value="">
 
                     <div class="mb-3 text-end">
                         <label class="custom-label mb-1">اسم المدير <span class="text-danger">*</span></label>

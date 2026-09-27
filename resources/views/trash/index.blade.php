@@ -3,172 +3,290 @@
 
 @section('content')
 
-@if ($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show text-start mb-3 rounded-3 shadow-sm py-2 px-3 small" role="alert">
-        <div class="d-flex align-items-center mb-1">
-            <i class="fa-regular fa-circle-xmark me-2"></i>
-            <span class="fw-bold">تنبيه:</span>
-        </div>
-        <ul class="mb-0 ps-3">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-        <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+@include('partials.form-errors')
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="task-page-title m-0">المحذوفات</h2>
 </div>
 
-<ul class="nav nav-tabs mb-4" id="trashTabs">
+<div class="search-filter-bar d-flex flex-wrap align-items-center gap-2 mb-3">
+    <input type="text" id="trashSearchInput" class="form-control custom-input text-end" style="max-width: 320px;" placeholder="بحث بالاسم...">
+</div>
+
+<ul class="nav nav-tabs mb-4" id="trashTabs" role="tablist">
     <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-projects" type="button">المشاريع ({{ $projects->count() }})</button>
+        <button class="nav-link active" id="projects-tab" data-bs-toggle="tab" data-bs-target="#tab-projects" type="button" role="tab">المشاريع <span class="tab-count-badge">{{ $projects->count() }}</span></button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-tasks" type="button">المهام ({{ $tasks->count() }})</button>
+        <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tab-tasks" type="button" role="tab">المهام <span class="tab-count-badge">{{ $tasks->count() }}</span></button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-employees" type="button">الموظفين ({{ $employees->count() }})</button>
-    </li>
-        <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-clients" type="button">العملاء ({{ $clients->count() }})</button>
+        <button class="nav-link" id="employees-tab" data-bs-toggle="tab" data-bs-target="#tab-employees" type="button" role="tab">الموظفين <span class="tab-count-badge">{{ $employees->count() }}</span></button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-users" type="button">المستخدمون ({{ $users->count() }})</button>
+        <button class="nav-link" id="clients-tab" data-bs-toggle="tab" data-bs-target="#tab-clients" type="button" role="tab">العملاء <span class="tab-count-badge">{{ $clients->count() }}</span></button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#tab-users" type="button" role="tab">المستخدمون <span class="tab-count-badge">{{ $users->count() }}</span></button>
     </li>
 </ul>
 
 <div class="tab-content">
 
-    <div class="tab-pane fade show active" id="tab-projects">
-        @forelse($projects as $item)
-            <div class="d-flex justify-content-between align-items-center border rounded p-3 mb-2">
-                <div>
-                    <strong>{{ $item->project_name }}</strong>
-                    <div class="text-muted small">حُذف في: {{ $item->deleted_at }}</div>
-                </div>
-                <div class="d-flex gap-2">
-                    <form method="POST" action="{{ route('trash.restore', ['type' => 'project', 'id' => $item->project_id]) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-success">استعادة</button>
-                    </form>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmForceDelete('{{ route('trash.forceDelete', ['type' => 'project', 'id' => $item->project_id]) }}', '{{ $item->project_name }}')">حذف نهائي</button>
-                </div>
-            </div>
-        @empty
-            <p class="text-muted">لا توجد مشاريع محذوفة</p>
-        @endforelse
-    </div>
-
-    <div class="tab-pane fade" id="tab-tasks">
-        @forelse($tasks as $item)
-            <div class="d-flex justify-content-between align-items-center border rounded p-3 mb-2">
-                <div>
-                    <strong>{{ $item->task_title }}</strong>
-                    <div class="text-muted small">حُذف في: {{ $item->deleted_at }}</div>
-                </div>
-                <div class="d-flex gap-2">
-                    <form method="POST" action="{{ route('trash.restore', ['type' => 'task', 'id' => $item->task_id]) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-success">استعادة</button>
-                    </form>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmForceDelete('{{ route('trash.forceDelete', ['type' => 'task', 'id' => $item->task_id]) }}', '{{ $item->task_title }}')">حذف نهائي</button>
-                </div>
-            </div>
-        @empty
-            <p class="text-muted">لا توجد مهام محذوفة</p>
-        @endforelse
-    </div>
-
-    <div class="tab-pane fade" id="tab-employees">
-        @forelse($employees as $item)
-            <div class="d-flex justify-content-between align-items-center border rounded p-3 mb-2">
-                <div>
-                    <strong>{{ $item->name }}</strong>
-                    <div class="text-muted small">حُذف في: {{ $item->deleted_at }}</div>
-                </div>
-                <div class="d-flex gap-2">
-                    <form method="POST" action="{{ route('trash.restore', ['type' => 'employee', 'id' => $item->employee_id]) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-success">استعادة</button>
-                    </form>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmForceDelete('{{ route('trash.forceDelete', ['type' => 'employee', 'id' => $item->employee_id]) }}', '{{ $item->name }}')">حذف نهائي</button>
-                </div>
-            </div>
-        @empty
-            <p class="text-muted">لا يوجد موظفين محذوفين</p>
-        @endforelse
-    </div>
-
-    <div class="tab-pane fade" id="tab-clients">
-        @forelse($clients as $item)
-            <div class="d-flex justify-content-between align-items-center border rounded p-3 mb-2">
-                <div>
-                    <strong>{{ $item->name }}</strong>
-                    <div class="text-muted small">حُذف في: {{ $item->deleted_at }}</div>
-                </div>
-                <div class="d-flex gap-2">
-                    <form method="POST" action="{{ route('trash.restore', ['type' => 'client', 'id' => $item->client_id]) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-success">استعادة</button>
-                    </form>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmForceDelete('{{ route('trash.forceDelete', ['type' => 'client', 'id' => $item->client_id]) }}', '{{ $item->name }}')">حذف نهائي</button>
-                </div>
-            </div>
-               @empty
-            <p class="text-muted">لا يوجد عملاء محذوفين</p>
-        @endforelse
-    </div>
-
-    <div class="tab-pane fade" id="tab-users">
-        @forelse($users as $item)
-            <div class="d-flex justify-content-between align-items-center border rounded p-3 mb-2">
-                <div>
-                    <strong>{{ $item->username }}</strong> <span class="text-muted small">({{ $item->role->label() }})</span>
-                    <div class="text-muted small">حُذف في: {{ $item->deleted_at }}</div>
-                </div>
-                <div class="d-flex gap-2">
-                    <form method="POST" action="{{ route('trash.restore', ['type' => 'user', 'id' => $item->user_id]) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-success">استعادة</button>
-                    </form>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmForceDelete('{{ route('trash.forceDelete', ['type' => 'user', 'id' => $item->user_id]) }}', '{{ $item->username }}')">حذف نهائي</button>
-                </div>
-            </div>
-        @empty
-            <p class="text-muted">لا يوجد مستخدمون محذوفون</p>
-        @endforelse
-    </div>
-
-</div>
-<!-- Force delete confirmation modal -->
-<div class="modal fade" id="forceDeleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-modal p-4 text-center">
-            <div class="modal-body p-0">
-                <p class="text-danger fw-bold mb-2">تحذير: هذا الإجراء نهائي ولا يمكن التراجع عنه</p>
-                <p class="mb-4" id="forceDeleteModalText"></p>
-                <form id="forceDeleteForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <div class="d-flex justify-content-center gap-3">
-                        <button type="submit" class="btn btn-delete-confirm">تأكيد الحذف النهائي</button>
-                        <button type="button" class="btn btn-delete-cancel" data-bs-dismiss="modal">إلغاء</button>
-                    </div>
-                </form>
-            </div>
+    {{-- المشاريع --}}
+    <div class="tab-pane fade show active" id="tab-projects" role="tabpanel">
+        <div class="table-responsive">
+            <table class="table align-middle users-table">
+                <thead>
+                    <tr>
+                        <th class="text-end">اسم المشروع</th>
+                        <th class="text-end">الشركة</th>
+                        <th class="text-end">تاريخ الحذف</th>
+                        <th class="text-center">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="projectsTableBody">
+                    @forelse($projects as $item)
+                        <tr class="paginate-item" data-filter-match="1" data-search-text="{{ strtolower($item->project_name) }}">
+                            <td class="text-end"><span class="user-name">{{ $item->project_name }}</span></td>
+                            <td class="text-end"><span class="text-muted">{{ $item->company_name ?? '-' }}</span></td>
+                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
+                            <td class="text-center">
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="استعادة"
+                                        data-restore-url="{{ route('trash.restore', ['type' => 'project', 'id' => $item->project_id]) }}"
+                                        data-restore-name="{{ $item->project_name }}"
+                                        onclick="openConfirmRestoreModal(this)">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                    <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف نهائي"
+                                        data-delete-url="{{ route('trash.forceDelete', ['type' => 'project', 'id' => $item->project_id]) }}"
+                                        data-delete-name="{{ $item->project_name }}"
+                                        data-delete-permanent="1"
+                                        onclick="openConfirmDeleteModal(this)">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="text-center text-muted py-4">لا توجد مشاريع محذوفة</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
+        <div id="projectsPagination" class="pagination-controls"></div>
     </div>
+
+    {{-- المهام --}}
+    <div class="tab-pane fade" id="tab-tasks" role="tabpanel">
+        <div class="table-responsive">
+            <table class="table align-middle users-table">
+                <thead>
+                    <tr>
+                        <th class="text-end">اسم المهمة</th>
+                        <th class="text-end">المشروع</th>
+                        <th class="text-end">المرحلة</th>
+                        <th class="text-end">تاريخ الحذف</th>
+                        <th class="text-center">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="tasksTableBody">
+                    @forelse($tasks as $item)
+                        <tr class="paginate-item" data-filter-match="1" data-search-text="{{ strtolower($item->task_title) }}">
+                            <td class="text-end"><span class="user-name">{{ $item->task_title }}</span></td>
+                            <td class="text-end"><span class="text-muted">{{ $item->project->project_name ?? '-' }}</span></td>
+                            <td class="text-end"><span class="text-muted">{{ $item->stage?->stage_key?->label() ?? '-' }}</span></td>
+                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
+                            <td class="text-center">
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="استعادة"
+                                        data-restore-url="{{ route('trash.restore', ['type' => 'task', 'id' => $item->task_id]) }}"
+                                        data-restore-name="{{ $item->task_title }}"
+                                        onclick="openConfirmRestoreModal(this)">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                    <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف نهائي"
+                                        data-delete-url="{{ route('trash.forceDelete', ['type' => 'task', 'id' => $item->task_id]) }}"
+                                        data-delete-name="{{ $item->task_title }}"
+                                        data-delete-permanent="1"
+                                        onclick="openConfirmDeleteModal(this)">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="5" class="text-center text-muted py-4">لا توجد مهام محذوفة</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div id="tasksPagination" class="pagination-controls"></div>
+    </div>
+
+    {{-- الموظفين --}}
+    <div class="tab-pane fade" id="tab-employees" role="tabpanel">
+        <div class="table-responsive">
+            <table class="table align-middle users-table">
+                <thead>
+                    <tr>
+                        <th class="text-end">اسم الموظف</th>
+                        <th class="text-end">القسم</th>
+                        <th class="text-end">تاريخ الحذف</th>
+                        <th class="text-center">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="employeesTrashTableBody">
+                    @forelse($employees as $item)
+                        <tr class="paginate-item" data-filter-match="1" data-search-text="{{ strtolower($item->name) }}">
+                            <td class="text-end"><span class="user-name">{{ $item->name }}</span></td>
+                            <td class="text-end"><span class="text-muted">{{ $item->department ?? '-' }}</span></td>
+                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
+                            <td class="text-center">
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="استعادة"
+                                        data-restore-url="{{ route('trash.restore', ['type' => 'employee', 'id' => $item->employee_id]) }}"
+                                        data-restore-name="{{ $item->name }}"
+                                        onclick="openConfirmRestoreModal(this)">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                    <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف نهائي"
+                                        data-delete-url="{{ route('trash.forceDelete', ['type' => 'employee', 'id' => $item->employee_id]) }}"
+                                        data-delete-name="{{ $item->name }}"
+                                        data-delete-permanent="1"
+                                        onclick="openConfirmDeleteModal(this)">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="text-center text-muted py-4">لا يوجد موظفين محذوفين</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div id="employeesTrashPagination" class="pagination-controls"></div>
+    </div>
+
+    {{-- العملاء --}}
+    <div class="tab-pane fade" id="tab-clients" role="tabpanel">
+        <div class="table-responsive">
+            <table class="table align-middle users-table">
+                <thead>
+                    <tr>
+                        <th class="text-end">اسم العميل</th>
+                        <th class="text-end">الشركة</th>
+                        <th class="text-end">تاريخ الحذف</th>
+                        <th class="text-center">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="clientsTableBody">
+                    @forelse($clients as $item)
+                        <tr class="paginate-item" data-filter-match="1" data-search-text="{{ strtolower($item->name) }}">
+                            <td class="text-end"><span class="user-name">{{ $item->name }}</span></td>
+                            <td class="text-end"><span class="text-muted">{{ $item->company_name ?? '-' }}</span></td>
+                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
+                            <td class="text-center">
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="استعادة"
+                                        data-restore-url="{{ route('trash.restore', ['type' => 'client', 'id' => $item->client_id]) }}"
+                                        data-restore-name="{{ $item->name }}"
+                                        onclick="openConfirmRestoreModal(this)">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                    <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف نهائي"
+                                        data-delete-url="{{ route('trash.forceDelete', ['type' => 'client', 'id' => $item->client_id]) }}"
+                                        data-delete-name="{{ $item->name }}"
+                                        data-delete-permanent="1"
+                                        onclick="openConfirmDeleteModal(this)">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="text-center text-muted py-4">لا يوجد عملاء محذوفين</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div id="clientsPagination" class="pagination-controls"></div>
+    </div>
+
+    {{-- المستخدمون (admin/manager) --}}
+    <div class="tab-pane fade" id="tab-users" role="tabpanel">
+        <div class="table-responsive">
+            <table class="table align-middle users-table">
+                <thead>
+                    <tr>
+                        <th class="text-end">اسم المستخدم</th>
+                        <th class="text-end">الدور</th>
+                        <th class="text-end">تاريخ الحذف</th>
+                        <th class="text-center">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTrashTableBody">
+                    @forelse($users as $item)
+                        <tr class="paginate-item" data-filter-match="1" data-search-text="{{ strtolower($item->username) }}">
+                            <td class="text-end"><span class="user-name">{{ $item->username }}</span></td>
+                            <td class="text-end"><span class="text-muted">{{ $item->role->label() }}</span></td>
+                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
+                            <td class="text-center">
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="استعادة"
+                                        data-restore-url="{{ route('trash.restore', ['type' => 'user', 'id' => $item->user_id]) }}"
+                                        data-restore-name="{{ $item->username }}"
+                                        onclick="openConfirmRestoreModal(this)">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                    <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="حذف نهائي"
+                                        data-delete-url="{{ route('trash.forceDelete', ['type' => 'user', 'id' => $item->user_id]) }}"
+                                        data-delete-name="{{ $item->username }}"
+                                        data-delete-permanent="1"
+                                        onclick="openConfirmDeleteModal(this)">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="text-center text-muted py-4">لا يوجد مستخدمون محذوفون</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div id="usersTrashPagination" class="pagination-controls"></div>
+    </div>
+
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const paginators = {
+        projects: createListPaginator({ gridSelector: '#projectsTableBody', itemSelector: 'tr.paginate-item', controlsId: 'projectsPagination', perPage: 8 }),
+        tasks: createListPaginator({ gridSelector: '#tasksTableBody', itemSelector: 'tr.paginate-item', controlsId: 'tasksPagination', perPage: 8 }),
+        employees: createListPaginator({ gridSelector: '#employeesTrashTableBody', itemSelector: 'tr.paginate-item', controlsId: 'employeesTrashPagination', perPage: 8 }),
+        clients: createListPaginator({ gridSelector: '#clientsTableBody', itemSelector: 'tr.paginate-item', controlsId: 'clientsPagination', perPage: 8 }),
+        users: createListPaginator({ gridSelector: '#usersTrashTableBody', itemSelector: 'tr.paginate-item', controlsId: 'usersTrashPagination', perPage: 8 }),
+    };
+    Object.values(paginators).forEach(p => p.render());
+
+    document.getElementById('trashSearchInput')?.addEventListener('input', function () {
+        const term = this.value.trim().toLowerCase();
+        document.querySelectorAll('.tab-pane tbody tr.paginate-item').forEach(row => {
+            const haystack = row.getAttribute('data-search-text') || '';
+            row.setAttribute('data-filter-match', (!term || haystack.includes(term)) ? '1' : '0');
+        });
+        Object.values(paginators).forEach(p => p.reset());
+    });
+});
+</script>
+
 @endsection
 
-@push('scripts')
-<script>
-function confirmForceDelete(url, name) {
-    document.getElementById('forceDeleteForm').action = url;
-    document.getElementById('forceDeleteModalText').innerText = 'هل تريد حذف "' + name + '" نهائياً؟';
-    new bootstrap.Modal(document.getElementById('forceDeleteModal')).show();
-}
-</script>
+@push('modals')
+@include('partials.confirm-delete-modal')
+@include('partials.confirm-restore-modal')
 @endpush

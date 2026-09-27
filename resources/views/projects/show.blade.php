@@ -350,9 +350,12 @@
                                         {{ $task->task_title }}
                                     </span>
                                 @endif
-                                <div class="text-muted" style="font-size: 11px;">
+                                                                <div class="text-muted" style="font-size: 11px;">
                                     {{ $task->assignedEmployees->pluck('name')->implode('، ') ?: 'غير مسند' }}
                                     · {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->translatedFormat('d F Y') : 'غير محدد' }}
+                                    @if($task->assignedEmployees->contains(fn ($e) => $e->trashed()))
+                                        <span class="text-danger">· الموظف المسند محذوف</span>
+                                    @endif
                                 </div>
                                 <div class="d-flex align-items-center gap-3" style="font-size: 13px;">
                                     @php

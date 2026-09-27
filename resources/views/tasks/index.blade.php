@@ -105,8 +105,10 @@
                         default => 'badge-status-default',
                     };
 
-                                                         $projectName  = optional($task->project)->project_name;
+                                                        
+                                                                             $projectName  = optional($task->project)->project_name;
                     $assigneeName = $task->assignedEmployees->pluck('name')->implode('، ');
+                    $hasTrashedAssignee = $task->assignedEmployees->contains(fn ($e) => $e->trashed());
                     $searchText   = strtolower(trim($task->task_title . ' ' . ($projectName ?? '') . ' ' . $assigneeName));
                 @endphp
                 <tr class="paginate-item"
@@ -142,9 +144,11 @@
                         @endif
                     </td>
 
-                    <td class="text-end">
+                                        <td class="text-end">
                         <span class="text-muted">{{ $assigneeName !== '' ? $assigneeName : 'غير مسند' }}</span>
-
+                        @if($hasTrashedAssignee)
+                            <div class="text-danger" style="font-size: 11px;">الموظف المسند محذوف</div>
+                        @endif
                 </td>
 
                     <td class="text-center">

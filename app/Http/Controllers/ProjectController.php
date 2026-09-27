@@ -159,7 +159,7 @@ $project->clients()->sync($request->input('client_ids', []));
             'user',
             'clients',
             'managers',
-            'stages.tasks.assignedEmployees',
+            'stages.tasks.assignedEmployees' => fn ($q) => $q->withTrashed(),
             'stages.tasks.attachments',
             'comments' => function ($query) {
                 $query->whereNull('task_id')->with('user')->latest();

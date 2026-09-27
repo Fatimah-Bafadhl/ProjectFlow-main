@@ -19,19 +19,19 @@ class TaskController extends Controller
 
             if ($user->isManager()) {
         $managedProjectIds = $user->managedProjects()->pluck('projects.project_id');
-        $tasks = Task::whereIn('project_id', $managedProjectIds)->with(['project', 'attachments'])->get();
+        $tasks = Task::whereIn('project_id', $managedProjectIds)->with(['project', 'attachments', 'assignedEmployees' => fn ($q) => $q->withTrashed()])->get();
         $projects = $user->managedProjects()->with('stages')->get();
            } elseif ($user->isEmployee()) {
             $employee = Employee::where('user_id', $user->user_id)->first();
             $employeeId = $employee->employee_id ?? 0;
-            $tasks = Task::whereHas('assignedEmployees', fn ($q) => $q->where('employees.employee_id', $employeeId))
-                ->with(['project', 'attachments'])
+                        $tasks = Task::whereHas('assignedEmployees', fn ($q) => $q->where('employees.employee_id', $employeeId))
+                ->with(['project', 'attachments', 'assignedEmployees' => fn ($q) => $q->withTrashed()])
                 ->get();
             $projectIds = $tasks->pluck('project_id')->unique();
             $projects = Project::whereIn('project_id', $projectIds)->with('stages')->get();
     } else {
-        $tasks = Task::with(['project', 'attachments'])->get();
-        $projects = Project::with('stages')->get();
+        $tasks = Task::with(['project', 'attachments', 'assignedEmployees' => fn ($q) => $q->withTrashed()])->get();
+    $projects = Project::with('stages')->get();
     }
 
     $employees = Employee::all();
