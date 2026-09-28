@@ -47,25 +47,27 @@ class Task extends Model
    
 
 // التسمية العربية للأولوية (بصيغة المؤنث لأنها تُقرأ بعد كلمة "أولوية")
-    public function getPriorityLabelAttribute(): string
+  public function getPriorityLabelAttribute(): string
     {
-        return match ($this->priority) {
-            'منخفض' => 'أولوية منخفضة',
-            'متوسط' => 'أولوية متوسطة',
-            'عالي'  => 'أولوية عالية',
-            default => 'أولوية متوسطة',
-        };
+        return (\App\Enums\TaskPriority::tryFrom((string) $this->priority) ?? \App\Enums\TaskPriority::Medium)->badgeLabel();
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        $status = \App\Enums\TaskStatus::tryFrom((string) $this->status);
+
+        return $status ? $status->label() : (string) $this->status;
     }
 
     // كلاس التلوين للأولوية (يُستخدم مباشرة في Blade)
     public function getPriorityClassAttribute(): string
     {
-        return match ($this->priority) {
-            'منخفض' => 'badge-priority-low',
-            'متوسط' => 'badge-priority-medium',
-            'عالي'  => 'badge-priority-high',
-            default => 'badge-priority-medium',
-        };
+        return (\App\Enums\TaskPriority::tryFrom((string) $this->priority) ?? \App\Enums\TaskPriority::Medium)->badgeClass();
+    }
+
+    public function getStatusClassAttribute(): string
+    {
+        return \App\Enums\TaskStatus::tryFrom((string) $this->status)?->badgeClass() ?? 'badge-status-default';
     }
 
 
