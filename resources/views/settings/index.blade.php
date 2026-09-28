@@ -4,14 +4,14 @@
 
 @section('content')
 <!-- عنوان الصفحة -->
-<div class="mb-4" dir="rtl">
+<div class="mb-4">
     <h2 class="task-page-title" data-i18n="settingsPageHeader">الاعدادات</h2>
     <p class="text-muted m-0" data-i18n="settingsPageSub" style="font-size: 14px;">إدارة تفضيلاتك وحسابك الشخصي</p>
 </div>
 
 <!-- الكارد الرئيسي للإعدادات -->
-<div class="card custom-modal border p-3 mx-auto" style="max-width: 480px;" dir="rtl">
-    <!-- 1. قسم الإشعارات الرئيسي -->
+<div class="card custom-modal border p-3 mx-auto" style="max-width: 480px;">
+<!-- 1. قسم الإشعارات الرئيسي -->
     <div class="d-flex align-items-center justify-content-between p-3 mb-3 border rounded-4" style="background-color: #FAF9FB;">
         <div class="d-flex align-items-center gap-3">
             <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: rgba(138, 132, 173, 0.12); color: #8A84AD;">
@@ -43,14 +43,21 @@
                 <span class="text-muted" data-i18n="languagesSub" style="font-size: 12px;">لغة الواجهة</span>
             </div>
         </div>
-        <span class="text-secondary" id="currentLangBadge" style="font-size: 13px;">العربية</span>
+        <span class="text-secondary" id="currentLangBadge" style="font-size: 13px;">{{ app()->getLocale() === 'ar' ? 'العربية' : 'English' }}</span>
     </div>
 
     <div class="d-flex flex-column gap-2 mb-4">
-        <button class="btn text-start w-100 py-2 px-3 rounded-3 fw-semibold border" id="langArBtn" onclick="changeLanguage('ar')" style="font-size: 14px;" type="button">العربية</button>
-        <button class="btn text-start w-100 py-2 px-3 rounded-3 fw-semibold border" id="langEnBtn" onclick="changeLanguage('en')" style="font-size: 14px;" type="button">English</button>
-    </div>
-
+                <form action="{{ route('locale.update') }}" method="POST">
+            @csrf
+            <input type="hidden" name="locale" value="ar">
+            <button class="btn text-start w-100 py-2 px-3 rounded-3 fw-semibold border {{ app()->getLocale() === 'ar' ? 'bg-light border-secondary' : '' }}" id="langArBtn" style="font-size: 14px;" type="submit">العربية</button>
+        </form>
+        <form action="{{ route('locale.update') }}" method="POST">
+            @csrf
+            <input type="hidden" name="locale" value="en">
+            <button class="btn text-start w-100 py-2 px-3 rounded-3 fw-semibold border {{ app()->getLocale() === 'en' ? 'bg-light border-secondary' : '' }}" id="langEnBtn" style="font-size: 14px;" type="submit">English</button>
+        </form>
+</div>
     <!-- 4. قسم تغيير كلمة المرور -->
     <div class="d-flex align-items-center justify-content-between p-3 mb-3 border rounded-4" style="background-color: #FAF9FB;">
         <div class="d-flex align-items-center gap-3">
@@ -114,6 +121,5 @@
         passwordUpdate: "{{ route('settings.password.update') }}" // ضع مسار راوت تحديث الباسورد لديك
     };
 </script>
-<!-- استدعاء ملف الجافاسكريفت الخارجي -->
-<script src="{{ asset('js/main.js') }}"></script>
+
 @endpush

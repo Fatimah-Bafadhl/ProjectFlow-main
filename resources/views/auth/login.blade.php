@@ -4,6 +4,9 @@
 
 @section('content')
 <main class="login-wrapper text-center w-100 px-3">
+        <div class="d-flex justify-content-end mb-3">
+        @include('partials.locale-switcher')
+    </div>
     <!-- شعار الشركة العلوي -->
     <div class="logo-container mb-4">
         <img alt="Future Vision Solution Logo" class="login-logo img-fluid" src="{{ asset('FVSLogo.jpg') }}"/>
@@ -19,7 +22,7 @@
             @csrf
 
             <!-- اسم المستخدم / البريد الإلكتروني -->
-            <div class="text-start text-rtl mb-3">
+            <div class="text-start mb-3">
                 <label class="form-label custom-label" for="usernameInput">اسم المستخدم</label>
                 <input class="form-control custom-input text-start @error('email') is-invalid @enderror" 
                        name="email" 
@@ -36,7 +39,7 @@
             </div>
 
             <!-- كلمة المرور -->
-            <div class="text-start text-rtl mb-3">
+            <div class="text-start mb-3">
                 <label class="form-label custom-label" for="passwordInput">كلمة المرور</label>
                 <input class="form-control custom-input text-start @error('password') is-invalid @enderror" 
                        name="password" 
@@ -51,7 +54,7 @@
             </div>
 
             <!-- خيار تذكرني ورابط نسيت كلمة المرور -->
-            <div class="d-flex justify-content-between align-items-center mb-4 text-rtl">
+            <div class="d-flex justify-content-between align-items-center mb-4">
                 <div class="form-check">
                     <input class="form-check-input" name="remember" id="rememberMe" type="checkbox"/>
                     <label class="form-check-label custom-label" for="rememberMe" style="font-size: 14px; cursor: pointer;">تذكرني</label>

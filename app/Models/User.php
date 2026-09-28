@@ -28,6 +28,7 @@ class User extends Authenticatable
     'role',
     'phone',
     'company_name',
+     'locale',
 ];
 
     /**

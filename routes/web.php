@@ -49,6 +49,9 @@ Route::get('/', function () {
 Route::redirect('/admin/dashboard', '/dashboard');
 Route::redirect('/admin', '/dashboard');
 
+// Locale switch: available to guests (login page) and logged-in users
+Route::post('/locale', [\App\Http\Controllers\LocaleController::class, 'update'])->name('locale.update');
+
 // 2. مسارات تسجيل الدخول (للصيوف فقط)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');

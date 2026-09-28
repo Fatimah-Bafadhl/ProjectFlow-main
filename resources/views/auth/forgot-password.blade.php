@@ -24,7 +24,7 @@
             <p class="login-subtitle mb-4">أدخل بريدك الإلكتروني للتحقق من وجوده في النظام</p>
             
             <form id="checkEmailForm" onsubmit="return false;">
-                <div class="text-start text-rtl mb-3">
+                <div class="text-start mb-3">
                     <input class="form-control custom-input text-center" dir="ltr" id="emailInput" name="email" placeholder="البريد الإلكتروني" type="text"/>
                     <small class="error-message text-danger d-block text-start d-none mt-1" id="emailError" style="font-size: 12px;"></small>
                 </div>
@@ -39,13 +39,13 @@
             <form id="updatePasswordForm" onsubmit="return false;">
                 <input type="hidden" id="verifiedEmail" name="email">
 
-                <div class="text-start text-rtl mb-3">
+                <div class="text-start mb-3">
                     <label class="form-label text-muted" style="font-size: 13px;">كلمة المرور الجديدة</label>
                     <input type="password" class="form-control custom-input" id="passwordInput" name="password" placeholder="8 خانات على الأقل">
                     <small class="error-message text-danger d-block text-start d-none mt-1" id="passwordError" style="font-size: 12px;"></small>
                 </div>
 
-                <div class="text-start text-rtl mb-4">
+                <div class="text-start mb-4">
                     <label class="form-label text-muted" style="font-size: 13px;">تأكيد كلمة المرور</label>
                     <input type="password" class="form-control custom-input" id="passwordConfirmationInput" name="password_confirmation" placeholder="أعد إدخال كلمة المرور">
                 </div>

@@ -78,9 +78,12 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+        'locale' => env('APP_LOCALE', 'ar'),
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'ar'),
+
+    // Locales the app accepts (used by the SetLocale middleware and the switch action).
+    'supported_locales' => ['ar', 'en'],
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 

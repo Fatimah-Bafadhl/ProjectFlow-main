@@ -1016,40 +1016,7 @@ if (phoneField) {
 /* ==========================================
    7. الإعدادات، اللغة والترجمة، والإشعارات[cite: 1]
 ========================================== */
-const translations = {
-    ar: {
-        settingsPageHeader: "الاعدادات",
-        settingsPageSub: "إدارة تفضيلاتك وحسابك الشخصي",
-        notificationsHeading: "الاشعارات",
-        notificationsSub: "إشعارات البريد الإلكتروني",
-        toggleEmailNotif: "تفعيل إشعارات البريد",
-        languagesHeading: "اللغات",
-        languagesSub: "لغة الواجهة",
-        currentLangText: "العربية",
-        changePassHeading: "تغيير كلمة المرور",
-        changePassSub: "تحديث بيانات تسجيل الدخول الخاصة بك",
-        currentPassLabel: "كلمة المرور الحالية",
-        newPassLabel: "كلمة المرور الجديدة",
-        confirmPassLabel: "تأكيد كلمة المرور الجديدة",
-        updatePassBtn: "تحديث كلمة المرور"
-    },
-    en: {
-        settingsPageHeader: "Settings",
-        settingsPageSub: "Manage your preferences and personal account",
-        notificationsHeading: "Notifications",
-        notificationsSub: "Email notifications",
-        toggleEmailNotif: "Enable Email Notifications",
-        languagesHeading: "Languages",
-        languagesSub: "Interface language",
-        currentLangText: "English",
-        changePassHeading: "Change Password",
-        changePassSub: "Update your login credentials",
-        currentPassLabel: "Current Password",
-        newPassLabel: "New Password",
-        confirmPassLabel: "Confirm New Password",
-        updatePassBtn: "Update Password"
-    }
-};
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const emailNotifToggle = document.getElementById('emailNotifToggle');
@@ -1101,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const confirmPassValue = confirmPassInput.value.trim();
 
             if (newPass !== confirmPassValue) {
-                const currentLang = localStorage.getItem('preferredLang') || 'ar';
+const currentLang = document.documentElement.lang || 'ar';
                 const errorMsg = currentLang === 'en' 
                     ? 'Passwords do not match.' 
                     : 'كلمتا المرور غير متطابقتين.';
@@ -1139,56 +1106,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const savedLang = localStorage.getItem('preferredLang') || 'ar';
-    changeLanguage(savedLang);
+    
 });
 
-function changeLanguage(lang) {
-    localStorage.setItem('preferredLang', lang);
-
-    const htmlRoot = document.documentElement;
-    const bootstrapCSS = document.getElementById('bootstrapCSS');
-    const langBadge = document.getElementById('currentLangBadge');
-
-    if (htmlRoot) {
-        if (lang === 'en') {
-            htmlRoot.setAttribute('lang', 'en');
-            htmlRoot.setAttribute('dir', 'ltr');
-            if (bootstrapCSS) bootstrapCSS.href = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css";
-            if (langBadge) langBadge.textContent = translations.en.currentLangText;
-        } else {
-            htmlRoot.setAttribute('lang', 'ar');
-            htmlRoot.setAttribute('dir', 'rtl');
-            if (bootstrapCSS) bootstrapCSS.href = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css";
-            if (langBadge) langBadge.textContent = translations.ar.currentLangText;
-        }
-    }
-
-    const elementsToTranslate = document.querySelectorAll('[data-i18n]');
-    elementsToTranslate.forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        if (translations[lang] && translations[lang][key]) {
-            element.textContent = translations[lang][key];
-        }
-    });
-
-    updateActiveLanguageButtons(lang);
-}
-
-function updateActiveLanguageButtons(lang) {
-    const arBtn = document.getElementById('langArBtn');
-    const enBtn = document.getElementById('langEnBtn');
-
-    if (arBtn && enBtn) {
-        if (lang === 'ar') {
-            arBtn.classList.add('bg-light', 'border-secondary');
-            enBtn.classList.remove('bg-light', 'border-secondary');
-        } else {
-            enBtn.classList.add('bg-light', 'border-secondary');
-            arBtn.classList.remove('bg-light', 'border-secondary');
-        }
-    }
-}
 
 /* ==========================================
    8. الدوال الموحدة (رسائل الحالة والإشعارات)[cite: 1]
