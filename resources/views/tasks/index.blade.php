@@ -42,7 +42,7 @@
 {{-- Filter bar --}}
 <div class="search-filter-bar d-flex flex-wrap align-items-center gap-2 mb-3">
     <input type="text" id="taskSearchInput"
-           class="form-control custom-input text-end"
+           class="form-control custom-input text-start"
            style="max-width: 260px;"
            placeholder="بحث باسم المهمة أو المشروع...">
 
@@ -75,12 +75,12 @@
     <table class="table align-middle users-table">
         <thead>
             <tr>
-                <th class="text-end">المهمة</th>
-                <th class="text-end">المشروع</th>
-                <th class="text-end">المسند إلى</th>
+                <th class="text-start">المهمة</th>
+                <th class="text-start">المشروع</th>
+                <th class="text-start">المسند إلى</th>
                 <th class="text-center">الأولوية</th>
                 <th class="text-center">الحالة</th>
-                <th class="text-end">تاريخ الانتهاء</th>
+                <th class="text-start">تاريخ الانتهاء</th>
                 <th class="text-center">إجراءات</th>
             </tr>
         </thead>
@@ -126,13 +126,13 @@
                     data-priority="{{ $task->priority ?? 'متوسط' }}"
                     data-attachments="{{ json_encode($attachmentsJson, JSON_UNESCAPED_UNICODE) }}">
 
-                                        <td class="text-end">
+                                        <td class="text-start">
                         <a class="user-name text-decoration-none" href="{{ route('tasks.show', $task->task_id) }}">
                             {{ $task->task_title }}
                         </a>
                     </td>
 
-                    <td class="text-end">
+                    <td class="text-start">
                         @if($task->project)
                             <a href="{{ route('projects.show', $task->project->project_id) }}"
                                class="text-decoration-none text-muted"
@@ -144,7 +144,7 @@
                         @endif
                     </td>
 
-                                        <td class="text-end">
+                                        <td class="text-start">
                         <span class="text-muted">{{ $assigneeName !== '' ? $assigneeName : 'غير مسند' }}</span>
                         @if($hasTrashedAssignee)
                             <div class="text-danger" style="font-size: 11px;">الموظف المسند محذوف</div>
@@ -159,7 +159,7 @@
                         <span class="badge-task-status {{ $statusClass }}">{{ $task->status }}</span>
                     </td>
 
-                    <td class="text-end">
+                    <td class="text-start">
                         <span class="text-muted" dir="ltr">
                             {{ $task->end_task ? \Carbon\Carbon::parse($task->end_task)->format('Y-m-d') : '-' }}
                         </span>
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <form id="employeeTaskStatusForm" method="POST">
                         @csrf
                         @method('PUT')
-                        <div class="mb-4 text-end">
+                        <div class="mb-4 text-start">
                             <label class="custom-label mb-1">حالة المهمة <span class="text-danger">*</span></label>
                             <select class="form-select custom-input text-center" id="employeeTaskStatusSelect" name="status" required>
                                 <option value="قيد التنفيذ">قيد التنفيذ</option>

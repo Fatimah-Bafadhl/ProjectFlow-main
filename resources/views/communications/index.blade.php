@@ -82,7 +82,7 @@
                         <form action="{{ route('tickets.store', $selectedProject->project_id) }}" method="POST" class="comm-thread-reply">
                 @csrf
                 <textarea name="message" rows="3" class="form-control custom-input mb-2" placeholder="اكتب رسالتك أو استفسارك..." required>{{ old('message', $prefillMessage) }}</textarea>
-                <div class="text-end">
+                <div class="text-start">
                     <button type="submit" class="btn btn-save px-4">
                         <i class="fa-regular fa-paper-plane me-1"></i>
                         إرسال

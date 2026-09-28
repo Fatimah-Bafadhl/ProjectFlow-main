@@ -25,7 +25,7 @@
 </div>
 
 <div class="search-filter-bar d-flex flex-wrap align-items-center gap-2 mb-3">
-    <input type="text" id="userSearchInput" class="form-control custom-input text-end" style="max-width: 260px;" placeholder="بحث بالاسم أو البريد الإلكتروني...">
+    <input type="text" id="userSearchInput" class="form-control custom-input text-start" style="max-width: 260px;" placeholder="بحث بالاسم أو البريد الإلكتروني...">
     <select id="userRoleFilter" class="form-select custom-input text-center" style="max-width: 200px;">
         <option value="">كل الصلاحيات</option>
         @foreach ($roles as $role)
@@ -38,11 +38,11 @@
     <table class="table align-middle users-table">
         <thead>
             <tr>
-                <th class="text-end">اسم المستخدم</th>
-                <th class="text-end">البريد الإلكتروني</th>
+                <th class="text-start">اسم المستخدم</th>
+                <th class="text-start">البريد الإلكتروني</th>
                 <th class="text-center">الصلاحية</th>
-                <th class="text-end">الهاتف</th>
-                <th class="text-end">تاريخ الإضافة</th>
+                <th class="text-start">الهاتف</th>
+                <th class="text-start">تاريخ الإضافة</th>
                 <th class="text-center">إجراءات</th>
             </tr>
         </thead>
@@ -53,19 +53,19 @@
                     data-username="{{ $user->username }}"
                     data-email="{{ $user->email }}"
                     data-role="{{ $user->role->value }}">
-                    <td class="text-end">
+                    <td class="text-start">
                         <span class="user-name">{{ $user->username }}</span>
                     </td>
-                    <td class="text-end">
+                    <td class="text-start">
                         <span class="text-muted">{{ $user->email }}</span>
                     </td>
                     <td class="text-center">
                         <span class="role-badge role-badge-{{ $user->role->value }}">{{ $user->role->label() }}</span>
                     </td>
-                                        <td class="text-end">
+                                        <td class="text-start">
                         <span dir="ltr">{{ $user->phone ?? '-' }}</span>
                     </td>
-                    <td class="text-end">
+                    <td class="text-start">
                         <span class="text-muted" dir="ltr">{{ $user->created_at?->format('Y-m-d') ?? '-' }}</span>
                     </td>
                     <td class="text-center">
@@ -185,19 +185,19 @@ document.addEventListener('DOMContentLoaded', function () {
         <form action="{{ route('users.store') }}" method="POST" id="addUserForm">
             @csrf
 
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">اسم المستخدم <span class="text-danger">*</span></label>
-                <input type="text" name="username" class="form-control custom-input text-end" required>
+                <input type="text" name="username" class="form-control custom-input text-start" required>
             </div>
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
-                <input type="email" name="email" class="form-control custom-input text-end" required>
+                <input type="email" name="email" class="form-control custom-input text-start" required>
             </div>
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">كلمة المرور <span class="text-danger">*</span></label>
-                <input type="password" name="password" class="form-control custom-input text-end" required>
+                <input type="password" name="password" class="form-control custom-input text-start" required>
             </div>
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">الصلاحية <span class="text-danger">*</span></label>
                 <select name="role" id="addUserRole" class="form-select custom-input text-center" required>
                     @foreach ($roles as $role)
@@ -205,21 +205,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     @endforeach
                 </select>
             </div>
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">الهاتف</label>
-                <input type="text" name="phone" class="form-control custom-input text-end">
+                <input type="text" name="phone" class="form-control custom-input text-start">
             </div>
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">اسم الشركة</label>
-                <input type="text" name="company_name" class="form-control custom-input text-end">
+                <input type="text" name="company_name" class="form-control custom-input text-start">
             </div>
 
-            <div class="mb-3 text-end d-none" id="addEmployeeDeptField">
+            <div class="mb-3 text-start d-none" id="addEmployeeDeptField">
                 <label class="custom-label mb-1">القسم</label>
-                <input type="text" name="department" id="addDepartmentInput" class="form-control custom-input text-end">
+                <input type="text" name="department" id="addDepartmentInput" class="form-control custom-input text-start">
             </div>
 
-                        <div class="mb-3 text-end d-none" id="addClientProjectField">
+                        <div class="mb-3 text-start d-none" id="addClientProjectField">
                 <label class="custom-label mb-1">المشاريع</label>
                 <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن مشروع..." data-target="addClientProjectsList">
                 <div class="assignment-list" id="addClientProjectsList">
@@ -252,19 +252,19 @@ document.addEventListener('DOMContentLoaded', function () {
             @csrf
             @method('PUT')
 
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">اسم المستخدم <span class="text-danger">*</span></label>
-                <input type="text" name="username" id="editUsernameInput" class="form-control custom-input text-end" required>
+                <input type="text" name="username" id="editUsernameInput" class="form-control custom-input text-start" required>
             </div>
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
-                <input type="email" name="email" id="editEmailInput" class="form-control custom-input text-end" required>
+                <input type="email" name="email" id="editEmailInput" class="form-control custom-input text-start" required>
             </div>
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">كلمة مرور جديدة (اتركه فارغاً لعدم التغيير)</label>
-                <input type="password" name="password" id="editPasswordInput" class="form-control custom-input text-end">
+                <input type="password" name="password" id="editPasswordInput" class="form-control custom-input text-start">
             </div>
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">الصلاحية <span class="text-danger">*</span></label>
                 <select name="role" id="editRoleSelect" class="form-select custom-input text-center edit-role-select" required>
                     @foreach ($roles as $role)
@@ -272,21 +272,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     @endforeach
                 </select>
             </div>
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">الهاتف</label>
-                <input type="text" name="phone" id="editPhoneInput" class="form-control custom-input text-end">
+                <input type="text" name="phone" id="editPhoneInput" class="form-control custom-input text-start">
             </div>
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">اسم الشركة</label>
-                <input type="text" name="company_name" id="editCompanyInput" class="form-control custom-input text-end">
+                <input type="text" name="company_name" id="editCompanyInput" class="form-control custom-input text-start">
             </div>
 
-            <div class="mb-3 text-end d-none" id="editEmployeeDeptField">
+            <div class="mb-3 text-start d-none" id="editEmployeeDeptField">
                 <label class="custom-label mb-1">القسم</label>
-                <input type="text" name="department" id="editDepartmentInput" class="form-control custom-input text-end">
+                <input type="text" name="department" id="editDepartmentInput" class="form-control custom-input text-start">
             </div>
 
-            <div class="mb-3 text-end d-none" id="editClientProjectField">
+            <div class="mb-3 text-start d-none" id="editClientProjectField">
                 <label class="custom-label mb-1">المشاريع</label>
                 <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن مشروع..." data-target="editClientProjectsList">
                 <div class="assignment-list" id="editClientProjectsList">

@@ -282,7 +282,7 @@
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-5" dir="rtl">
     <!-- إجمالي المشاريع -->
     <div class="col">
-        <div class="stat-card text-end">
+        <div class="stat-card text-start">
             <div class="stat-number">{{ $totalProjects ?? 0 }}</div>
             <div class="stat-label">
                 <span>اجمالي المشاريع</span>
@@ -294,7 +294,7 @@
     <!-- إجمالي المهام -->
      @if(!$isClient)
     <div class="col">
-        <div class="stat-card text-end">
+        <div class="stat-card text-start">
             <div class="stat-number">{{ $totalTasks ?? 0 }}</div>
             <div class="stat-label">
                 <span>اجمالي المهام</span>
@@ -306,7 +306,7 @@
 
     <!-- مكتملة -->
     <div class="col">
-        <div class="stat-card text-end">
+        <div class="stat-card text-start">
             <div class="stat-number">{{  $isClient ? $projectCompletedCount : $projectCompletedCount + $taskCompletedCount }}</div>
             <div class="stat-label">
                 <span>مكتملة</span>
@@ -320,7 +320,7 @@
 
     <!-- قيد المراجعة -->
     <div class="col">
-        <div class="stat-card text-end">
+        <div class="stat-card text-start">
             <div class="stat-number">{{  $isClient ? $projectInReviewCount : $projectInReviewCount + $taskInReviewCount }}</div>
             <div class="stat-label">
                 <span>قيد المراجعة</span>
@@ -334,7 +334,7 @@
 
     <!-- قيد التنفيذ -->
     <div class="col">
-        <div class="stat-card text-end">
+        <div class="stat-card text-start">
             <div class="stat-number">{{ $isClient ? $projectInProgressCount : $projectInProgressCount + $taskInProgressCount }}</div>
             <div class="stat-label">
                 <span>قيد التنفيذ</span>
@@ -348,7 +348,7 @@
 
     <!-- قيد الانتظار -->
     <div class="col">
-        <div class="stat-card text-end">
+        <div class="stat-card text-start">
             <div class="stat-number">{{$isClient ? $projectPendingCount : $projectPendingCount + $taskPendingCount }}</div>
             <div class="stat-label">
                 <span>قيد الانتظار</span>
@@ -362,7 +362,7 @@
 
     <!-- متوقف مؤقتاً -->
     <div class="col">
-        <div class="stat-card text-end">
+        <div class="stat-card text-start">
             <div class="stat-number">{{$isClient ? $projectPausedCount : $projectPausedCount + $taskPausedCount }}</div>
             <div class="stat-label">
                 <span>متوقف مؤقتاً</span>

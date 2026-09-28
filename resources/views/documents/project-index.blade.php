@@ -44,7 +44,7 @@
 {{-- Search + Add form (collapsed) --}}
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
     <div class="position-relative" style="flex: 1; min-width: 240px; max-width: 420px;">
-        <input type="text" id="docSearchInput" class="form-control custom-input text-end ps-5"
+        <input type="text" id="docSearchInput" class="form-control custom-input text-start ps-5"
                placeholder="بحث بعنوان المستند...">
         <i class="fa-solid fa-magnifying-glass position-absolute top-50 translate-middle-y start-0 ms-3 text-muted" style="font-size: 13px;"></i>
     </div>
@@ -87,7 +87,7 @@
             </label>
         </div>
 
-        <div class="text-end">
+        <div class="text-start">
             <button type="submit" class="btn btn-save px-4">حفظ المستند</button>
         </div>
     </form>

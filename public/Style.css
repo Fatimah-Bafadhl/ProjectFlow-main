@@ -467,7 +467,7 @@ body {
     font-weight: 700; /* Bold */
     color: #333333;
     display: block;
-    text-align: right;
+    text-align: start;
 }
 
 .custom-input {
@@ -530,7 +530,7 @@ body {
 .error-message {
     font-size: 12px;
     display: block;
-    text-align: right;
+    text-align: start;
 }
 
 .custom-input.is-invalid {
@@ -680,7 +680,7 @@ body {
 .recent-projects-scroll {
     max-height: 380px; /* الارتفاع الأقصى للكارد (يمكنك تعديل الرقم حسب الحاجة) */
     overflow-y: auto;   /* تفعيل التمرير الداخلي عند زيادة العناصر */
-    padding-left: 8px;  /* مسافة بسيطة لعدم التغطية على المحتوى */
+    padding-inline-end: 8px;   /* مسافة بسيطة لعدم التغطية على المحتوى */
 }
 
 .recent-projects-scroll::-webkit-scrollbar {
@@ -915,10 +915,10 @@ body {
     text-align: center;
     padding: 4px 10px;
 }
-.projects-scroll-container {
+html[dir="rtl"] .projects-scroll-container {
     direction: ltr;
 }
-.projects-scroll-container > * {
+html[dir="rtl"] .projects-scroll-container > * {
     direction: rtl;
 }
 
@@ -926,7 +926,7 @@ body {
     text-align: center;
     appearance: none;
     -webkit-appearance: none;
-    padding-right: 14px;
+    padding-inline-start: 14px;
 }
 .search-filter-bar select.form-select option {
     text-align: center;
@@ -1376,7 +1376,7 @@ main.flex-grow-1 {
 
 /* Documents two-column search input icon alignment */
 #docSearchInput {
-    padding-right: 14px;
+    padding-inline-start: 14px;
 }
 
 @media (max-width: 991.98px) {
@@ -1403,9 +1403,8 @@ main.flex-grow-1 {
     border-bottom: 1px solid #E5E0EE;
     white-space: nowrap;
 }
-.users-table thead th:first-child { border-top-right-radius: 12px; }
-.users-table thead th:last-child  { border-top-left-radius: 12px; }
-
+.users-table thead th:first-child { border-start-start-radius: 12px; }
+.users-table thead th:last-child  { border-start-end-radius: 12px; }
 .users-table tbody tr {
     transition: background-color 0.15s ease;
 }
@@ -1486,7 +1485,7 @@ main.flex-grow-1 {
     display: inline-block;
     min-width: 22px;
     padding: 1px 8px;
-    margin-right: 6px;
+     margin-inline-start: 6px;
     background-color: #F0EEF6;
     color: #8A84AD;
     border-radius: 10px;
@@ -1505,7 +1504,7 @@ main.flex-grow-1 {
     display: inline-block;
     min-width: 22px;
     padding: 1px 8px;
-    margin-right: 6px;
+     margin-inline-start: 6px;
     background-color: #F0EEF6;
     color: #8A84AD;
     border-radius: 10px;
@@ -1572,9 +1571,9 @@ main.flex-grow-1 {
 .custom-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
     content: "/";
     color: #B0B0B0;
-    float: right;
-    padding-left: 8px;
-    padding-right: 0;
+   float: inline-start;
+    padding-inline-end: 8px;
+    padding-inline-start: 0;
 }
 
 .form-card-wide {
@@ -2115,6 +2114,7 @@ main.flex-grow-1 {
     background-size: 10px;
 }
 .filter-select:hover { background-color: #F0EDF5; }
+html[dir="ltr"] .filter-select { background-position: right 6px center; }
 .filter-select:focus {
     border-color: #8A84AD;
     background-color: #FFFFFF;
@@ -2370,14 +2370,14 @@ main.flex-grow-1 {
 }
 .comm-message-client {
     background-color: #F0EEF6;
-    align-self: flex-end;
-    border-bottom-left-radius: 4px;
+   align-self: flex-end;
+    border-end-end-radius: 4px;
 }
 .comm-message-manager {
     background-color: #FAF9FB;
     border: 1px solid #EFEEF3;
-    align-self: flex-start;
-    border-bottom-right-radius: 4px;
+     align-self: flex-start;
+    border-end-start-radius: 4px;
 }
 
 .comm-message-meta {
@@ -2621,6 +2621,10 @@ main.flex-grow-1 {
 }
 .client-project-card:hover .client-project-card-cta i {
     transform: translateX(-3px);
+}
+
+html[dir="ltr"] .client-project-card:hover .client-project-card-cta i {
+    transform: translateX(3px);
 }
 
 /* Empty state */

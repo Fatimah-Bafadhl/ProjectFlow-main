@@ -436,7 +436,7 @@
                             <form action="{{ route('tickets.store', $project->project_id) }}" method="POST" class="mb-3">
                                 @csrf
                                 <textarea class="form-control custom-input w-100 mb-2" name="message" rows="2" placeholder="اكتب طلبك أو استفسارك هنا..." required></textarea>
-                                <div class="text-end">
+                                <div class="text-start">
                                     <button type="submit" class="btn btn-save px-4">إرسال الطلب</button>
                                 </div>
                             </form>

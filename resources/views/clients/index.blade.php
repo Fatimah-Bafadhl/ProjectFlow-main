@@ -23,7 +23,7 @@
 
 <!-- شريط البحث -->
 <div class="search-filter-bar d-flex flex-wrap align-items-center gap-2 mb-3">
-    <input type="text" id="clientSearchInput" class="form-control custom-input text-end" style="max-width: 320px;" placeholder="بحث بالاسم أو البريد الإلكتروني أو الشركة...">
+    <input type="text" id="clientSearchInput" class="form-control custom-input text-start" style="max-width: 320px;" placeholder="بحث بالاسم أو البريد الإلكتروني أو الشركة...">
 </div>
 
 <!-- جدول العملاء -->
@@ -31,12 +31,12 @@
     <table class="table align-middle users-table">
         <thead>
             <tr>
-                <th class="text-end">اسم العميل</th>
-                <th class="text-end">البريد الإلكتروني</th>
-                <th class="text-end">الشركة</th>
+                <th class="text-start">اسم العميل</th>
+                <th class="text-start">البريد الإلكتروني</th>
+                <th class="text-start">الشركة</th>
                 <th class="text-center">المشاريع</th>
-                <th class="text-end">الهاتف</th>
-                <th class="text-end">تاريخ الإضافة</th>
+                <th class="text-start">الهاتف</th>
+                <th class="text-start">تاريخ الإضافة</th>
                 <th class="text-center">إجراءات</th>
             </tr>
         </thead>
@@ -52,9 +52,9 @@
                     data-client-phone="{{ $client->phone }}"
                     data-client-project="{{ $client->project_name }}"
                     data-client-project-ids="{{ $client->projects->pluck('project_id')->implode(',') }}">
-                    <td class="text-end"><span class="user-name">{{ $client->name }}</span></td>
-                    <td class="text-end"><span class="text-muted">{{ $client->email }}</span></td>
-                    <td class="text-end">{{ $client->company_name ?? '-' }}</td>
+                    <td class="text-start"><span class="user-name">{{ $client->name }}</span></td>
+                    <td class="text-start"><span class="text-muted">{{ $client->email }}</span></td>
+                    <td class="text-start">{{ $client->company_name ?? '-' }}</td>
                                                <td class="text-center">
                         @php
                             $projCount = $client->projects->count();
@@ -74,8 +74,8 @@
                             <span class="text-muted">-</span>
                         @endif
                     </td>
-                    <td class="text-end"><span dir="ltr">{{ $client->phone ?? '-' }}</span></td>
-                    <td class="text-end"><span class="text-muted" dir="ltr">{{ $client->created_at?->format('Y-m-d') ?? '-' }}</span></td>
+                    <td class="text-start"><span dir="ltr">{{ $client->phone ?? '-' }}</span></td>
+                    <td class="text-start"><span class="text-muted" dir="ltr">{{ $client->created_at?->format('Y-m-d') ?? '-' }}</span></td>
                     <td class="text-center">
                         @if($canManage)
                             <div class="d-inline-flex align-items-center gap-2">
@@ -153,32 +153,32 @@ document.addEventListener('DOMContentLoaded', function () {
     <input type="hidden" name="_method" id="clientFormMethod" value="POST">
     <input type="hidden" name="role" id="clientRoleInput" value="client" disabled>
 
-    <div class="mb-3 text-end">
+    <div class="mb-3 text-start">
         <label class="custom-label mb-1">اسم العميل <span class="text-danger">*</span></label>
-        <input class="form-control custom-input text-end" id="clientNameInput" name="name" required type="text"/>
+        <input class="form-control custom-input text-start" id="clientNameInput" name="name" required type="text"/>
     </div>
 
-    <div class="mb-3 text-end d-none" id="clientPasswordGroup">
+    <div class="mb-3 text-start d-none" id="clientPasswordGroup">
         <label class="custom-label mb-1">كلمة المرور <span class="text-danger">*</span></label>
-        <input class="form-control custom-input text-end" id="clientPasswordInput" name="password" type="password" minlength="8" disabled/>
+        <input class="form-control custom-input text-start" id="clientPasswordInput" name="password" type="password" minlength="8" disabled/>
     </div>
 
-                                        <div class="mb-3 text-end">
+                                        <div class="mb-3 text-start">
                         <label class="custom-label mb-1">اسم الشركة <span class="text-danger">*</span></label>
-                        <input class="form-control custom-input text-end" id="companyNameInput" name="company_name" required type="text"/>
+                        <input class="form-control custom-input text-start" id="companyNameInput" name="company_name" required type="text"/>
                     </div>
 
-                    <div class="mb-3 text-end">
+                    <div class="mb-3 text-start">
                         <label class="custom-label mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
-                        <input class="form-control custom-input text-end" id="clientEmailInput" name="email" required type="email"/>
+                        <input class="form-control custom-input text-start" id="clientEmailInput" name="email" required type="email"/>
                     </div>
                     
-                    <div class="mb-3 text-end">
+                    <div class="mb-3 text-start">
                         <label class="custom-label mb-1">رقم الهاتف <span class="text-danger">*</span></label>
-                        <input class="form-control custom-input text-end" id="clientPhoneInput" name="phone" pattern="^05[0-9]{8}$" required title="يرجى إدخال رقم هاتف سعودي صحيح يبدأ بـ 05 ومكون من 10 أرقام" type="tel"/>
+                        <input class="form-control custom-input text-start" id="clientPhoneInput" name="phone" pattern="^05[0-9]{8}$" required title="يرجى إدخال رقم هاتف سعودي صحيح يبدأ بـ 05 ومكون من 10 أرقام" type="tel"/>
                     </div>
                     
-                                                           <div class="mb-3 text-end">
+                                                           <div class="mb-3 text-start">
                         <label class="custom-label mb-1">المشاريع <span class="text-danger">*</span></label>
                         <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن مشروع..." data-target="clientProjectsCheckboxes">
                         <div class="assignment-list" id="clientProjectsCheckboxes">

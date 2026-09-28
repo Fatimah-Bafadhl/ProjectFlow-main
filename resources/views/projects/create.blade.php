@@ -32,24 +32,24 @@
         <!-- Section 1: Basic Info -->
         <h5 class="section-title mb-3">المعلومات الأساسية</h5>
         <div class="row g-3 mb-4">
-            <div class="col-md-6 text-end">
+            <div class="col-md-6 text-start">
                 <label class="custom-label mb-1">اسم المشروع <span class="text-danger">*</span></label>
-                <input class="form-control custom-input text-end" id="projectNameInput" name="project_name" required type="text" value="{{ old('project_name') }}"/>
+                <input class="form-control custom-input text-start" id="projectNameInput" name="project_name" required type="text" value="{{ old('project_name') }}"/>
             </div>
-            <div class="col-md-6 text-end">
+            <div class="col-md-6 text-start">
                 <label class="custom-label mb-1">اسم الشركة <span class="text-danger">*</span></label>
-                <input class="form-control custom-input text-end" id="projectCompanyNameInput" name="company_name" required type="text" placeholder="أدخلي اسم الشركة أو العميل" value="{{ old('company_name') }}"/>
+                <input class="form-control custom-input text-start" id="projectCompanyNameInput" name="company_name" required type="text" placeholder="أدخلي اسم الشركة أو العميل" value="{{ old('company_name') }}"/>
             </div>
-            <div class="col-12 text-end">
+            <div class="col-12 text-start">
                 <label class="custom-label mb-1">الوصف <span class="text-danger">*</span></label>
-                <textarea class="form-control custom-input text-end" id="projectDescInput" name="project_description" rows="3" required>{{ old('project_description') }}</textarea>
+                <textarea class="form-control custom-input text-start" id="projectDescInput" name="project_description" rows="3" required>{{ old('project_description') }}</textarea>
             </div>
         </div>
 
         <!-- Section 2: Timeline & Type -->
         <h5 class="section-title mb-3">التفاصيل الزمنية والنوع</h5>
         <div class="row g-3 mb-4">
-                       <div class="col-md-4 text-end">
+                       <div class="col-md-4 text-start">
                 <label class="custom-label mb-1">نوع المشروع <span class="text-danger">*</span></label>
                 <select class="form-select custom-input text-center" id="projectTypeSelect" name="project_type" required>
                     @foreach($projectTypes as $type)
@@ -57,11 +57,11 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-4 text-end">
+            <div class="col-md-4 text-start">
                 <label class="custom-label mb-1">تاريخ البدء <span class="text-danger">*</span></label>
                 <input class="form-control custom-date-btn text-center" id="projectStartDateInput" name="start_project" required type="date" value="{{ old('start_project') }}" onchange="document.getElementById('projectEndDateInput').min = this.value;"/>
             </div>
-            <div class="col-md-4 text-end">
+            <div class="col-md-4 text-start">
                 <label class="custom-label mb-1">تاريخ الانتهاء <span class="text-danger">*</span></label>
                 <input class="form-control custom-date-btn text-center" id="projectEndDateInput" name="end_project" required type="date" value="{{ old('end_project') }}"/>
             </div>
@@ -70,7 +70,7 @@
         <h5 class="section-title mb-3">فريق العمل والمسؤوليات</h5>
         <div class="row g-4 mb-4">
             @if(auth()->user()->isAdmin())
-            <div class="col-md-4 text-end">
+            <div class="col-md-4 text-start">
                 <label class="custom-label mb-2">المدراء المسؤولون</label>
                 <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن مدير..." data-target="managersList">
                             <div class="assignment-list" id="managersList">
@@ -84,7 +84,7 @@
             </div>
             @endif
 
-            <div class="col-md-4 text-end">
+            <div class="col-md-4 text-start">
                 <label class="custom-label mb-2">فريق العمل (الموظفون)</label>
                 <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن موظف..." data-target="employeesList">
                                <div class="assignment-list" id="employeesList">
@@ -97,7 +97,7 @@
                 </div>
             </div>
 
-            <div class="col-md-4 text-end">
+            <div class="col-md-4 text-start">
                 <label class="custom-label mb-2">العميل</label>
                 <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن عميل..." data-target="clientsList">
                               <div class="assignment-list" id="clientsList">

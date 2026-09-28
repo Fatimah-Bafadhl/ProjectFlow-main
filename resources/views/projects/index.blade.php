@@ -38,7 +38,7 @@ $isAdmin = $user && $user->isAdmin();
 </div>
 
 <div class="search-filter-bar d-flex flex-wrap align-items-center gap-2 mb-3">
-    <input type="text" id="projectSearchInput" class="form-control custom-input text-end" style="max-width: 260px;" placeholder="بحث باسم المشروع أو الشركة...">
+    <input type="text" id="projectSearchInput" class="form-control custom-input text-start" style="max-width: 260px;" placeholder="بحث باسم المشروع أو الشركة...">
 
     <select id="projectStatusFilter" class="form-select custom-input text-center" style="max-width: 200px;">
         <option value="">كل الحالات</option>
@@ -83,7 +83,7 @@ $isAdmin = $user && $user->isAdmin();
                  data-comment-count="{{ $project->comments_count ?? 0 }}"
                  data-open-ticket-count="{{ $openTickets }}">
 
-                <div class="d-flex flex-column align-items-start text-end" style="min-width: 160px;">
+                <div class="d-flex flex-column align-items-start text-start" style="min-width: 160px;">
                     <a class="text-decoration-none text-dark project-card-title" href="{{ route('projects.show', $project->project_id) }}">
                         {{ $project->project_name }}
                     </a>
@@ -91,7 +91,7 @@ $isAdmin = $user && $user->isAdmin();
                 </div>
 
                 @if($isAdmin)
-                <div class="d-flex flex-column align-items-start text-end extra-small text-muted" style="min-width: 100px;">
+                <div class="d-flex flex-column align-items-start text-start extra-small text-muted" style="min-width: 100px;">
                     <span>المدير:</span>
                     <span class="fw-bold text-dark">
                         @if($managersCount > 0)
@@ -174,27 +174,27 @@ $isAdmin = $user && $user->isAdmin();
                         @csrf
                         <input type="hidden" name="_method" id="projectFormMethod" value="POST">
                         
-                        <div class="mb-3 text-end">
+                        <div class="mb-3 text-start">
                             <label class="custom-label mb-1">اسم المشروع <span class="text-danger">*</span></label>
-                            <input class="form-control custom-input text-end" id="projectNameInput" name="project_name" required type="text"/>
+                            <input class="form-control custom-input text-start" id="projectNameInput" name="project_name" required type="text"/>
                         </div>
 
-                        <div class="mb-3 text-end">
+                        <div class="mb-3 text-start">
                             <label class="custom-label mb-1">اسم الشركة <span class="text-danger">*</span></label>
-                            <input class="form-control custom-input text-end" id="projectCompanyNameInput" name="company_name" required type="text" placeholder="أدخلي اسم الشركة أو العميل"/>
+                            <input class="form-control custom-input text-start" id="projectCompanyNameInput" name="company_name" required type="text" placeholder="أدخلي اسم الشركة أو العميل"/>
                         </div>
 
-                        <div class="mb-3 text-end">
+                        <div class="mb-3 text-start">
                             <label class="custom-label mb-1">الوصف <span class="text-danger">*</span></label>
-                            <textarea class="form-control custom-input text-end" id="projectDescInput" name="project_description" rows="2" required></textarea>
+                            <textarea class="form-control custom-input text-start" id="projectDescInput" name="project_description" rows="2" required></textarea>
                         </div>
 
                         <div class="row g-2 mb-3">
-                            <div class="col-6 text-end">
+                            <div class="col-6 text-start">
                                 <label class="custom-label mb-1">تاريخ البدء <span class="text-danger">*</span></label>
                                 <input class="form-control custom-date-btn text-center" id="projectStartDateInput" name="start_project" required type="date" onchange="document.getElementById('projectEndDateInput').min = this.value;"/>
                             </div>
-                            <div class="col-6 text-end">
+                            <div class="col-6 text-start">
                                 <label class="custom-label mb-1">تاريخ الانتهاء <span class="text-danger">*</span></label>
                                 <input class="form-control custom-date-btn text-center" id="projectEndDateInput" name="end_project" required type="date"/>
                             </div>
@@ -202,7 +202,7 @@ $isAdmin = $user && $user->isAdmin();
 
                         
 
-                        <div class="mb-4 text-end">
+                        <div class="mb-4 text-start">
                             <label class="custom-label mb-1">نوع المشروع <span class="text-danger">*</span></label>
                             <select class="form-select custom-input text-center" id="projectTypeSelect" name="project_type" required>
                                 @foreach($projectTypes as $type)
@@ -213,7 +213,7 @@ $isAdmin = $user && $user->isAdmin();
 
                                                                              
 @if($isAdmin)
-<div class="mb-3 text-end">
+<div class="mb-3 text-start">
     <label class="custom-label mb-1">المدراء المسؤولون</label>
     <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن مدير..." data-target="editManagersList">
     <div class="assignment-list" id="editManagersList">
@@ -227,7 +227,7 @@ $isAdmin = $user && $user->isAdmin();
 </div>
 @endif
 
-<div class="mb-4 text-end">
+<div class="mb-4 text-start">
     <label class="custom-label mb-1">فريق العمل (الموظفون)</label>
     <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن موظف..." data-target="editEmployeesList">
     <div class="assignment-list" id="editEmployeesList">
@@ -240,7 +240,7 @@ $isAdmin = $user && $user->isAdmin();
     </div>
 </div>
 
-<div class="mb-4 text-end">
+<div class="mb-4 text-start">
     <label class="custom-label mb-1">العميل</label>
     <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن عميل..." data-target="editClientsList">
     <div class="assignment-list" id="editClientsList">

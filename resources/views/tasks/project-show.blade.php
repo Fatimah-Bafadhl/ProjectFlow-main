@@ -178,7 +178,7 @@ data-assigned-to="{{ $task->assignedEmployees->pluck('employee_id') }}"
                 <input type="url" name="url" id="attachmentUrlInput" class="form-control custom-input" placeholder="https://..." maxlength="2048">
             </div>
 
-            <div class="text-end">
+            <div class="text-start">
                 <button type="submit" class="btn btn-save px-4">حفظ المرفق</button>
             </div>
         </form>

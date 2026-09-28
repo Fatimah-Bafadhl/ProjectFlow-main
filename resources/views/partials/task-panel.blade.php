@@ -36,12 +36,12 @@
             <input type="hidden" name="_method" id="taskFormMethod" value="POST">
             <input type="hidden" name="redirect_to" id="taskRedirectInput" value="">
 
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">اسم المهمة <span class="text-danger">*</span></label>
-                <input class="form-control custom-input text-end" id="taskNameInput" name="task_title" required type="text" placeholder="أدخل اسم المهمة"/>
+                <input class="form-control custom-input text-start" id="taskNameInput" name="task_title" required type="text" placeholder="أدخل اسم المهمة"/>
             </div>
 
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">اسم المشروع <span class="text-danger">*</span></label>
                 <select class="form-select custom-input text-center" id="projectIdInput" name="project_id" onchange="updateProjectDatesLimits(); updateStageOptions();" required>
                     <option value="">اختر المشروع</option>
@@ -57,14 +57,14 @@
                 </select>
             </div>
 
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">المرحلة</label>
                 <select class="form-select custom-input text-center" id="stageIdInput" name="stage_id">
                     <option value="">اختر مشروعاً أولاً</option>
                 </select>
             </div>
 
-          <div class="mb-3 text-end">
+          <div class="mb-3 text-start">
     <label class="custom-label mb-2">مسند إلى <span class="text-danger">*</span></label>
     <input type="text" class="form-control custom-input assignment-search" placeholder="بحث عن موظف..." data-target="taskAssignedToList">
     <div class="assignment-list" id="taskAssignedToList">
@@ -79,24 +79,24 @@
     </div>
 </div>
 
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">الوصف <span class="text-danger">*</span></label>
-                <textarea class="form-control custom-input text-end" id="descriptionInput" name="task_description" required rows="3" placeholder="أدخل وصف المهمة"></textarea>
+                <textarea class="form-control custom-input text-start" id="descriptionInput" name="task_description" required rows="3" placeholder="أدخل وصف المهمة"></textarea>
             </div>
 
             <div class="row g-2 mb-3">
-                <div class="col-6 text-end">
+                <div class="col-6 text-start">
                     <label class="custom-label mb-1">تاريخ البدء <span class="text-danger">*</span></label>
                     <input class="form-control custom-date-btn text-center" id="startDateInput" name="start_task" required type="date"/>
                 </div>
-                <div class="col-6 text-end">
+                <div class="col-6 text-start">
                     <label class="custom-label mb-1">تاريخ الانتهاء <span class="text-danger">*</span></label>
                     <input class="form-control custom-date-btn text-center" id="endDateInput" name="end_task" required type="date"/>
                 </div>
             </div>
 
             <div class="row g-2 mb-3">
-                <div class="col-6 text-end">
+                <div class="col-6 text-start">
                     <label class="custom-label mb-1">الحالة <span class="text-danger">*</span></label>
                     <select class="form-select custom-input text-center" id="statusSelect" name="status" required>
                         <option value="قيد التنفيذ">قيد التنفيذ</option>
@@ -106,7 +106,7 @@
                         <option value="قيد الانتظار">قيد الانتظار</option>
                     </select>
                 </div>
-                <div class="col-6 text-end">
+                <div class="col-6 text-start">
                     <label class="custom-label mb-1">الأولوية <span class="text-danger">*</span></label>
                     <select class="form-select custom-input text-center" id="prioritySelect" name="priority" required>
                         <option value="منخفض">منخفض</option>
@@ -117,13 +117,13 @@
             </div>
 
             {{-- Existing attachments (edit-mode only; populated by JS from data-attachments) --}}
-            <div class="mb-3 text-end d-none" id="existingAttachmentsBlock">
+            <div class="mb-3 text-start d-none" id="existingAttachmentsBlock">
                 <label class="custom-label mb-1">المرفقات الحالية</label>
                 <div id="existingAttachmentsList" class="d-flex flex-column gap-2"></div>
             </div>
 
             {{-- Add new files (add-mode and edit-mode) --}}
-            <div class="mb-3 text-end">
+            <div class="mb-3 text-start">
                 <label class="custom-label mb-1">إضافة مرفقات جديدة</label>
                 <input class="d-none" id="taskAttachmentsInput" name="attachments[]" type="file" multiple onchange="showTaskAttachmentsPreview(this)" />
                 <div class="d-flex flex-wrap gap-2">

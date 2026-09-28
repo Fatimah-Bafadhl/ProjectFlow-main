@@ -25,7 +25,7 @@
         </span>
     @endif
 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2 mt-2 notification-menu text-end"
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2 mt-2 notification-menu text-start"
                     aria-labelledby="notificationsDropdown" style="width: 310px; border-radius: 14px;">
                     
                     <li class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center">

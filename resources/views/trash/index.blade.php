@@ -10,7 +10,7 @@
 </div>
 
 <div class="search-filter-bar d-flex flex-wrap align-items-center gap-2 mb-3">
-    <input type="text" id="trashSearchInput" class="form-control custom-input text-end" style="max-width: 320px;" placeholder="بحث بالاسم...">
+    <input type="text" id="trashSearchInput" class="form-control custom-input text-start" style="max-width: 320px;" placeholder="بحث بالاسم...">
 </div>
 
 <ul class="nav nav-tabs mb-4" id="trashTabs" role="tablist">
@@ -39,18 +39,18 @@
             <table class="table align-middle users-table">
                 <thead>
                     <tr>
-                        <th class="text-end">اسم المشروع</th>
-                        <th class="text-end">الشركة</th>
-                        <th class="text-end">تاريخ الحذف</th>
+                        <th class="text-start">اسم المشروع</th>
+                        <th class="text-start">الشركة</th>
+                        <th class="text-start">تاريخ الحذف</th>
                         <th class="text-center">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="projectsTableBody">
                     @forelse($projects as $item)
                         <tr class="paginate-item" data-filter-match="1" data-search-text="{{ strtolower($item->project_name) }}">
-                            <td class="text-end"><span class="user-name">{{ $item->project_name }}</span></td>
-                            <td class="text-end"><span class="text-muted">{{ $item->company_name ?? '-' }}</span></td>
-                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
+                            <td class="text-start"><span class="user-name">{{ $item->project_name }}</span></td>
+                            <td class="text-start"><span class="text-muted">{{ $item->company_name ?? '-' }}</span></td>
+                            <td class="text-start"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
                             <td class="text-center">
                                 <div class="d-inline-flex align-items-center gap-2">
                                     <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="استعادة"
@@ -84,20 +84,20 @@
             <table class="table align-middle users-table">
                 <thead>
                     <tr>
-                        <th class="text-end">اسم المهمة</th>
-                        <th class="text-end">المشروع</th>
-                        <th class="text-end">المرحلة</th>
-                        <th class="text-end">تاريخ الحذف</th>
+                        <th class="text-start">اسم المهمة</th>
+                        <th class="text-start">المشروع</th>
+                        <th class="text-start">المرحلة</th>
+                        <th class="text-start">تاريخ الحذف</th>
                         <th class="text-center">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="tasksTableBody">
                     @forelse($tasks as $item)
                         <tr class="paginate-item" data-filter-match="1" data-search-text="{{ strtolower($item->task_title) }}">
-                            <td class="text-end"><span class="user-name">{{ $item->task_title }}</span></td>
-                            <td class="text-end"><span class="text-muted">{{ $item->project->project_name ?? '-' }}</span></td>
-                            <td class="text-end"><span class="text-muted">{{ $item->stage?->stage_key?->label() ?? '-' }}</span></td>
-                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
+                            <td class="text-start"><span class="user-name">{{ $item->task_title }}</span></td>
+                            <td class="text-start"><span class="text-muted">{{ $item->project->project_name ?? '-' }}</span></td>
+                            <td class="text-start"><span class="text-muted">{{ $item->stage?->stage_key?->label() ?? '-' }}</span></td>
+                            <td class="text-start"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
                             <td class="text-center">
                                 <div class="d-inline-flex align-items-center gap-2">
                                     <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="استعادة"
@@ -131,18 +131,18 @@
             <table class="table align-middle users-table">
                 <thead>
                     <tr>
-                        <th class="text-end">اسم الموظف</th>
-                        <th class="text-end">القسم</th>
-                        <th class="text-end">تاريخ الحذف</th>
+                        <th class="text-start">اسم الموظف</th>
+                        <th class="text-start">القسم</th>
+                        <th class="text-start">تاريخ الحذف</th>
                         <th class="text-center">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="employeesTrashTableBody">
                     @forelse($employees as $item)
                         <tr class="paginate-item" data-filter-match="1" data-search-text="{{ strtolower($item->name) }}">
-                            <td class="text-end"><span class="user-name">{{ $item->name }}</span></td>
-                            <td class="text-end"><span class="text-muted">{{ $item->department ?? '-' }}</span></td>
-                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
+                            <td class="text-start"><span class="user-name">{{ $item->name }}</span></td>
+                            <td class="text-start"><span class="text-muted">{{ $item->department ?? '-' }}</span></td>
+                            <td class="text-start"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
                             <td class="text-center">
                                 <div class="d-inline-flex align-items-center gap-2">
                                     <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="استعادة"
@@ -176,18 +176,18 @@
             <table class="table align-middle users-table">
                 <thead>
                     <tr>
-                        <th class="text-end">اسم العميل</th>
-                        <th class="text-end">الشركة</th>
-                        <th class="text-end">تاريخ الحذف</th>
+                        <th class="text-start">اسم العميل</th>
+                        <th class="text-start">الشركة</th>
+                        <th class="text-start">تاريخ الحذف</th>
                         <th class="text-center">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="clientsTableBody">
                     @forelse($clients as $item)
                         <tr class="paginate-item" data-filter-match="1" data-search-text="{{ strtolower($item->name) }}">
-                            <td class="text-end"><span class="user-name">{{ $item->name }}</span></td>
-                            <td class="text-end"><span class="text-muted">{{ $item->company_name ?? '-' }}</span></td>
-                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
+                            <td class="text-start"><span class="user-name">{{ $item->name }}</span></td>
+                            <td class="text-start"><span class="text-muted">{{ $item->company_name ?? '-' }}</span></td>
+                            <td class="text-start"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
                             <td class="text-center">
                                 <div class="d-inline-flex align-items-center gap-2">
                                     <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="استعادة"
@@ -221,18 +221,18 @@
             <table class="table align-middle users-table">
                 <thead>
                     <tr>
-                        <th class="text-end">اسم المستخدم</th>
-                        <th class="text-end">الدور</th>
-                        <th class="text-end">تاريخ الحذف</th>
+                        <th class="text-start">اسم المستخدم</th>
+                        <th class="text-start">الدور</th>
+                        <th class="text-start">تاريخ الحذف</th>
                         <th class="text-center">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="usersTrashTableBody">
                     @forelse($users as $item)
                         <tr class="paginate-item" data-filter-match="1" data-search-text="{{ strtolower($item->username) }}">
-                            <td class="text-end"><span class="user-name">{{ $item->username }}</span></td>
-                            <td class="text-end"><span class="text-muted">{{ $item->role->label() }}</span></td>
-                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
+                            <td class="text-start"><span class="user-name">{{ $item->username }}</span></td>
+                            <td class="text-start"><span class="text-muted">{{ $item->role->label() }}</span></td>
+                            <td class="text-start"><span class="text-muted" dir="ltr">{{ $item->deleted_at?->format('Y-m-d H:i') }}</span></td>
                             <td class="text-center">
                                 <div class="d-inline-flex align-items-center gap-2">
                                     <button type="button" class="btn-icon text-muted border-0 bg-transparent p-0" title="استعادة"

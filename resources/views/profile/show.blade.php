@@ -13,7 +13,7 @@
 <div class="card custom-modal border p-4 mx-auto" style="max-width: 500px;">
     
    <!-- الهيدر الداخلي (الصورة الرمزية والاسم والبريد) -->
-    <div class="d-flex align-items-center gap-3 text-end mb-4">
+    <div class="d-flex align-items-center gap-3 text-start mb-4">
         <div class="rounded-circle d-flex align-items-center justify-content-center" id="profileCardAvatar" style="width: 48px; height: 48px; background-color: rgba(138, 132, 173, 0.12); color: #8A84AD; font-weight: 600; font-size: 14px;">
             {{ mb_substr($user->username, 0, 2) }}
         </div>

@@ -23,7 +23,7 @@
 
 <!-- شريط البحث (يفلتر التبويب النشط) -->
 <div class="search-filter-bar d-flex flex-wrap align-items-center gap-2 mb-3">
-    <input type="text" id="teamSearchInput" class="form-control custom-input text-end" style="max-width: 320px;" placeholder="بحث بالاسم أو البريد الإلكتروني...">
+    <input type="text" id="teamSearchInput" class="form-control custom-input text-start" style="max-width: 320px;" placeholder="بحث بالاسم أو البريد الإلكتروني...">
 </div>
 
 <!-- تبويبات: الموظفين / المدراء -->
@@ -48,11 +48,11 @@
             <table class="table align-middle users-table">
                 <thead>
                     <tr>
-                        <th class="text-end">اسم الموظف</th>
-                        <th class="text-end">البريد الإلكتروني</th>
+                        <th class="text-start">اسم الموظف</th>
+                        <th class="text-start">البريد الإلكتروني</th>
                         <th class="text-center">المهام</th>
                         <th class="text-center">المشاريع</th>
-                        <th class="text-end">تاريخ الإضافة</th>
+                        <th class="text-start">تاريخ الإضافة</th>
                         <th class="text-center">إجراءات</th>
                     </tr>
                 </thead>
@@ -66,8 +66,8 @@
                             data-department="{{ $employee->department }}"
                             data-employee-email="{{ $employee->email }}"
                             data-employee-phone="{{ $employee->phone }}">
-                            <td class="text-end"><span class="user-name">{{ $employee->name }}</span></td>
-                            <td class="text-end"><span class="text-muted">{{ $employee->email }}</span></td>
+                            <td class="text-start"><span class="user-name">{{ $employee->name }}</span></td>
+                            <td class="text-start"><span class="text-muted">{{ $employee->email }}</span></td>
                             <td class="text-center">
                                 @php $taskCount = $employee->tasks_count ?? 0; @endphp
                                 <span class="{{ $taskCount > 0 ? 'fw-bold text-danger' : 'text-muted' }}">{{ $taskCount }}</span>
@@ -91,7 +91,7 @@
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
-                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $employee->created_at?->format('Y-m-d') ?? '-' }}</span></td>
+                            <td class="text-start"><span class="text-muted" dir="ltr">{{ $employee->created_at?->format('Y-m-d') ?? '-' }}</span></td>
                             <td class="text-center">
                                 @if($canManage)
                                     <div class="d-inline-flex align-items-center gap-2">
@@ -123,10 +123,10 @@
             <table class="table align-middle users-table">
                 <thead>
                     <tr>
-                        <th class="text-end">اسم المدير</th>
-                        <th class="text-end">البريد الإلكتروني</th>
+                        <th class="text-start">اسم المدير</th>
+                        <th class="text-start">البريد الإلكتروني</th>
                         <th class="text-center">المشاريع المُدارة</th>
-                        <th class="text-end">تاريخ الإضافة</th>
+                        <th class="text-start">تاريخ الإضافة</th>
                         <th class="text-center">إجراءات</th>
                     </tr>
                 </thead>
@@ -139,8 +139,8 @@
                             data-manager-username="{{ $manager->username }}"
                             data-manager-email="{{ $manager->email }}"
                             data-manager-phone="{{ $manager->phone }}">
-                            <td class="text-end"><span class="user-name">{{ $manager->username }}</span></td>
-                            <td class="text-end"><span class="text-muted">{{ $manager->email }}</span></td>
+                            <td class="text-start"><span class="user-name">{{ $manager->username }}</span></td>
+                            <td class="text-start"><span class="text-muted">{{ $manager->email }}</span></td>
                                                         <td class="text-center">
                                 @php
                                     $managedCount = $manager->managedProjects->count();
@@ -160,7 +160,7 @@
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
-                            <td class="text-end"><span class="text-muted" dir="ltr">{{ $manager->created_at?->format('Y-m-d') ?? '-' }}</span></td>
+                            <td class="text-start"><span class="text-muted" dir="ltr">{{ $manager->created_at?->format('Y-m-d') ?? '-' }}</span></td>
                                                         <td class="text-center">
                                 @if($canManage)
                                     <div class="d-inline-flex align-items-center gap-2">
@@ -310,26 +310,26 @@ document.addEventListener('DOMContentLoaded', function () {
     <input type="hidden" name="form_mode" id="employeeFormMode" value="employee_add">
     <input type="hidden" name="form_target_id" id="employeeFormTargetId" value="">
 
-    <div class="mb-3 text-end">
+    <div class="mb-3 text-start">
         <label class="custom-label mb-1">اسم الموظف <span class="text-danger">*</span></label>
-        <input class="form-control custom-input text-end" id="employeeNameInput" name="name" required type="text"/>
+        <input class="form-control custom-input text-start" id="employeeNameInput" name="name" required type="text"/>
     </div>
 
-    <div class="mb-3 text-end d-none" id="employeePasswordGroup">
+    <div class="mb-3 text-start d-none" id="employeePasswordGroup">
         <label class="custom-label mb-1">كلمة المرور <span class="text-danger">*</span></label>
-        <input class="form-control custom-input text-end" id="employeePasswordInput" name="password" type="password" minlength="8" disabled/>
+        <input class="form-control custom-input text-start" id="employeePasswordInput" name="password" type="password" minlength="8" disabled/>
     </div>
-                    <div class="mb-3 text-end">
+                    <div class="mb-3 text-start">
                         <label class="custom-label mb-1">القسم <span class="text-danger">*</span></label>
-                        <input class="form-control custom-input text-end" id="departmentInput" name="department" required type="text"/>
+                        <input class="form-control custom-input text-start" id="departmentInput" name="department" required type="text"/>
                     </div>
-                    <div class="mb-3 text-end">
+                    <div class="mb-3 text-start">
                         <label class="custom-label mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
-                        <input class="form-control custom-input text-end" id="employeeEmailInput" name="email" required type="email"/>
+                        <input class="form-control custom-input text-start" id="employeeEmailInput" name="email" required type="email"/>
                     </div>
-                    <div class="mb-3 text-end">
+                    <div class="mb-3 text-start">
                         <label class="custom-label mb-1">رقم الهاتف <span class="text-danger">*</span></label>
-                        <input class="form-control custom-input text-end" id="employeePhoneInput" name="phone" pattern="^05[0-9]{8}$" required title="يرجى إدخال رقم هاتف سعودي صحيح يبدأ بـ 05 ومكون من 10 أرقام" type="tel"/>
+                        <input class="form-control custom-input text-start" id="employeePhoneInput" name="phone" pattern="^05[0-9]{8}$" required title="يرجى إدخال رقم هاتف سعودي صحيح يبدأ بـ 05 ومكون من 10 أرقام" type="tel"/>
                     </div>
                     <div class="text-center pt-2">
                         <button class="btn btn-save" type="submit">حفظ الموظف</button>
@@ -357,21 +357,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     <input type="hidden" name="form_mode" id="managerFormMode" value="manager_add">
                     <input type="hidden" name="form_target_id" id="managerFormTargetId" value="">
 
-                    <div class="mb-3 text-end">
+                    <div class="mb-3 text-start">
                         <label class="custom-label mb-1">اسم المدير <span class="text-danger">*</span></label>
-                        <input class="form-control custom-input text-end" id="managerNameInput" name="username" required type="text"/>
+                        <input class="form-control custom-input text-start" id="managerNameInput" name="username" required type="text"/>
                     </div>
-                    <div class="mb-3 text-end">
+                    <div class="mb-3 text-start">
                         <label class="custom-label mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
-                        <input class="form-control custom-input text-end" id="managerEmailInput" name="email" required type="email"/>
+                        <input class="form-control custom-input text-start" id="managerEmailInput" name="email" required type="email"/>
                     </div>
-                                        <div class="mb-3 text-end">
+                                        <div class="mb-3 text-start">
                         <label class="custom-label mb-1" id="managerPasswordLabel">كلمة مرور جديدة (اتركه فارغاً لعدم التغيير)</label>
-                        <input class="form-control custom-input text-end" id="managerPasswordInput" name="password" type="password" minlength="8"/>
+                        <input class="form-control custom-input text-start" id="managerPasswordInput" name="password" type="password" minlength="8"/>
                     </div>
-                    <div class="mb-3 text-end">
+                    <div class="mb-3 text-start">
                         <label class="custom-label mb-1">رقم الهاتف</label>
-                        <input class="form-control custom-input text-end" id="managerPhoneInput" name="phone" type="text"/>
+                        <input class="form-control custom-input text-start" id="managerPhoneInput" name="phone" type="text"/>
                     </div>
 
                     <div class="text-center pt-2">
